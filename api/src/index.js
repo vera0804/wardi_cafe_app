@@ -4,5 +4,9 @@ const { startLicenseExpiryCron } = require('./jobs/license-expiry.cron');
 
 app.listen(port, () => {
   startLicenseExpiryCron();
-  console.log(`API listening on http://localhost:${port}`);
+  const publicDir = require('path').join(__dirname, '..', 'public');
+  const hasPwa = require('fs').existsSync(publicDir);
+  console.log(
+    `Wardi escuchando en puerto ${port} (API${hasPwa ? ' + PWA estática en /public' : ''})`
+  );
 });

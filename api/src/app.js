@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -71,11 +73,11 @@ const globalApiLimiter = rateLimit({
     return p === '/api/health' || p.startsWith('/api/health?');
   },
 });
-app.use(globalApiLimiter);
-
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
+
+app.use('/api', globalApiLimiter);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/superadmin', superadminRoutes);
@@ -106,6 +108,29 @@ app.use('/api/payroll-slips', payrollSlipsRoutes);
 app.use('/api/tenant-users', tenantUsersRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/exchange-rate', exchangeRateRoutes);
+
+/** Rutas /api no registradas → JSON 404 (no caer en el fallback SPA). */
+app.use('/api', (req, res) => {
+  res.status(404).json({ message: 'Not found.' });
+});
+
+const publicDir = path.join(__dirname, '..', 'public');
+if (fs.existsSync(publicDir)) {
+  app.use(
+    express.static(publicDir, {
+      index: false,
+      maxAge: config.isProd ? '1d' : 0,
+    })
+  );
+  app.get(/^(?!\/api(?:\/|$)).*/, (req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      return next();
+    }
+    res.sendFile(path.join(publicDir, 'index.html'), (err) => {
+      if (err) next(err);
+    });
+  });
+}
 
 app.use((err, _req, res, next) => {
   if (res.headersSent) {

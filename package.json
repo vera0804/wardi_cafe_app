@@ -1,9 +1,11 @@
 {
   "name": "wardi-cafe-app",
   "private": true,
-  "description": "Monorepo Wardi (PWA + API). Scripts raíz pendientes de alinear con build integrado.",
+  "description": "Monorepo Wardi (PWA + API). Producción: un solo proceso Express sirve /api y la SPA.",
   "scripts": {
     "install:all": "npm install --prefix api && npm install --prefix pwa",
+    "build": "npm run install:all && npm run build --prefix pwa && node scripts/copy-pwa.js",
+    "start": "npm run start --prefix api",
     "db:migrate": "node database/run-migrations.js",
     "db:setup-role": "node database/setup-app-role.js",
     "db:verify": "node database/verify-migrations.js",
