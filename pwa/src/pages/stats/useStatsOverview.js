@@ -3,7 +3,8 @@ import { useAuth } from '../../auth/AuthContext.jsx';
 import { canAccessEstadisticas } from '../../layouts/dashboardMenuData.js';
 import { fetchStatsOverview } from '../../services/statsApi.js';
 import { apiRequest } from '../../services/api.js';
-import { defaultDateRange } from './statsFormat.jsx';
+import { defaultDateRange, formatPeriodLine } from './statsFormat.jsx';
+import { listHarvests } from '../../services/harvests.js';
 
 export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
   const { user } = useAuth();
@@ -12,6 +13,9 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
   const [to, setTo] = useState(def.to);
   const [farmId, setFarmId] = useState('');
   const [lotId, setLotId] = useState('');
+  const [harvestId, setHarvestId] = useState('');
+  const [harvestLabel, setHarvestLabel] = useState('');
+  const [harvests, setHarvests] = useState([]);
   const [lowStock, setLowStock] = useState('10');
   const [farms, setFarms] = useState([]);
   const [lots, setLots] = useState([]);
@@ -43,9 +47,21 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
     }
   }, []);
 
+  const loadHarvests = useCallback(async () => {
+    try {
+      const rows = await listHarvests({ active: 'active' });
+      setHarvests(Array.isArray(rows) ? rows : []);
+    } catch {
+      setHarvests([]);
+      setHarvestId('');
+      setHarvestLabel('');
+    }
+  }, []);
+
   useEffect(() => {
     loadFarms();
-  }, [loadFarms]);
+    loadHarvests();
+  }, [loadFarms, loadHarvests]);
 
   useEffect(() => {
     loadLots(farmId);
@@ -77,6 +93,45 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
     if (!blocked) refresh();
   }, [blocked, refresh]);
 
+  function onHarvestChange(id) {
+    setHarvestId(id);
+    if (!id) {
+      setHarvestLabel('');
+      return;
+    }
+    const h = harvests.find((x) => x.id === id);
+    if (h) {
+      setHarvestLabel(h.name || '');
+      setFrom(String(h.start_date).slice(0, 10));
+      setTo(String(h.end_date).slice(0, 10));
+    }
+  }
+
+  const filtersProps = {
+    from,
+    to,
+    farmId,
+    lotId,
+    harvestId,
+    harvests,
+    onHarvestChange,
+    lowStock,
+    farms,
+    lots,
+    loading,
+    onFromChange: setFrom,
+    onToChange: setTo,
+    onFarmChange: (v) => {
+      setFarmId(v);
+      setLotId('');
+    },
+    onLotChange: setLotId,
+    onLowStockChange: setLowStock,
+    onRefresh: refresh,
+  };
+
+  const periodLine = formatPeriodLine(data, { harvestLabel });
+
   return {
     from,
     setFrom,
@@ -86,10 +141,16 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
     setFarmId,
     lotId,
     setLotId,
+    harvestId,
+    harvestLabel,
+    harvests,
+    onHarvestChange,
     lowStock,
     setLowStock,
     farms,
     lots,
+    filtersProps,
+    periodLine,
     data,
     loading,
     error,

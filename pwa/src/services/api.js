@@ -141,7 +141,11 @@ export async function apiRequest(path, options = {}) {
       typeof msg === 'string' ? msg : 'No se pudo completar la solicitud',
     );
     err.status = res.status;
-    if (data !== null && typeof data === 'object') err.body = data;
+    if (data !== null && typeof data === 'object') {
+      err.body = data;
+      if (data.code) err.code = data.code;
+      if (data.impact) err.impact = data.impact;
+    }
     throw err;
   }
 

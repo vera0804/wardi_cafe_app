@@ -123,6 +123,9 @@ router.post('/login', loginLimiterByIp, loginLimiterByUser, requireCsrf, async (
     setSessionCookie(res, token);
     return res.status(200).json(user);
   } catch (err) {
+    if (err?.code === 'LICENSE_EXPIRED') {
+      return res.status(403).json({ message: 'Licencia vencida.', code: 'LICENSE_EXPIRED' });
+    }
     if (err?.code === 'LOCKED' || err?.code === 'AUTH_FAILED') {
       return res.status(401).json({ message: 'Credenciales inválidas.' });
     }

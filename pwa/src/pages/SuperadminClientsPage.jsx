@@ -1,32 +1,52 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import {
   createSuperadminClient,
   fetchSuperadminClients,
   fetchSuperadminPlans,
+  renewSuperadminClientLicense,
   superadminEnterTenant,
 } from '../services/superadminApi.js';
 import PasswordPolicyHint from '../components/PasswordPolicyHint.jsx';
+import SuperadminPlanSummary from '../components/SuperadminPlanSummary.jsx';
+import SuperadminLayout from '../layouts/SuperadminLayout.jsx';
 import { validatePasswordPolicy } from '../utils/passwordPolicy.js';
 
+function todayIsoLocal() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export default function SuperadminClientsPage() {
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
+  const [renewingId, setRenewingId] = useState(null);
   const [form, setForm] = useState({
     client_name: '',
     plan_id: '',
+    license_starts_on: todayIsoLocal(),
+    billing_anchor_day: '',
+    trial_days_override: '',
     admin_email: '',
     admin_password: '',
     admin_first_name: '',
     admin_last_name_1: '',
     admin_last_name_2: '',
   });
+
+  const selectedPlan = useMemo(
+    () => plans.find((p) => p.id === form.plan_id) || null,
+    [plans, form.plan_id]
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -35,7 +55,16 @@ export default function SuperadminClientsPage() {
       const [p, c] = await Promise.all([fetchSuperadminPlans(), fetchSuperadminClients()]);
       setPlans(p);
       setClients(c);
-      setForm((f) => (f.plan_id ? f : { ...f, plan_id: p[0]?.id || '' }));
+      setForm((f) => {
+        const next = { ...f };
+        if (!f.plan_id && p[0]?.id) next.plan_id = p[0].id;
+        if (!f.license_starts_on) next.license_starts_on = todayIsoLocal();
+        if (p[0]?.billing_model === 'monthly_anchor' && !f.billing_anchor_day) {
+          const day = new Date().getDate();
+          next.billing_anchor_day = String(Math.min(28, day));
+        }
+        return next;
+      });
     } catch (e) {
       setError(e?.message || 'No se pudo cargar.');
     } finally {
@@ -47,6 +76,13 @@ export default function SuperadminClientsPage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (selectedPlan?.billing_model === 'monthly_anchor' && !form.billing_anchor_day) {
+      const day = Math.min(28, new Date(form.license_starts_on || todayIsoLocal()).getDate() || 1);
+      setForm((f) => ({ ...f, billing_anchor_day: String(day) }));
+    }
+  }, [selectedPlan?.billing_model, selectedPlan?.id, form.billing_anchor_day, form.license_starts_on]);
+
   async function handleEnter(clientId) {
     setError('');
     try {
@@ -55,6 +91,25 @@ export default function SuperadminClientsPage() {
       navigate('/dashboard', { replace: true });
     } catch (e) {
       setError(e?.message || 'No se pudo entrar a la organización.');
+    }
+  }
+
+  async function handleRenew(client) {
+    setError('');
+    setRenewingId(client.id);
+    try {
+      await renewSuperadminClientLicense(client.id, {
+        license_starts_on: todayIsoLocal(),
+        billing_anchor_day:
+          client.plan_billing_model === 'monthly_anchor'
+            ? client.billing_anchor_day || Math.min(28, new Date().getDate())
+            : undefined,
+      });
+      await load();
+    } catch (e) {
+      setError(e?.message || 'No se pudo renovar la licencia.');
+    } finally {
+      setRenewingId(null);
     }
   }
 
@@ -68,15 +123,23 @@ export default function SuperadminClientsPage() {
     setCreating(true);
     setError('');
     try {
-      await createSuperadminClient({
+      const payload = {
         client_name: form.client_name.trim(),
         plan_id: form.plan_id,
+        license_starts_on: form.license_starts_on || todayIsoLocal(),
         admin_email: form.admin_email.trim(),
         admin_password: form.admin_password,
         admin_first_name: form.admin_first_name.trim(),
         admin_last_name_1: form.admin_last_name_1.trim(),
         admin_last_name_2: form.admin_last_name_2.trim() || undefined,
-      });
+      };
+      if (selectedPlan?.billing_model === 'monthly_anchor' && form.billing_anchor_day) {
+        payload.billing_anchor_day = Number(form.billing_anchor_day);
+      }
+      if (selectedPlan?.billing_model === 'trial_days' && form.trial_days_override) {
+        payload.trial_days_override = Number(form.trial_days_override);
+      }
+      await createSuperadminClient(payload);
       setForm((f) => ({
         ...f,
         client_name: '',
@@ -85,6 +148,8 @@ export default function SuperadminClientsPage() {
         admin_first_name: '',
         admin_last_name_1: '',
         admin_last_name_2: '',
+        license_starts_on: todayIsoLocal(),
+        trial_days_override: '',
       }));
       await load();
     } catch (e) {
@@ -95,29 +160,12 @@ export default function SuperadminClientsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6 text-slate-900">
-      <div className="mx-auto max-w-4xl space-y-8">
-        <header>
-          <h1 className="text-xl font-semibold text-lime-900">Plataforma — organizaciones</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Cree clientes con plan y administrador inicial, o entre a una organización para usar el sistema como
-            ella.
-          </p>
-          {user && !user.needsTenantSelection ? (
-            <button
-              type="button"
-              className="mt-4 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
-              onClick={() => navigate('/dashboard', { replace: true })}
-            >
-              Ir al panel principal
-            </button>
-          ) : null}
-        </header>
+    <SuperadminLayout>
+      {error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">{error}</div>
+      ) : null}
 
-        {error ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">{error}</div>
-        ) : null}
-
+      <div className="space-y-8">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Nueva organización</h2>
           <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={handleCreate}>
@@ -130,7 +178,7 @@ export default function SuperadminClientsPage() {
                 onChange={(ev) => setForm((f) => ({ ...f, client_name: ev.target.value }))}
               />
             </label>
-            <label className="block text-sm">
+            <label className="block text-sm sm:col-span-2">
               <span className="text-slate-600">Plan</span>
               <select
                 required
@@ -140,11 +188,52 @@ export default function SuperadminClientsPage() {
               >
                 {plans.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name}
+                    {p.name} ({p.billing_model_label})
                   </option>
                 ))}
               </select>
+              <SuperadminPlanSummary plan={selectedPlan} />
             </label>
+            <label className="block text-sm">
+              <span className="text-slate-600">Inicio de licencia</span>
+              <input
+                type="date"
+                required
+                className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                value={form.license_starts_on}
+                onChange={(ev) => setForm((f) => ({ ...f, license_starts_on: ev.target.value }))}
+              />
+            </label>
+            {selectedPlan?.billing_model === 'monthly_anchor' ? (
+              <label className="block text-sm">
+                <span className="text-slate-600">Día de pago mensual (1-28)</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={28}
+                  required
+                  className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                  value={form.billing_anchor_day}
+                  onChange={(ev) => setForm((f) => ({ ...f, billing_anchor_day: ev.target.value }))}
+                />
+              </label>
+            ) : null}
+            {selectedPlan?.billing_model === 'trial_days' ? (
+              <label className="block text-sm">
+                <span className="text-slate-600">
+                  Días de demo (opcional; plan: {selectedPlan.trial_days ?? 30})
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  max={365}
+                  placeholder={String(selectedPlan.trial_days ?? 30)}
+                  className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                  value={form.trial_days_override}
+                  onChange={(ev) => setForm((f) => ({ ...f, trial_days_override: ev.target.value }))}
+                />
+              </label>
+            ) : null}
             <label className="block text-sm">
               <span className="text-slate-600">Correo del administrador</span>
               <input
@@ -202,7 +291,13 @@ export default function SuperadminClientsPage() {
                 {creating ? 'Creando…' : 'Crear organización'}
               </button>
               {!plans.length ? (
-                <p className="mt-2 text-xs text-amber-800">No hay planes en el sistema. Cree al menos un plan en la base de datos.</p>
+                <p className="mt-2 text-xs text-amber-800">
+                  No hay planes activos. Cree uno en la pestaña{' '}
+                  <a href="/superadmin/plans" className="font-medium underline">
+                    Planes
+                  </a>
+                  .
+                </p>
               ) : null}
             </div>
           </form>
@@ -220,21 +315,36 @@ export default function SuperadminClientsPage() {
                     <div className="font-medium text-slate-800">{c.name}</div>
                     <div className="text-xs text-slate-500">
                       Plan: {c.plan_name || '—'} · Estado: {c.status || '—'}
+                      {c.license_expires_on_display ? (
+                        <> · Vence: {c.license_expires_on_display}</>
+                      ) : (
+                        <> · Sin vencimiento</>
+                      )}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-lime-700 px-3 py-1.5 text-sm font-medium text-lime-800 hover:bg-lime-50"
-                    onClick={() => handleEnter(c.id)}
-                  >
-                    Entrar como esta organización
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={renewingId === c.id}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                      onClick={() => handleRenew(c)}
+                    >
+                      {renewingId === c.id ? 'Renovando…' : 'Renovar licencia'}
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg border border-lime-700 px-3 py-1.5 text-sm font-medium text-lime-800 hover:bg-lime-50"
+                      onClick={() => handleEnter(c.id)}
+                    >
+                      Entrar
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </section>
       </div>
-    </div>
+    </SuperadminLayout>
   );
 }

@@ -4,6 +4,10 @@ function round2(n) {
   return Math.round(Number(n) * 100) / 100;
 }
 
+function round4(n) {
+  return Math.round(Number(n) * 10000) / 10000;
+}
+
 function parseDateRange(query) {
   const today = new Date().toISOString().slice(0, 10);
   let from = query.from || query.from_date;
@@ -149,16 +153,31 @@ const SQL_LABOR_EXCLUDE_IF_DAY_COVERED_BY_PAID_PAYROLL = `
 function sqlLpBase({ paramFrom, paramTo, farmPlaceholder, lotPlaceholder }) {
   return `
     lp_base AS (
-      SELECT lp.id AS lp_id, lp.lot_id AS header_lot_id, lp.prod_date
-      FROM lot_production lp
-      INNER JOIN lots l ON l.id = lp.lot_id AND l.client_id = $1
-      WHERE lp.is_active = true
-        AND lp.client_id = $1
-        AND lp.prod_date >= ${paramFrom}::date
-        AND lp.prod_date <= ${paramTo}::date
+      SELECT clp.id AS lp_id, clp.lot_id AS header_lot_id, clp.prod_date, clp.cajuelas, clp.fanegas
+      FROM coffee_lot_production clp
+      INNER JOIN lots l ON l.id = clp.lot_id AND l.client_id = $1
+      WHERE clp.is_active = true
+        AND clp.client_id = $1
+        AND clp.prod_date >= ${paramFrom}::date
+        AND clp.prod_date <= ${paramTo}::date
         ${farmPlaceholder ? 'AND l.farm_id = ' + farmPlaceholder + '::uuid' : ''}
         ${lotPlaceholder ? 'AND l.id = ' + lotPlaceholder + '::uuid' : ''}
     )`;
+}
+
+/** Precio por fanega (CRC) de la cosecha activa que cubre prod_date; si hay solape, la más reciente por inicio. */
+function sqlHarvestPriceLateral(clientParam = '$1') {
+  return `
+    LEFT JOIN LATERAL (
+      SELECT h.price_per_fanega
+      FROM harvests h
+      WHERE h.client_id = ${clientParam}
+        AND h.is_active = true
+        AND b.prod_date >= h.start_date
+        AND b.prod_date <= h.end_date
+      ORDER BY h.start_date DESC
+      LIMIT 1
+    ) harvest_px ON true`;
 }
 
 async function getTotalProductionKgAndRevenue({ clientId, from, to, farmId, lotId }) {
@@ -169,22 +188,21 @@ async function getTotalProductionKgAndRevenue({ clientId, from, to, farmId, lotI
   if (lotId) params.push(lotId);
 
   const res = await pool.query(
-    `WITH ${sqlLpBase({ paramFrom: '$2', paramTo: '$3', farmPlaceholder: farmPh, lotPlaceholder: lotPh })},
-    per_production AS (
-      SELECT b.lp_id, SUM(lpd.kilos)::numeric(14,3) AS kg, SUM(lpd.total_amount)::numeric(14,2) AS revenue
-      FROM lp_base b
-      INNER JOIN lot_production_details lpd ON lpd.lot_production_id = b.lp_id
-      GROUP BY b.lp_id
-    )
+    `WITH ${sqlLpBase({ paramFrom: '$2', paramTo: '$3', farmPlaceholder: farmPh, lotPlaceholder: lotPh })}
     SELECT
-      COALESCE(SUM(pp.kg), 0)::numeric(14,3) AS total_kg,
-      COALESCE(SUM(pp.revenue), 0)::numeric(14,2) AS total_revenue_crc
-    FROM per_production pp`,
+      COALESCE(SUM(b.cajuelas), 0)::numeric(14,3) AS total_cajuelas,
+      COALESCE(SUM(b.fanegas), 0)::numeric(14,4) AS total_fanegas,
+      COALESCE(SUM(b.fanegas * COALESCE(harvest_px.price_per_fanega, 0)), 0)::numeric(14,2) AS total_revenue_crc
+    FROM lp_base b
+    ${sqlHarvestPriceLateral('$1')}`,
     params
   );
+  const totalFanegas = Number(res.rows[0]?.total_fanegas || 0);
   return {
-    totalKg: Number(res.rows[0]?.total_kg || 0),
-    totalRevenueCrc: Number(res.rows[0]?.total_revenue_crc || 0),
+    totalCajuelas: Number(res.rows[0]?.total_cajuelas || 0),
+    totalFanegas,
+    totalKg: totalFanegas,
+    totalRevenueCrc: round2(Number(res.rows[0]?.total_revenue_crc || 0)),
   };
 }
 
@@ -325,96 +343,48 @@ async function getRevenueByLot({ clientId, from, to, farmId, lotId }) {
 
   const res = await pool.query(
     `WITH ${sqlLpBase({ paramFrom: '$2', paramTo: '$3', farmPlaceholder: farmPh, lotPlaceholder: lotPh })},
-    alloc_rev AS (
-      SELECT lpa.lot_id,
-             SUM(rv.trev * (lpa.allocation_pct / 100.0))::numeric(14,2) AS revenue
-      FROM lp_base b
-      INNER JOIN (
-        SELECT lot_production_id, SUM(total_amount)::numeric(14,2) AS trev
-        FROM lot_production_details
-        GROUP BY lot_production_id
-      ) rv ON rv.lot_production_id = b.lp_id
-      INNER JOIN lot_production_allocations lpa ON lpa.lot_production_id = b.lp_id AND lpa.is_active = true
-      INNER JOIN lots l ON l.id = lpa.lot_id AND l.client_id = $1
-      GROUP BY lpa.lot_id
-    ),
-    no_alloc_rev AS (
+    line_rev AS (
       SELECT b.header_lot_id AS lot_id,
-             SUM(rv.trev)::numeric(14,2) AS revenue
+             b.cajuelas,
+             b.fanegas,
+             (b.fanegas * COALESCE(harvest_px.price_per_fanega, 0))::numeric(14,2) AS line_revenue_crc
       FROM lp_base b
-      INNER JOIN (
-        SELECT lot_production_id, SUM(total_amount)::numeric(14,2) AS trev
-        FROM lot_production_details
-        GROUP BY lot_production_id
-      ) rv ON rv.lot_production_id = b.lp_id
-      WHERE NOT EXISTS (
-        SELECT 1 FROM lot_production_allocations a
-        WHERE a.lot_production_id = b.lp_id AND a.is_active = true
-      )
-      GROUP BY b.header_lot_id
-    ),
-    merged AS (
-      SELECT lot_id, SUM(revenue) AS revenue FROM alloc_rev GROUP BY lot_id
-      UNION ALL
-      SELECT lot_id, SUM(revenue) AS revenue FROM no_alloc_rev GROUP BY lot_id
+      ${sqlHarvestPriceLateral('$1')}
     ),
     by_lot AS (
-      SELECT lot_id, SUM(revenue)::numeric(14,2) AS revenue FROM merged GROUP BY lot_id
+      SELECT lot_id,
+             SUM(cajuelas)::numeric(14,3) AS cajuelas,
+             SUM(fanegas)::numeric(14,4) AS fanegas,
+             SUM(line_revenue_crc)::numeric(14,2) AS revenue_crc
+      FROM line_rev
+      GROUP BY lot_id
     )
-    SELECT bl.lot_id, l.name AS lot_name, f.id AS farm_id, f.name AS farm_name, bl.revenue
+    SELECT bl.lot_id,
+           l.name AS lot_name,
+           f.id AS farm_id,
+           f.name AS farm_name,
+           bl.cajuelas,
+           bl.fanegas,
+           bl.revenue_crc
     FROM by_lot bl
     INNER JOIN lots l ON l.id = bl.lot_id AND l.client_id = $1
     INNER JOIN farms f ON f.id = l.farm_id AND f.client_id = $1`,
     params
   );
-
-  // Simplificar kg por lote: recalcular en subconsulta limpia
-  const kgRes = await pool.query(
-    `WITH ${sqlLpBase({ paramFrom: '$2', paramTo: '$3', farmPlaceholder: farmPh, lotPlaceholder: lotPh })},
-    alloc_kg AS (
-      SELECT lpa.lot_id,
-             SUM(dt.tk * (lpa.allocation_pct / 100.0))::numeric(14,3) AS kg
-      FROM lp_base b
-      INNER JOIN (
-        SELECT lot_production_id, SUM(kilos) AS tk
-        FROM lot_production_details
-        GROUP BY lot_production_id
-      ) dt ON dt.lot_production_id = b.lp_id
-      INNER JOIN lot_production_allocations lpa ON lpa.lot_production_id = b.lp_id AND lpa.is_active = true
-      GROUP BY lpa.lot_id
-    ),
-    no_alloc_kg AS (
-      SELECT b.header_lot_id AS lot_id,
-             SUM(dt.tk)::numeric(14,3) AS kg
-      FROM lp_base b
-      INNER JOIN (
-        SELECT lot_production_id, SUM(kilos) AS tk
-        FROM lot_production_details
-        GROUP BY lot_production_id
-      ) dt ON dt.lot_production_id = b.lp_id
-      WHERE NOT EXISTS (
-        SELECT 1 FROM lot_production_allocations a
-        WHERE a.lot_production_id = b.lp_id AND a.is_active = true
-      )
-      GROUP BY b.header_lot_id
-    ),
-    merged AS (
-      SELECT lot_id, SUM(kg) AS kg FROM alloc_kg GROUP BY lot_id
-      UNION ALL
-      SELECT lot_id, SUM(kg) AS kg FROM no_alloc_kg GROUP BY lot_id
-    )
-    SELECT lot_id, SUM(kg)::numeric(14,3) AS kg FROM merged GROUP BY lot_id`,
-    params
-  );
-  const kgMap = new Map(kgRes.rows.map((r) => [String(r.lot_id), Number(r.kg || 0)]));
-  return res.rows.map((r) => ({
-    lot_id: r.lot_id,
-    lot_name: r.lot_name,
-    farm_id: r.farm_id,
-    farm_name: r.farm_name,
-    revenue_crc: round2(Number(r.revenue || 0)),
-    kg: round2(kgMap.get(String(r.lot_id)) ?? 0),
-  }));
+  return res.rows.map((r) => {
+    const fanegas = round4(Number(r.fanegas || 0));
+    const cajuelas = round2(Number(r.cajuelas || 0));
+    return {
+      lot_id: r.lot_id,
+      lot_name: r.lot_name,
+      farm_id: r.farm_id,
+      farm_name: r.farm_name,
+      revenue_crc: round2(Number(r.revenue_crc || 0)),
+      cajuelas,
+      fanegas,
+      kg: fanegas,
+    };
+  });
 }
 
 async function getCostsByLot({ clientId, from, to, farmId, lotId, assetDepreciationAlloc }) {
@@ -514,10 +484,11 @@ async function getRentabilityByLot({ clientId, from, to, farmId, lotId, assetDep
   for (const id of lotIds) {
     const rev = revRows.find((x) => String(x.lot_id) === id);
     const revenue = rev?.revenue_crc ?? 0;
-    const kg = rev?.kg ?? 0;
+    const cajuelas = rev?.cajuelas ?? 0;
+    const fanegas = rev?.fanegas ?? 0;
     const cost = costMap.get(id) ?? 0;
     const m = metaMap.get(id);
-    if (!m && revenue === 0 && cost === 0) continue;
+    if (!m && revenue === 0 && cost === 0 && fanegas === 0 && cajuelas === 0) continue;
     const margin = round2(revenue - cost);
     rows.push({
       lot_id: id,
@@ -527,8 +498,11 @@ async function getRentabilityByLot({ clientId, from, to, farmId, lotId, assetDep
       revenue_crc: round2(revenue),
       cost_crc: round2(cost),
       margin_crc: margin,
-      kg: round2(kg),
-      margin_per_kg_crc: kg > 0 ? round2(margin / kg) : null,
+      cajuelas: round2(cajuelas),
+      fanegas: round4(fanegas),
+      kg: round4(fanegas),
+      margin_per_fanega_crc: fanegas > 0 ? round2(margin / fanegas) : null,
+      margin_per_kg_crc: fanegas > 0 ? round2(margin / fanegas) : null,
     });
   }
   rows.sort((a, b) => b.margin_crc - a.margin_crc);
@@ -547,6 +521,8 @@ async function getRentabilityByFarm({ clientId, from, to, farmId, lotId, assetDe
         revenue_crc: 0,
         cost_crc: 0,
         margin_crc: 0,
+        cajuelas: 0,
+        fanegas: 0,
         kg: 0,
       });
     }
@@ -554,7 +530,9 @@ async function getRentabilityByFarm({ clientId, from, to, farmId, lotId, assetDe
     agg.revenue_crc += r.revenue_crc;
     agg.cost_crc += r.cost_crc;
     agg.margin_crc += r.margin_crc;
-    agg.kg += r.kg;
+    agg.cajuelas += Number(r.cajuelas || 0);
+    agg.fanegas += Number(r.fanegas || 0);
+    agg.kg += Number(r.fanegas || 0);
   }
   return [...byFarm.values()]
     .map((f) => ({
@@ -562,8 +540,11 @@ async function getRentabilityByFarm({ clientId, from, to, farmId, lotId, assetDe
       revenue_crc: round2(f.revenue_crc),
       cost_crc: round2(f.cost_crc),
       margin_crc: round2(f.margin_crc),
-      kg: round2(f.kg),
-      margin_per_kg_crc: f.kg > 0 ? round2(f.margin_crc / f.kg) : null,
+      cajuelas: round2(f.cajuelas),
+      fanegas: round4(f.fanegas),
+      kg: round4(f.fanegas),
+      margin_per_fanega_crc: f.fanegas > 0 ? round2(f.margin_crc / f.fanegas) : null,
+      margin_per_kg_crc: f.fanegas > 0 ? round2(f.margin_crc / f.fanegas) : null,
     }))
     .sort((a, b) => b.margin_crc - a.margin_crc);
 }
@@ -1155,6 +1136,248 @@ async function getLaborByType({ clientId, from, to, farmId, lotId }) {
   return finalizeLaborByTypeRows(grossRes, netRes, payrollSplit, LABOR_BY_TYPE_NAME_NONE_AMOUNT);
 }
 
+/**
+ * Mano de obra por trabajador: horas registradas (`unit = hora`) y total pagado en el periodo/alcance.
+ * Total pagado = labores netas (sin duplicar días cubiertos por planilla pagada) + planilla variable a lotes
+ * + nómina fija pagada a lotes (misma regla que el resumen de inversión en M.O.).
+ */
+async function getLaborByWorker({ clientId, from, to, farmId, lotId }) {
+  const buildFarmScopeUnallocatedSql = (farmParamIdx, valueExpr, extraLeWhere = '') => {
+    if (!farmId || lotId || farmParamIdx == null) return '';
+    return `
+         UNION ALL
+         SELECT le.worker_id AS wid, ${valueExpr} AS val
+         FROM labor_entries le
+         WHERE le.is_active AND le.client_id = $1 AND le.cost_scope = 'farm'
+           AND le.work_date >= $2::date AND le.work_date <= $3::date
+           AND le.farm_id = $${farmParamIdx}::uuid
+           AND EXISTS (SELECT 1 FROM farms f WHERE f.id = le.farm_id AND f.client_id = $1)${extraLeWhere}
+           AND NOT EXISTS (
+             SELECT 1 FROM labor_entry_allocations lea0
+             WHERE lea0.labor_entry_id = le.id AND lea0.is_active = true
+               AND COALESCE(lea0.amount_allocated, 0) > 0
+           )`;
+  };
+
+  const runLaborUnionByWorker = (valueExpr, withPayrollExclude, hoursOnly) => {
+    const unitFilter = hoursOnly ? ` AND le.unit = 'hora'` : '';
+    const exL = withPayrollExclude ? `\n           ${SQL_LABOR_EXCLUDE_IF_DAY_COVERED_BY_PAID_PAYROLL}` : '';
+    const exS = withPayrollExclude ? `\n         ${SQL_LABOR_EXCLUDE_IF_DAY_COVERED_BY_PAID_PAYROLL}` : '';
+    const farmUnallocatedExtra = hoursOnly ? ` AND le.unit = 'hora'` : exS;
+
+    if (farmId || lotId) {
+      const params = [clientId, from, to];
+      let idx = 4;
+      let farmClause = '';
+      let lotClause = '';
+      let farmParamIdx = null;
+      if (farmId) {
+        farmParamIdx = idx;
+        farmClause = `AND l.farm_id = $${idx}::uuid`;
+        params.push(farmId);
+        idx += 1;
+      }
+      if (lotId) {
+        lotClause = `AND l.id = $${idx}::uuid`;
+        params.push(lotId);
+        idx += 1;
+      }
+      const farmScopeUnallocatedSql = buildFarmScopeUnallocatedSql(
+        farmParamIdx,
+        valueExpr,
+        farmUnallocatedExtra
+      );
+      return pool.query(
+        `SELECT w.id AS worker_id,
+                concat_ws(' ', w.first_name, w.last_name_1, w.last_name_2) AS worker_name,
+                w.worker_type::text AS worker_type,
+                COALESCE(SUM(x.val), 0)::numeric(14,2) AS amount_val
+         FROM (
+           SELECT le.worker_id AS wid, ${valueExpr} AS val
+           FROM labor_entries le
+           INNER JOIN lots l ON l.id = le.lot_id AND l.client_id = $1
+           WHERE le.is_active AND le.client_id = $1 AND le.cost_scope = 'lot'
+             AND le.work_date >= $2::date AND le.work_date <= $3::date${unitFilter}${exL}
+             ${farmClause}
+             ${lotClause}
+           UNION ALL
+           SELECT le.worker_id, ${hoursOnly ? 'le.qty' : 'lea.amount_allocated'}
+           FROM labor_entries le
+           INNER JOIN labor_entry_allocations lea
+             ON lea.labor_entry_id = le.id AND lea.is_active = true
+           INNER JOIN lots l ON l.id = lea.lot_id AND l.client_id = $1
+           WHERE le.is_active AND le.client_id = $1 AND le.cost_scope = 'farm'
+             AND le.work_date >= $2::date AND le.work_date <= $3::date${unitFilter}${exL}
+             ${farmClause}
+             ${lotClause}
+           ${farmScopeUnallocatedSql}
+         ) x
+         INNER JOIN workers w ON w.id = x.wid AND w.client_id = $1
+         GROUP BY w.id, worker_name, w.worker_type
+         HAVING COALESCE(SUM(x.val), 0) <> 0
+         ORDER BY amount_val DESC`,
+        params
+      );
+    }
+
+    return pool.query(
+      `SELECT w.id AS worker_id,
+              concat_ws(' ', w.first_name, w.last_name_1, w.last_name_2) AS worker_name,
+              w.worker_type::text AS worker_type,
+              COALESCE(SUM(x.val), 0)::numeric(14,2) AS amount_val
+       FROM (
+         SELECT le.worker_id AS wid, ${valueExpr} AS val
+         FROM labor_entries le
+         INNER JOIN lots l ON l.id = le.lot_id AND l.client_id = $1
+         WHERE le.is_active AND le.client_id = $1 AND le.cost_scope = 'lot'
+           AND le.work_date >= $2::date AND le.work_date <= $3::date${unitFilter}${exS}
+         UNION ALL
+         SELECT le.worker_id, ${hoursOnly ? 'le.qty' : 'lea.amount_allocated'}
+         FROM labor_entries le
+         INNER JOIN labor_entry_allocations lea
+           ON lea.labor_entry_id = le.id AND lea.is_active = true
+         INNER JOIN lots l ON l.id = lea.lot_id AND l.client_id = $1
+         WHERE le.is_active AND le.client_id = $1 AND le.cost_scope = 'farm'
+           AND le.work_date >= $2::date AND le.work_date <= $3::date${unitFilter}${exS}
+         UNION ALL
+         SELECT le.worker_id AS wid, ${valueExpr} AS val
+         FROM labor_entries le
+         WHERE le.is_active AND le.client_id = $1 AND le.cost_scope = 'farm'
+           AND le.work_date >= $2::date AND le.work_date <= $3::date
+           AND EXISTS (SELECT 1 FROM farms f WHERE f.id = le.farm_id AND f.client_id = $1)${unitFilter}${exS}
+           AND NOT EXISTS (
+             SELECT 1 FROM labor_entry_allocations lea0
+             WHERE lea0.labor_entry_id = le.id AND lea0.is_active = true
+               AND COALESCE(lea0.amount_allocated, 0) > 0
+           )
+       ) x
+       INNER JOIN workers w ON w.id = x.wid AND w.client_id = $1
+       GROUP BY w.id, worker_name, w.worker_type
+       HAVING COALESCE(SUM(x.val), 0) <> 0
+       ORDER BY amount_val DESC`,
+      [clientId, from, to]
+    );
+  };
+
+  const payrollLotFarmFilter = () => {
+    const params = [clientId, from, to];
+    let idx = 4;
+    let lotFarmFilter = '';
+    if (farmId) {
+      lotFarmFilter += ` AND l.farm_id = $${idx}::uuid`;
+      params.push(farmId);
+      idx += 1;
+    }
+    if (lotId) {
+      lotFarmFilter += ` AND l.id = $${idx}::uuid`;
+      params.push(lotId);
+      idx += 1;
+    }
+    return { params, lotFarmFilter };
+  };
+
+  const { params: payParams, lotFarmFilter } = payrollLotFarmFilter();
+
+  const [laborNetRes, hoursRes, payVarRes, payFixRes] = await Promise.all([
+    runLaborUnionByWorker('le.amount', true, false),
+    runLaborUnionByWorker('le.qty', false, true),
+    pool.query(
+      `SELECT ps.worker_id,
+              concat_ws(' ', w.first_name, w.last_name_1, w.last_name_2) AS worker_name,
+              w.worker_type::text AS worker_type,
+              COALESCE(SUM(psla.amount_allocated), 0)::numeric(14,2) AS amount_val
+       FROM payroll_slip_lot_allocations psla
+       INNER JOIN payroll_slips ps ON ps.id = psla.payroll_slip_id AND ps.client_id = $1
+       INNER JOIN workers w ON w.id = ps.worker_id AND w.client_id = $1
+       INNER JOIN lots l ON l.id = psla.lot_id AND l.client_id = $1
+       WHERE ps.status = 'pagada'
+         AND ps.period_from <= $3::date AND ps.period_to >= $2::date
+         ${lotFarmFilter}
+       GROUP BY ps.worker_id, worker_name, w.worker_type
+       HAVING COALESCE(SUM(psla.amount_allocated), 0) <> 0
+       ORDER BY amount_val DESC`,
+      payParams
+    ),
+    pool.query(
+      `SELECT fp.worker_id,
+              concat_ws(' ', w.first_name, w.last_name_1, w.last_name_2) AS worker_name,
+              w.worker_type::text AS worker_type,
+              COALESCE(SUM(fpa.amount_allocated), 0)::numeric(14,2) AS amount_val
+       FROM fixed_payroll_allocations fpa
+       INNER JOIN fixed_payroll fp ON fp.id = fpa.fixed_payroll_id AND fp.is_active = true AND fp.is_paid = true
+       INNER JOIN workers w ON w.id = fp.worker_id AND w.client_id = $1
+       INNER JOIN payroll_periods pp ON pp.id = fp.period_id
+       INNER JOIN lots l ON l.id = fpa.lot_id AND l.client_id = $1
+       WHERE fpa.is_active = true
+         AND fpa.amount_allocated IS NOT NULL
+         AND COALESCE(fpa.amount_allocated, 0) > 0
+         AND pp.period_month >= date_trunc('month', $2::date)::date
+         AND pp.period_month <= date_trunc('month', $3::date)::date
+         ${lotFarmFilter}
+       GROUP BY fp.worker_id, worker_name, w.worker_type
+       HAVING COALESCE(SUM(fpa.amount_allocated), 0) <> 0
+       ORDER BY amount_val DESC`,
+      payParams
+    ),
+  ]);
+
+  const byWorker = new Map();
+
+  const touch = (row, patch) => {
+    const id = row.worker_id;
+    if (id == null) return;
+    const k = String(id);
+    let r = byWorker.get(k);
+    if (!r) {
+      r = {
+        worker_id: id,
+        worker_name: row.worker_name || 'Trabajador',
+        worker_type: row.worker_type || null,
+        hours_registered: 0,
+        amount_labor_entries_net_crc: 0,
+        amount_payroll_variable_crc: 0,
+        amount_fixed_payroll_crc: 0,
+        amount_total_paid_crc: 0,
+      };
+      byWorker.set(k, r);
+    }
+    if (row.worker_name && !r.worker_name) r.worker_name = row.worker_name;
+    if (row.worker_type && !r.worker_type) r.worker_type = row.worker_type;
+    Object.assign(r, patch);
+  };
+
+  for (const row of laborNetRes.rows) {
+    touch(row, { amount_labor_entries_net_crc: round2(Number(row.amount_val || 0)) });
+  }
+  for (const row of hoursRes.rows) {
+    touch(row, { hours_registered: round2(Number(row.amount_val || 0)) });
+  }
+  for (const row of payVarRes.rows) {
+    touch(row, { amount_payroll_variable_crc: round2(Number(row.amount_val || 0)) });
+  }
+  for (const row of payFixRes.rows) {
+    touch(row, { amount_fixed_payroll_crc: round2(Number(row.amount_val || 0)) });
+  }
+
+  const rows = [...byWorker.values()]
+    .map((r) => {
+      const total = round2(
+        r.amount_labor_entries_net_crc + r.amount_payroll_variable_crc + r.amount_fixed_payroll_crc
+      );
+      return { ...r, amount_total_paid_crc: total };
+    })
+    .filter(
+      (r) =>
+        r.hours_registered > 0 ||
+        r.amount_labor_entries_net_crc > 0 ||
+        r.amount_payroll_variable_crc > 0 ||
+        r.amount_fixed_payroll_crc > 0
+    );
+
+  rows.sort((a, b) => b.amount_total_paid_crc - a.amount_total_paid_crc);
+  return rows;
+}
+
 async function getHarvestKgBuckets({ clientId, from, to, farmId, lotId, bucket }) {
   const trunc = bucket === 'month' ? 'month' : 'week';
   const farmPh = farmId ? '$4' : null;
@@ -1164,22 +1387,24 @@ async function getHarvestKgBuckets({ clientId, from, to, farmId, lotId, bucket }
   if (lotId) params.push(lotId);
   const res = await pool.query(
     `WITH ${sqlLpBase({ paramFrom: '$2', paramTo: '$3', farmPlaceholder: farmPh, lotPlaceholder: lotPh })}
-    SELECT date_trunc('${trunc}', lp.prod_date)::date AS period_start,
-           COALESCE(SUM(lpd.kilos), 0)::numeric(14,3) AS kg
+    SELECT date_trunc('${trunc}', b.prod_date)::date AS period_start,
+           COALESCE(SUM(b.fanegas), 0)::numeric(14,4) AS fanegas
      FROM lp_base b
-     INNER JOIN lot_production lp ON lp.id = b.lp_id
-     INNER JOIN lot_production_details lpd ON lpd.lot_production_id = lp.id
      GROUP BY 1
      ORDER BY 1`,
     params
   );
-  return res.rows.map((r) => ({
-    period_start: r.period_start,
-    kg: round2(Number(r.kg || 0)),
-  }));
+  return res.rows.map((r) => {
+    const fanegas = round4(Number(r.fanegas || 0));
+    return {
+      period_start: r.period_start,
+      fanegas,
+      kg: fanegas,
+    };
+  });
 }
 
-async function getProductionKgByCaliber({ clientId, from, to, farmId, lotId }) {
+async function getProductionByWorkWeek({ clientId, from, to, farmId, lotId }) {
   const farmPh = farmId ? '$4' : null;
   const lotPh = lotId ? (farmId ? '$5' : '$4') : null;
   const params = [clientId, from, to];
@@ -1187,21 +1412,18 @@ async function getProductionKgByCaliber({ clientId, from, to, farmId, lotId }) {
   if (lotId) params.push(lotId);
   const res = await pool.query(
     `WITH ${sqlLpBase({ paramFrom: '$2', paramTo: '$3', farmPlaceholder: farmPh, lotPlaceholder: lotPh })}
-    SELECT c.id AS caliber_id,
-           c.name AS caliber_name,
-           COALESCE(SUM(lpd.kilos), 0)::numeric(14,3) AS kg
+    SELECT to_char(b.prod_date, 'IYYY-"S"IW') AS work_week,
+           COALESCE(SUM(b.cajuelas), 0)::numeric(14,3) AS cajuelas,
+           COALESCE(SUM(b.fanegas), 0)::numeric(14,4) AS fanegas
      FROM lp_base b
-     INNER JOIN lot_production lp ON lp.id = b.lp_id
-     INNER JOIN lot_production_details lpd ON lpd.lot_production_id = lp.id
-     INNER JOIN calibers c ON c.id = lpd.caliber_id
-     GROUP BY c.id, c.name
-     ORDER BY kg DESC`,
+     GROUP BY 1
+     ORDER BY 1`,
     params
   );
   return res.rows.map((r) => ({
-    caliber_id: r.caliber_id,
-    caliber_name: r.caliber_name,
-    kg: round2(Number(r.kg || 0)),
+    work_week: r.work_week,
+    cajuelas: round2(Number(r.cajuelas || 0)),
+    fanegas: round2(Number(r.fanegas || 0)),
   }));
 }
 
@@ -1769,16 +1991,20 @@ async function getLotAreasMap({ clientId, farmId, lotId }) {
 function buildYieldByLot(rentLots, areaMap) {
   return rentLots.map((r) => {
     const ha = areaMap.get(String(r.lot_id));
-    const kg = Number(r.kg || 0);
-    const kgPerHa = ha != null && ha > 0 && kg > 0 ? round2(kg / ha) : null;
+    const fanegas = Number(r.fanegas || 0);
+    const cajuelas = Number(r.cajuelas || 0);
+    const fanegasPerHa = ha != null && ha > 0 && fanegas > 0 ? round4(fanegas / ha) : null;
     return {
       lot_id: r.lot_id,
       lot_name: r.lot_name,
       farm_id: r.farm_id,
       farm_name: r.farm_name,
-      kg: round2(kg),
+      cajuelas: round2(cajuelas),
+      fanegas: round4(fanegas),
+      kg: round4(fanegas),
       area_ha: ha != null && ha > 0 ? round2(ha) : null,
-      kg_per_ha: kgPerHa,
+      fanegas_per_ha: fanegasPerHa,
+      kg_per_ha: fanegasPerHa,
     };
   });
 }
@@ -1788,29 +2014,38 @@ function buildYieldByFarm(rentLots, areaMap) {
   for (const r of rentLots) {
     const key = r.farm_id ? String(r.farm_id) : r.farm_name;
     const ha = areaMap.get(String(r.lot_id));
-    const kg = Number(r.kg || 0);
+    const fanegas = Number(r.fanegas || 0);
+    const cajuelas = Number(r.cajuelas || 0);
     if (!byFarm.has(key)) {
       byFarm.set(key, {
         farm_id: r.farm_id,
         farm_name: r.farm_name,
+        cajuelas: 0,
+        fanegas: 0,
         kg: 0,
         area_ha: 0,
       });
     }
     const agg = byFarm.get(key);
-    agg.kg += kg;
+    agg.cajuelas += cajuelas;
+    agg.fanegas += fanegas;
+    agg.kg += fanegas;
     if (ha != null && ha > 0) agg.area_ha += ha;
   }
   return [...byFarm.values()]
     .map((f) => ({
       farm_id: f.farm_id,
       farm_name: f.farm_name,
-      kg: round2(f.kg),
+      cajuelas: round2(f.cajuelas),
+      fanegas: round4(f.fanegas),
+      kg: round4(f.fanegas),
       area_ha: f.area_ha > 0 ? round2(f.area_ha) : null,
+      fanegas_per_ha:
+        f.area_ha > 0 && f.fanegas > 0 ? round4(f.fanegas / f.area_ha) : null,
       kg_per_ha:
-        f.area_ha > 0 && f.kg > 0 ? round2(f.kg / f.area_ha) : null,
+        f.area_ha > 0 && f.fanegas > 0 ? round4(f.fanegas / f.area_ha) : null,
     }))
-    .sort((a, b) => (b.kg_per_ha || 0) - (a.kg_per_ha || 0));
+    .sort((a, b) => (b.fanegas_per_ha || 0) - (a.fanegas_per_ha || 0));
 }
 
 async function getExpensesByCategory({ clientId, from, to, farmId, lotId }) {
@@ -1920,6 +2155,7 @@ async function getOverview(query) {
     invTop,
     invLow,
     laborTypes,
+    laborByWorker,
     laborCostOcc,
     laborRegCounts,
     expByCat,
@@ -1940,12 +2176,13 @@ async function getOverview(query) {
     getInventoryTopConsumed({ clientId, from, to, farmId, lotId, limit: 15 }),
     getInventoryLowStock({ clientId, threshold: Number(query.low_stock_threshold) || 10, limit: 25 }),
     loadLaborByTypeBundle({ clientId, from, to, farmId, lotId }),
+    getLaborByWorker({ clientId, from, to, farmId, lotId }),
     getLaborCostByTypeOccasionalOnly({ clientId, from, to, farmId, lotId }),
     getLaborTypeRegistrationCounts({ clientId, from, to, farmId, lotId }),
     getExpensesByCategory({ clientId, from, to, farmId, lotId }),
     getHarvestKgBuckets({ clientId, from, to, farmId, lotId, bucket: 'week' }),
     getHarvestKgBuckets({ clientId, from, to, farmId, lotId, bucket: 'month' }),
-    getProductionKgByCaliber({ clientId, from, to, farmId, lotId }),
+    getProductionByWorkWeek({ clientId, from, to, farmId, lotId }),
     getDirectExpensesByLot({ clientId, from, to, farmId, lotId }),
     getInventoryConsumedByItemLot({ clientId, from, to, farmId, lotId, limit: 40 }),
     getLaborSpendByBucketOccasional({ clientId, from, to, farmId, lotId, bucket: 'month' }),
@@ -1954,8 +2191,8 @@ async function getOverview(query) {
     getLotAreasMap({ clientId, farmId, lotId }),
   ]);
 
-  const costPerKg =
-    prod.totalKg > 0 ? round2(costs.totalDirectCostsCrc / prod.totalKg) : null;
+  const costPerFanega =
+    prod.totalFanegas > 0 ? round2(costs.totalDirectCostsCrc / prod.totalFanegas) : null;
   const marginTotalCrc = round2(prod.totalRevenueCrc - costs.totalDirectCostsCrc);
 
   const yieldByLot = buildYieldByLot(rentLots, lotAreasMap);
@@ -1965,13 +2202,18 @@ async function getOverview(query) {
   const costPerHaByFarm = buildCostPerHaByFarm(rentLots, lotAreasMap);
 
   return {
+    production_mode: 'cafe',
+    production_unit: 'fanega',
     period: { from, to },
     filters: { farm_id: farmId, lot_id: lotId },
     cost_production: {
-      total_kg: prod.totalKg,
+      total_cajuelas: round2(prod.totalCajuelas),
+      total_fanegas: round4(prod.totalFanegas),
+      total_kg: round4(prod.totalFanegas),
       total_revenue_crc: prod.totalRevenueCrc,
       total_direct_costs_crc: costs.totalDirectCostsCrc,
-      cost_per_kg_crc: costPerKg,
+      cost_per_fanega_crc: costPerFanega,
+      cost_per_kg_crc: costPerFanega,
       margin_total_crc: marginTotalCrc,
       breakdown_crc: {
         expenses: costs.expensesCrc,
@@ -1991,12 +2233,13 @@ async function getOverview(query) {
     inventory_low_stock: invLow,
     labor_by_type: laborTypes.labor_by_type,
     labor_by_type_presence_payroll: laborTypes.labor_by_type_presence_payroll,
+    labor_by_worker: laborByWorker,
     labor_cost_by_type_ocasional: laborCostOcc,
     labor_type_registrations: laborRegCounts,
     expenses_by_category: expByCat,
     harvest_weekly_kg: harvestWeek,
     harvest_monthly_kg: harvestMonth,
-    production_kg_by_caliber: byCaliber,
+    production_by_work_week: byCaliber,
     direct_expenses_by_lot: dirExpLots,
     direct_expenses_by_farm: directExpensesByFarm,
     inventory_consumed_by_item_lot: invItemLot,
@@ -2008,13 +2251,15 @@ async function getOverview(query) {
     cost_per_ha_by_lot: costPerHaByLot,
     cost_per_ha_by_farm: costPerHaByFarm,
     notes: [
-      'El costo por kg usa la suma de kilos registrados en producción (detalle por calibre) en el periodo.',
-      'Los ingresos se toman del valor declarado en producción (kilos × precio por kg).',
+      'El costo por fanega usa fanegas de producción de café registradas en el periodo (cajuelas ÷ 20 en cada registro diario).',
+      'Los ingresos se calculan como fanegas × precio por fanega (CRC) de la cosecha activa cuyo rango cubre la fecha de producción; sin precio o sin cosecha, esa producción aporta 0 al ingreso.',
       'El costo de planilla variable proviene solo de planillas en estado pagada, repartido por lotes (payroll_slip_lot_allocations).',
       'La depreciación de activos fijos (activos y periodos de depreciación en estado activo) se incluye en costos directos: se escala al alcance del filtro por proporción de hectáreas de lote y se reparte entre lotes por área.',
+      'Las labores en días ya cubiertos por planilla pagada del mismo trabajador no se suman al costeo de jornales (evita duplicar con planilla).',
       'La tabla “Labores por tipo” (resumen global) sigue mostrando jornadas netas más planilla variable y nómina fija a lotes atribuida por tipo; la vista de mano de obra usa además columnas dedicadas: costo por tipo solo ocasionales, registros por tipo (todos los trabajadores) y picos temporales solo ocasionales.',
-      'En la pantalla de mano de obra: «Costo por tipo (ocasionales)» suma montos de registros de labor (monto distinto de cero) de trabajadores ocasionales, sin excluir días cubiertos por planilla pagada ni sumar planilla. «Tipos más realizados» cuenta registros de labor con todos los trabajadores. Picos semana/mes/año suman montos de jornadas solo de ocasionales.',
-      'Rendimiento (kg/ha) y costo/ha usan el área en hectáreas registrada en cada lote; lotes sin área no aportan al cociente.',
+      'En la pantalla de mano de obra: «Mano de obra por trabajador» muestra horas registradas (unidad hora) y total pagado = labores netas + planilla variable a lotes + nómina fija a lotes. «Costo por tipo (ocasionales)» suma montos de registros de labor (monto distinto de cero) de trabajadores ocasionales, sin excluir días cubiertos por planilla pagada ni sumar planilla. «Tipos más realizados» cuenta registros de labor con todos los trabajadores. Picos semana/mes/año suman montos de jornadas solo de ocasionales.',
+      'Rendimiento (fanegas/Ha) y costo/ha usan el área en hectáreas registrada en cada lote; lotes sin área no aportan al cociente.',
+      'Las curvas de cosecha semanal y mensual muestran fanegas agrupadas por periodo.',
     ],
   };
 }

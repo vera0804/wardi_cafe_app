@@ -67,4 +67,10 @@ module.exports = {
    * Desactivar solo para depuración: TENANT_RLS_REQUEST_SCOPE=0
    */
   tenantRlsRequestScope: process.env.TENANT_RLS_REQUEST_SCOPE !== '0',
+
+  /** Zona horaria para vencimiento de licencia y cron (IANA). */
+  licenseTimezone: process.env.LICENSE_TIMEZONE || 'America/Costa_Rica',
+  /** Cron diario: 23:59 en licenseTimezone. */
+  licenseCronSchedule: process.env.LICENSE_CRON_SCHEDULE || '59 23 * * *',
+  licenseCronEnabled: process.env.LICENSE_CRON_ENABLED !== '0',
 };

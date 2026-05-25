@@ -58,6 +58,21 @@ async function main() {
             (SELECT rolsuper FROM pg_roles WHERE rolname = current_user) AS is_superuser,
             (SELECT rolbypassrls FROM pg_roles WHERE rolname = current_user) AS bypass_rls`
   );
+  const licenseCols = await c.query(
+    `SELECT
+       EXISTS (
+         SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = 'clients' AND column_name = 'license_expires_on'
+       ) AS clients_ok,
+       EXISTS (
+         SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = 'plans' AND column_name = 'billing_model'
+       ) AS plans_ok,
+       EXISTS (
+         SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = 'plans' AND column_name = 'is_active'
+       ) AS plans_active_ok`
+  );
 
   console.log('=== Migraciones (schema_migrations) ===');
   if (!migTable.rows[0].ok) {
@@ -70,6 +85,17 @@ async function main() {
   console.log('\n=== RLS ===');
   console.log(`  app_current_tenant_id(): ${fn.rows[0].ok ? 'sí' : 'NO'}`);
   console.log(`  Políticas wardi_tenant_isolation: ${rls.rows[0].policies} en ${rls.rows[0].tables} tablas`);
+
+  console.log('\n=== Licencias (columnas) ===');
+  console.log(
+    `  clients.license_expires_on: ${licenseCols.rows[0].clients_ok ? 'sí' : 'NO (aplique 20260521170000)'}`
+  );
+  console.log(
+    `  plans.billing_model: ${licenseCols.rows[0].plans_ok ? 'sí' : 'NO (aplique 20260521170000)'}`
+  );
+  console.log(
+    `  plans.is_active: ${licenseCols.rows[0].plans_active_ok ? 'sí' : 'NO (aplique 20260522120000)'}`
+  );
 
   console.log('\n=== Rol de conexión actual ===');
   console.log(`  Usuario: ${role.rows[0].db_user}`);

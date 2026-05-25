@@ -82,7 +82,7 @@ async function assertValidVarieties(varietyIds) {
   if (!varietyIds || varietyIds.length === 0) return;
   const res = await pool.query(
     `SELECT id
-     FROM avocado_varieties
+     FROM coffee_varieties
      WHERE id = ANY($1::uuid[])
        AND is_active = true`,
     [varietyIds]
@@ -96,10 +96,10 @@ async function assertValidVarieties(varietyIds) {
 
 async function replaceLotVarieties({ db, lotId, userId, varietyIds }) {
   if (varietyIds === undefined) return;
-  await db.query(`DELETE FROM lot_avocado_varieties WHERE lot_id = $1`, [lotId]);
+  await db.query(`DELETE FROM lot_coffee_varieties WHERE lot_id = $1`, [lotId]);
   if (!varietyIds.length) return;
   await db.query(
-    `INSERT INTO lot_avocado_varieties (lot_id, avocado_variety_id, created_by_user_id, updated_by_user_id)
+    `INSERT INTO lot_coffee_varieties (lot_id, coffee_variety_id, created_by_user_id, updated_by_user_id)
      SELECT $1, v.id, $2, $2
      FROM unnest($3::uuid[]) AS v(id)`,
     [lotId, userId, varietyIds]
@@ -112,8 +112,8 @@ async function getVarietiesByLotIds(lotIds) {
     `SELECT lcv.lot_id,
             cv.id,
             COALESCE(NULLIF(trim(cv.display_name), ''), cv.name) AS name
-     FROM lot_avocado_varieties lcv
-     JOIN avocado_varieties cv ON cv.id = lcv.avocado_variety_id
+     FROM lot_coffee_varieties lcv
+     JOIN coffee_varieties cv ON cv.id = lcv.coffee_variety_id
      WHERE lcv.lot_id = ANY($1::uuid[])
        AND lcv.is_active = true
      ORDER BY name ASC`,
@@ -406,7 +406,7 @@ async function listActiveFarmsForLots({ clientId }) {
 async function listActiveVarieties() {
   const res = await pool.query(
     `SELECT id, COALESCE(NULLIF(trim(display_name), ''), name) AS name
-     FROM avocado_varieties
+     FROM coffee_varieties
      WHERE is_active = true
      ORDER BY name ASC`
   );

@@ -358,7 +358,7 @@ export default function WorkersPage({ user }) {
                   </p>
                 ) : (
                   <p className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-700">
-                    Use <strong>Ocasional</strong> cuando el pago dependa de jornales, horas o tareas. Los costos de esas
+                    Use <strong>Ocasional</strong> cuando el pago dependa de jornales, horas, cajuelas u otras tareas. Los costos de esas
                     labores se calculan con la <strong>tarifa</strong> que registre en cada labor.
                   </p>
                 )}

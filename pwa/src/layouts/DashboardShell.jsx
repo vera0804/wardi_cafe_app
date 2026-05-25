@@ -8,6 +8,7 @@ import {
 } from './dashboardMenuData.js';
 import DashboardMenuIcon from './DashboardMenuIcon.jsx';
 import { getUserDisplayName } from '../utils/userDisplayName.js';
+import { isTenantAdmin } from './dashboardMenuData.js';
 import OfflineStatusBar from '../components/OfflineStatusBar.jsx';
 
 /**
@@ -26,6 +27,14 @@ export default function DashboardShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const displayName = getUserDisplayName(user);
+
+  const licenseExpiryLabel = (() => {
+    if (user?.licenseExpiresOnDisplay) return user.licenseExpiresOnDisplay;
+    const iso = user?.licenseExpiresOn;
+    if (!iso || typeof iso !== 'string') return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+    return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+  })();
 
   function handleMenuClick(item) {
     onMenuItemClick(item.label);
@@ -104,7 +113,7 @@ export default function DashboardShell({
               >
                 {sidebarCollapsed ? '»' : '«'}
               </button>
-              <div className="font-semibold text-lime-700">Wardi Aguacate</div>
+              <div className="font-semibold text-lime-700">Wardi Café</div>
             </div>
             <div className="flex items-center gap-4">
               <span className="text-slate-600">{displayName}</span>
@@ -140,6 +149,12 @@ export default function DashboardShell({
                   {' '}
                   · <span className="font-semibold">{user.clientName}</span>
                 </>
+              ) : null}
+              {isTenantAdmin(user) && licenseExpiryLabel ? (
+                <p className="mt-2 border-t border-slate-200/80 pt-2 text-slate-600">
+                  Vencimiento de la licencia:{' '}
+                  <span className="font-semibold text-slate-800">{licenseExpiryLabel}</span>
+                </p>
               ) : null}
             </div>
           </div>

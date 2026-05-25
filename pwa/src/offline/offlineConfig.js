@@ -2,7 +2,7 @@
 export const OFFLINE_MENU_LABELS = new Set([
   'Inventario',
   'Aplicaciones',
-  'Producción de aguacate',
+  'Producción de café',
   'Trabajadores',
   'Registro de labores',
   'Gastos',
@@ -19,8 +19,7 @@ export const OFFLINE_API_GET_PREFIXES = [
   '/api/geo',
   '/api/workers',
   '/api/labor-entries',
-  '/api/calibers',
-  '/api/avocado-production',
+  '/api/lot-production',
   '/api/inventory-items',
   '/api/inventory-brands',
   '/api/inventory-movements',
@@ -30,6 +29,8 @@ export const OFFLINE_API_GET_PREFIXES = [
   '/api/general-expenses',
   '/api/general-expense-allocations',
   '/api/expense-categories',
+  '/api/harvests',
+  '/api/harvest-estimates',
 ];
 
 /**
@@ -40,8 +41,7 @@ export const OFFLINE_API_MUTATION_PREFIXES = [
   '/api/lots',
   '/api/workers',
   '/api/labor-entries',
-  '/api/calibers',
-  '/api/avocado-production',
+  '/api/lot-production',
   '/api/inventory-items',
   '/api/inventory-brands',
   '/api/inventory-movements',

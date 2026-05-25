@@ -9,6 +9,12 @@ function fmtPeriod(d) {
   return String(d).slice(0, 10);
 }
 
+const WORKER_TYPE_LABELS = {
+  fijo: 'Fijo',
+  ocasional: 'Ocasional',
+  recolector: 'Recolector',
+};
+
 function LaborBars({ rows }) {
   const maxVal = Math.max(0.0001, ...rows.map((r) => Number(r.amount_crc || 0)));
   return (
@@ -50,42 +56,17 @@ export default function StatsManoObraPage() {
     cp?.breakdown_crc?.labor != null ? Number(cp.breakdown_crc.labor) : 0;
   /** Labores CRC + planilla variable a lotes + nómina fija pagada a lotes (coherente con la suma de tipos). */
   const laborInvestmentTotal = laborNetForCosting + payrollPaidToLots + fixedPayrollToLots;
-  const totalKg = cp?.total_kg != null ? Number(cp.total_kg) : 0;
-  const laborPerKgInvestment =
-    totalKg > 0 && laborInvestmentTotal > 0 ? laborInvestmentTotal / totalKg : null;
-
-  const periodLine = st.data?.period
-    ? `Periodo aplicado: ${st.data.period.from} — ${st.data.period.to}${
-        st.data.filters?.farm_id ? ' · Finca filtrada' : ''
-      }${st.data.filters?.lot_id ? ' · Lote filtrado' : ''}`
-    : null;
-
-  const filtersProps = {
-    from: st.from,
-    to: st.to,
-    farmId: st.farmId,
-    lotId: st.lotId,
-    lowStock: st.lowStock,
-    farms: st.farms,
-    lots: st.lots,
-    loading: st.loading,
-    onFromChange: st.setFrom,
-    onToChange: st.setTo,
-    onFarmChange: (v) => {
-      st.setFarmId(v);
-      st.setLotId('');
-    },
-    onLotChange: st.setLotId,
-    onLowStockChange: st.setLowStock,
-    onRefresh: st.refresh,
-  };
+  const totalFanegas =
+    cp?.total_fanegas != null ? Number(cp.total_fanegas) : cp?.total_kg != null ? Number(cp.total_kg) : 0;
+  const laborPerFanegaInvestment =
+    totalFanegas > 0 && laborInvestmentTotal > 0 ? laborInvestmentTotal / totalFanegas : null;
 
   return (
     <StatsSectionShell
       title="Mano de obra (labores y planilla)"
-      description="Resumen de inversión (todos los trabajadores), costo por tipo solo ocasionales, frecuencia de tipos de labor (todos) y picos temporales de jornadas ocasionales."
-      filtersProps={filtersProps}
-      periodLine={periodLine}
+      description="Resumen de inversión (todos los trabajadores), mano de obra por trabajador, costo por tipo solo ocasionales, frecuencia de tipos de labor (todos) y picos temporales de jornadas ocasionales."
+      filtersProps={st.filtersProps}
+      periodLine={st.periodLine}
     >
       {st.loading && !st.data ? <p className="text-sm text-stone-500">Cargando datos…</p> : null}
       {st.error ? (
@@ -104,12 +85,12 @@ export default function StatsManoObraPage() {
                 subtitle={`${crc(laborNetForCosting)} labores CRC + ${crc(payrollPaidToLots)} planilla variable a lotes + ${crc(fixedPayrollToLots)} nómina fija a lotes`}
               />
               <KpiCard
-                title="Mano de obra por kg producido"
-                value={laborPerKgInvestment != null ? crc(laborPerKgInvestment) : '—'}
+                title="Mano de obra por fanega producida"
+                value={laborPerFanegaInvestment != null ? crc(laborPerFanegaInvestment) : '—'}
                 subtitle={
-                  totalKg > 0
-                    ? `Inversión total en M.O. ÷ ${num(totalKg, 3)} kg`
-                    : 'Sin kg en el periodo'
+                  totalFanegas > 0
+                    ? `Inversión total en M.O. ÷ ${num(totalFanegas, 4)} fanegas`
+                    : 'Sin fanegas en el periodo'
                 }
               />
               <KpiCard
@@ -118,6 +99,63 @@ export default function StatsManoObraPage() {
                 subtitle="Variable según planillas en estado pagada"
               />
             </div>
+          </section>
+
+          <section>
+            <h2 className="mb-1 text-lg font-semibold text-stone-900">Mano de obra por trabajador</h2>
+            <p className="mb-3 text-sm text-stone-600">
+              Total pagado y horas registradas por trabajador en el periodo y alcance del filtro (finca, lote o todos
+              los lotes). El <strong>total pagado</strong> suma labores no duplicadas con planilla del mismo día, más
+              planilla variable y nómina fija asignada a lotes (coherente con el resumen de inversión). Las{' '}
+              <strong>horas</strong> son la suma de cantidades en registros con unidad «hora».
+            </p>
+            {st.data?.labor_by_worker?.length ? (
+              <TableWrap>
+                <thead className="border-b border-stone-200 bg-stone-50">
+                  <tr>
+                    <th className="p-3 text-left font-medium text-stone-700">Trabajador</th>
+                    <th className="p-3 text-left font-medium text-stone-700">Tipo</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Horas</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Labores (neto)</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Planilla var.</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Nómina fija</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Total pagado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {st.data.labor_by_worker.map((r) => (
+                    <tr
+                      key={String(r.worker_id)}
+                      className="border-b border-stone-100 hover:bg-stone-50/80"
+                    >
+                      <td className="p-3 text-stone-800">{r.worker_name}</td>
+                      <td className="p-3 text-stone-600">
+                        {WORKER_TYPE_LABELS[r.worker_type] || r.worker_type || '—'}
+                      </td>
+                      <td className="p-3 text-right tabular-nums text-stone-800">
+                        {Number(r.hours_registered || 0) > 0 ? num(r.hours_registered, 2) : '—'}
+                      </td>
+                      <td className="p-3 text-right tabular-nums text-stone-700">
+                        {crc(r.amount_labor_entries_net_crc)}
+                      </td>
+                      <td className="p-3 text-right tabular-nums text-stone-700">
+                        {crc(r.amount_payroll_variable_crc)}
+                      </td>
+                      <td className="p-3 text-right tabular-nums text-stone-700">
+                        {crc(r.amount_fixed_payroll_crc)}
+                      </td>
+                      <td className="p-3 text-right tabular-nums font-medium text-stone-900">
+                        {crc(r.amount_total_paid_crc)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </TableWrap>
+            ) : (
+              <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 shadow-sm">
+                Sin labores, planilla ni nómina fija en el periodo para el alcance seleccionado.
+              </div>
+            )}
           </section>
 
           <section>

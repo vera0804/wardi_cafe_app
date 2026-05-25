@@ -10,7 +10,7 @@ const METADATA_IPV4 = new Set(['169.254.169.254']);
 function allowedHostnamesFromEnv() {
   const raw = process.env.BCCR_ALLOWED_HOSTS;
   if (!raw || !String(raw).trim()) {
-    return new Set(['ws.sdde.bccr.fi.cr']);
+    return new Set(['apim.bccr.fi.cr']);
   }
   return new Set(
     String(raw)
@@ -137,11 +137,62 @@ async function validateBccrFetchTarget(rawUrl) {
     throw Object.assign(new Error(`BCCR_DNS:${msg}`), { status: 500 });
   }
 
-  /* href normalizado HTTPS sin credenciales */
-  return `${u.href}`;
+  /* Base API sin barra final; credenciales van en Authorization, no en la URL */
+  return u.href.replace(/\/+$/, '');
+}
+
+/**
+ * @param {string} isoDate YYYY-MM-DD
+ * @returns {string} yyyy/mm/dd (formato REST SDDE)
+ */
+function isoToBccrRestDate(isoDate) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(isoDate).trim());
+  if (!m) {
+    throw Object.assign(new Error('La fecha debe ser YYYY-MM-DD.'), { status: 400 });
+  }
+  return `${m[1]}/${m[2]}/${m[3]}`;
+}
+
+/**
+ * Construye la URL de series bajo la base validada (mismo host, sin SSRF).
+ *
+ * @param {string} validatedBaseHref
+ * @param {string} indicador Código numérico (317, 318, …)
+ * @param {string} isoDate YYYY-MM-DD
+ * @returns {string}
+ */
+function buildBccrSeriesUrl(validatedBaseHref, indicador, isoDate) {
+  const code = String(indicador || '').trim();
+  if (!/^\d+$/.test(code)) {
+    throw Object.assign(new Error('Código de indicador BCCR inválido.'), { status: 500 });
+  }
+
+  const base = new URL(`${validatedBaseHref.replace(/\/+$/, '')}/`);
+  const allow = allowedHostnamesFromEnv();
+  const host = base.hostname.toLowerCase();
+  if (!allow.has(host)) {
+    throw Object.assign(
+      new Error(`BCCR: host '${host}' no está en la lista permitida.`),
+      { status: 500 }
+    );
+  }
+
+  const u = new URL(`indicadoresEconomicos/${encodeURIComponent(code)}/series`, base);
+  const fecha = isoToBccrRestDate(isoDate);
+  u.searchParams.set('fechaInicio', fecha);
+  u.searchParams.set('fechaFin', fecha);
+  u.searchParams.set('idioma', 'ES');
+
+  if (u.hostname.toLowerCase() !== host) {
+    throw Object.assign(new Error('URL de series BCCR con host no permitido.'), { status: 500 });
+  }
+
+  return u.href;
 }
 
 module.exports = {
   validateBccrFetchTarget,
+  buildBccrSeriesUrl,
+  isoToBccrRestDate,
   allowedHostnamesFromEnv,
 };

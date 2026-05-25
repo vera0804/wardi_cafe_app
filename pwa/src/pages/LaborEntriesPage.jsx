@@ -36,10 +36,17 @@ function dateToday() {
   return new Date().toISOString().slice(0, 10);
 }
 
+const UNIT_LABELS = {
+  jornal: 'Jornal',
+  hora: 'Hora',
+  caja: 'Caja',
+  bolsas: 'Bolsas',
+  cajuela: 'Cajuela',
+};
+
 function unitLabel(unit) {
   const v = String(unit || '').toLowerCase();
-  if (!v) return '';
-  return v.charAt(0).toUpperCase() + v.slice(1);
+  return UNIT_LABELS[v] || (v ? v.charAt(0).toUpperCase() + v.slice(1) : '');
 }
 
 function sumAllocations(items) {
@@ -52,7 +59,7 @@ export default function LaborEntriesPage({ user }) {
     lots: [],
     workers: [],
     laborTypes: [],
-    units: ['jornal', 'hora', 'caja', 'bolsas'],
+    units: ['jornal', 'hora', 'caja', 'bolsas', 'cajuela'],
   });
   const [rows, setRows] = useState([]);
   const [summaryLot, setSummaryLot] = useState([]);
@@ -103,7 +110,7 @@ export default function LaborEntriesPage({ user }) {
           lots: data?.lots || [],
           workers: data?.workers || [],
           laborTypes: data?.laborTypes || [],
-          units: data?.units || ['jornal', 'hora', 'caja', 'bolsas'],
+          units: data?.units || ['jornal', 'hora', 'caja', 'bolsas', 'cajuela'],
         });
       } catch (e) {
         setListError(e?.message || 'No se pudo cargar metadata de labores.');

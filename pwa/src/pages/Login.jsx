@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 
-const LICENSE_MSG =
-  'Tu licencia ha expirado. Contacta al administrador para renovar el acceso.';
+const LICENSE_MSG = 'Licencia vencida';
 
 export default function Login() {
   const { login, user, ready } = useAuth();
@@ -39,7 +38,11 @@ export default function Login() {
       }
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(err?.message || 'No se pudo iniciar sesión. Intenta de nuevo.');
+      if (err?.code === 'LICENSE_EXPIRED') {
+        setError(LICENSE_MSG);
+      } else {
+        setError(err?.message || 'No se pudo iniciar sesión. Intenta de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
@@ -55,7 +58,7 @@ export default function Login() {
             className="mb-4 h-32 w-auto object-contain"
           />
           <h1 className="text-balance text-lg font-semibold leading-snug text-lime-950">
-            Sistema de Gestión de Fincas Aguacateras
+            Sistema de Gestión de Fincas Cafetaleras
           </h1>
         </header>
 

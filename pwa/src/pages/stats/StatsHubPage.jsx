@@ -3,24 +3,24 @@ import { Link } from 'react-router-dom';
 const MODULES = [
   {
     to: '/stats/produccion',
-    emoji: '🥑',
+    emoji: '☕',
     title: '1. Producción y rendimiento',
     description:
-      'Costo por kg, producción total, comparación por lotes y fincas, rendimiento por hectárea, curva de cosecha y kg por calibre.',
+      'Costo por fanega, volumen en cajuelas y fanegas, ingresos por precio de cosecha, rendimiento por hectárea y curvas semanal/mensual.',
   },
   {
     to: '/stats/costos',
     emoji: '💰',
     title: '2. Costos, gastos e inversión',
     description:
-      'Gastos por finca y lote, costo por hectárea, top 10 rubros de gasto y costo por kg a nivel lote y finca.',
+      'Gastos por finca y lote, costo por hectárea, top 10 rubros de gasto y costo por fanega a nivel lote y finca.',
   },
   {
     to: '/stats/mano-obra',
     emoji: '🧑‍🌾',
     title: '3. Mano de obra (labores y planilla)',
     description:
-      'Inversión en mano de obra, costo por tipo de labor, mano de obra por kg producido y picos por semana, mes y año.',
+      'Inversión en mano de obra, costo por tipo de labor, mano de obra por fanega producida y picos por semana, mes y año.',
   },
   {
     to: '/stats/inventario',
@@ -33,19 +33,19 @@ const MODULES = [
     emoji: '📈',
     title: '5. Rentabilidad',
     description:
-      'Fincas y lotes más rentables, margen por kg, y comparación de costo total frente a producción e ingresos por lote.',
+      'Fincas y lotes más rentables, margen por fanega, y comparación de costo total frente a producción e ingresos por lote.',
   },
 ];
 
 export default function StatsHubPage() {
   return (
     <div className="mx-auto w-full min-w-0 max-w-3xl">
-      <h1 className="mb-2 text-xl font-semibold text-stone-800">Estadísticas</h1>
+      <h1 className="mb-2 text-xl font-semibold text-stone-800">Estadísticas de café</h1>
       <p className="mb-8 text-sm text-stone-600">
-        Indicadores y análisis de la operación del cultivo de aguacate. En cada módulo puede filtrar por{' '}
-        <strong>rango de fechas</strong>, <strong>finca</strong> y <strong>lote</strong>; en inventario también por umbral
-        de stock bajo. En algunas pantallas verá la sigla{' '}
-        <dfn title="Indicadores clave de desempeño">KPI</dfn> (indicadores clave de desempeño).
+        Indicadores y análisis de la operación cafetalera. En cada módulo puede filtrar por{' '}
+        <strong>rango de fechas</strong>, <strong>cosecha</strong> (atajo que rellena el periodo),{' '}
+        <strong>finca</strong> y <strong>lote</strong>; en inventario y resumen también por umbral de stock bajo. Los
+        volúmenes se expresan en <strong>fanegas</strong> (cajuelas ÷ 20).
       </p>
       <ul className="space-y-3">
         {MODULES.map((m) => (

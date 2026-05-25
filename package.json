@@ -1,5 +1,5 @@
 {
-  "name": "wardi-aguacate-app",
+  "name": "wardi-cafe-app",
   "private": true,
   "description": "Monorepo Wardi (PWA + API). Scripts raíz pendientes de alinear con build integrado.",
   "scripts": {

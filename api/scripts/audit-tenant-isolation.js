@@ -20,8 +20,9 @@ const MOUNTED_ROUTES = [
   { mount: '/api/lots', file: 'lots.routes.js', tenantScope: 'tenant' },
   { mount: '/api/workers', file: 'workers.routes.js', tenantScope: 'tenant' },
   { mount: '/api/labor-entries', file: 'labor-entries.routes.js', tenantScope: 'tenant' },
-  { mount: '/api/calibers', file: 'calibers.routes.js', tenantScope: 'tenant' },
-  { mount: '/api/avocado-production', file: 'avocado-production.routes.js', tenantScope: 'tenant' },
+  { mount: '/api/lot-production', file: 'lot-production.routes.js', tenantScope: 'tenant' },
+  { mount: '/api/harvests', file: 'harvests.routes.js', tenantScope: 'tenant' },
+  { mount: '/api/harvest-estimates', file: 'harvest-estimates.routes.js', tenantScope: 'tenant' },
   { mount: '/api/inventory-items', file: 'inventory-items.routes.js', tenantScope: 'tenant' },
   { mount: '/api/inventory-brands', file: 'inventory-brands.routes.js', tenantScope: 'tenant' },
   { mount: '/api/inventory-movements', file: 'inventory-movements.routes.js', tenantScope: 'tenant' },
@@ -74,9 +75,10 @@ const EXPECT_TENANT_FILTER = new Set([
   'clients',
   'users',
   'sessions',
-  'lot_production',
-  'lot_production_allocations',
-  'lot_production_details',
+  'coffee_lot_production',
+  'fixed_payroll',
+  'fixed_payroll_allocations',
+  'payroll_slip_lot_allocations',
 ]);
 
 const GLOBAL_TABLE_WHITELIST = new Set([
@@ -85,9 +87,7 @@ const GLOBAL_TABLE_WHITELIST = new Set([
   'districts',
   'roles',
   'plans',
-  'avocado_calibers',
-  'calibers',
-  'avocado_varieties',
+  'coffee_varieties',
   'labor_types',
   'client_plans',
 ]);
@@ -116,7 +116,7 @@ function classifySqlLiteral({ serviceFile, sql, table }) {
   }
 
   if (
-    /^DELETE FROM (labor_entry_allocations|payroll_slip_lot_allocations|lot_production_allocations|lot_production_details)\b/i.test(
+    /^DELETE FROM (labor_entry_allocations|payroll_slip_lot_allocations)\b/i.test(
       norm
     ) &&
     /EXISTS\s*\(/i.test(norm)
@@ -130,6 +130,27 @@ function classifySqlLiteral({ serviceFile, sql, table }) {
 
   if (table === 'labor_types') {
     return { kind: 'skip', reason: 'catálogo global labor_types' };
+  }
+
+  if (table === 'fixed_payroll' && /FROM\s+public\.workers\s+w/i.test(norm) && /w\.client_id/i.test(norm)) {
+    return { kind: 'skip', reason: 'fixed_payroll acotado por workers.client_id (RLS vía política)' };
+  }
+
+  if (
+    table === 'fixed_payroll_allocations' &&
+    /fixed_payroll\s+fp/i.test(norm) &&
+    /workers\s+w/i.test(norm) &&
+    /lots\s+l/i.test(norm)
+  ) {
+    return { kind: 'skip', reason: 'fixed_payroll_allocations acotado por fp/worker y lots (RLS vía política)' };
+  }
+
+  if (
+    table === 'payroll_slip_lot_allocations' &&
+    /payroll_slips\s+ps/i.test(norm) &&
+    /ps\.client_id/i.test(norm)
+  ) {
+    return { kind: 'skip', reason: 'payroll_slip_lot_allocations acotado por payroll_slips/lots (RLS vía política)' };
   }
 
   return { kind: 'review', reason: 'revisar manualmente o añadir filtro client_id / EXISTS' };

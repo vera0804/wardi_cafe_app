@@ -1,109 +1,17 @@
 /**
- * Consulta tipo de cambio USD vía SOAP del BCCR (SDDE), con caché en memoria y reintentos.
- * Variables: BCCR_API_URL (solo HTTPS, host en lista blanca/DNS validado), BCCR_ALLOWED_HOSTS (opcional),
- * BCCR_TOKEN, BCCR_INDICADOR_VENTA, BCCR_INDICADOR_COMPRA, opcional BCCR_NOMBRE, BCCR_CORREO.
+ * Tipo de cambio USD vía API REST pública del BCCR (SDDE), con caché en memoria y reintentos.
+ * Variables: BCCR_API_URL (base HTTPS, host en lista blanca/DNS), BCCR_ALLOWED_HOSTS (opcional),
+ * BCCR_TOKEN (Bearer), BCCR_INDICADOR_VENTA, BCCR_INDICADOR_COMPRA.
  */
 
-const { validateBccrFetchTarget } = require('../lib/bccrUrlSafety');
+const { validateBccrFetchTarget, buildBccrSeriesUrl } = require('../lib/bccrUrlSafety');
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 20_000;
 const MAX_ATTEMPTS = 2;
-/** SOAP 1.1: muchos endpoints .asmx esperan la URI entre comillas. */
-const SOAP_ACTION = '"http://ws.sdde.bccr.fi.cr/ObtenerIndicadoresEconomicosXML"';
 
 /** @type {Map<string, { rate: number, storedAt: number, validUntil: number }>} */
 const memoryCache = new Map();
-
-function escapeXml(s) {
-  return String(s ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-/**
- * @param {string} isoDate YYYY-MM-DD
- * @returns {string} dd/mm/yyyy
- */
-function isoToDdMmYyyy(isoDate) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
-  if (!m) throw Object.assign(new Error('La fecha debe ser YYYY-MM-DD.'), { status: 400 });
-  return `${m[3]}/${m[2]}/${m[1]}`;
-}
-
-function buildSoapEnvelope({ indicador, fechaDdMmYyyy, nombre, correo, token }) {
-  return `<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
-    <ObtenerIndicadoresEconomicosXML xmlns="http://ws.sdde.bccr.fi.cr">
-      <Indicador>${escapeXml(indicador)}</Indicador>
-      <FechaInicio>${escapeXml(fechaDdMmYyyy)}</FechaInicio>
-      <FechaFinal>${escapeXml(fechaDdMmYyyy)}</FechaFinal>
-      <Nombre>${escapeXml(nombre)}</Nombre>
-      <SubNiveles>N</SubNiveles>
-      <CorreoElectronico>${escapeXml(correo)}</CorreoElectronico>
-      <Token>${escapeXml(token)}</Token>
-    </ObtenerIndicadoresEconomicosXML>
-  </soap:Body>
-</soap:Envelope>`;
-}
-
-function decodeXmlEntities(text) {
-  let s = String(text);
-  while (s.includes('&amp;')) {
-    s = s.replace(/&amp;/g, '&');
-  }
-  return s
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&apos;/gi, "'")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
-}
-
-function parseLocaleNumber(raw) {
-  const s = String(raw).trim();
-  if (!s) return NaN;
-  if (s.includes(',') && s.includes('.')) {
-    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
-      return Number(s.replace(/\./g, '').replace(',', '.'));
-    }
-    return Number(s.replace(/,/g, ''));
-  }
-  if (s.includes(',')) return Number(s.replace(/\./g, '').replace(',', '.'));
-  return Number(s.replace(/,/g, ''));
-}
-
-/**
- * @param {string} soapXmlText
- * @returns {number}
- */
-function extractRateFromSoap(soapXmlText) {
-  const decoded = decodeXmlEntities(soapXmlText);
-  const reResult = /<ObtenerIndicadoresEconomicosXMLResult>([\s\S]*?)<\/ObtenerIndicadoresEconomicosXMLResult>/i;
-  const mr = decoded.match(reResult);
-  let payload = mr ? mr[1].trim() : decoded;
-  const cdata = payload.match(/<!\[CDATA\[([\s\S]*?)\]\]>/i);
-  if (cdata) payload = decodeXmlEntities(cdata[1].trim());
-
-  const patterns = [
-    /<NUM_VALOR>\s*([\d.,]+)\s*<\/NUM_VALOR>/i,
-    /<DES_VALOR>\s*([\d.,]+)\s*<\/DES_VALOR>/i,
-    /<VALOR>\s*([\d.,]+)\s*<\/VALOR>/i,
-    /NUM_VALOR["']?\s*>\s*([\d.,]+)/i,
-  ];
-  for (const re of patterns) {
-    const m = payload.match(re);
-    if (m && m[1]) {
-      const n = parseLocaleNumber(m[1]);
-      if (Number.isFinite(n) && n > 0) return n;
-    }
-  }
-  throw new Error('No se pudo interpretar el tipo de cambio en la respuesta del BCCR.');
-}
 
 function getBccrEnvOrThrow() {
   const url = process.env.BCCR_API_URL && String(process.env.BCCR_API_URL).trim();
@@ -115,9 +23,7 @@ function getBccrEnvOrThrow() {
     err.status = 500;
     throw err;
   }
-  const nombre = (process.env.BCCR_NOMBRE && String(process.env.BCCR_NOMBRE).trim()) || 'Wardi';
-  const correo = (process.env.BCCR_CORREO && String(process.env.BCCR_CORREO).trim()) || '';
-  return { url, token, nombre, correo };
+  return { url, token };
 }
 
 function getIndicatorForKind(kind) {
@@ -170,32 +76,126 @@ function writeCache(key, rate) {
   });
 }
 
-async function fetchBccrSoapOnce({ url, body }) {
+/**
+ * @param {unknown} payload
+ * @param {string} isoDate YYYY-MM-DD
+ * @returns {number}
+ */
+function extractRateFromJson(payload, isoDate) {
+  if (!payload || typeof payload !== 'object') {
+    const err = new Error('Respuesta JSON inválida del BCCR.');
+    err.status = 502;
+    throw err;
+  }
+
+  const body = /** @type {{ estado?: boolean, mensaje?: string, datos?: unknown[] }} */ (payload);
+
+  if (body.estado !== true) {
+    const err = new Error(body.mensaje || 'El BCCR no devolvió una consulta exitosa.');
+    err.status = 502;
+    throw err;
+  }
+
+  const datos = body.datos;
+  if (!Array.isArray(datos) || datos.length === 0) {
+    const err = new Error('No hay datos de indicador en la respuesta del BCCR.');
+    err.status = 502;
+    throw err;
+  }
+
+  const first = datos[0];
+  const series = first && typeof first === 'object' ? /** @type {{ series?: unknown[] }} */ (first).series : null;
+
+  if (!Array.isArray(series) || series.length === 0) {
+    const err = new Error('No hay serie de tipo de cambio para la fecha solicitada.');
+    err.status = 502;
+    throw err;
+  }
+
+  const match =
+    series.find((row) => {
+      if (!row || typeof row !== 'object') return false;
+      const fecha = String(/** @type {{ fecha?: string }} */ (row).fecha || '').slice(0, 10);
+      return fecha === isoDate;
+    }) || series[series.length - 1];
+
+  const rate = Number(
+    match && typeof match === 'object'
+      ? /** @type {{ valorDatoPorPeriodo?: number }} */ (match).valorDatoPorPeriodo
+      : NaN
+  );
+
+  if (!Number.isFinite(rate) || rate <= 0) {
+    const err = new Error('Valor de tipo de cambio inválido en la respuesta del BCCR.');
+    err.status = 502;
+    throw err;
+  }
+
+  return rate;
+}
+
+/**
+ * @param {number} status
+ * @param {string} [bodySnippet]
+ */
+function errorFromBccrHttpStatus(status, bodySnippet) {
+  const byStatus = {
+    401: 'Token BCCR rechazado (401). Verifique BCCR_TOKEN.',
+    403: 'Acceso denegado al API del BCCR (403).',
+    429: 'Límite de consultas al BCCR excedido (429). Intente más tarde.',
+    500: 'Error interno en el servicio del BCCR (500).',
+    502: 'Puerta de enlace del BCCR no disponible (502).',
+    503: 'Servicio del BCCR temporalmente no disponible (503).',
+  };
+
+  let message = byStatus[status] || `BCCR HTTP ${status}.`;
+  if (bodySnippet) {
+    const trimmed = bodySnippet.trim().slice(0, 200);
+    if (trimmed) message = `${message} ${trimmed}`;
+  }
+
+  const err = new Error(message);
+  err.status = status === 429 || status >= 500 ? 503 : 502;
+  return err;
+}
+
+/**
+ * @param {{ url: string, token: string }} params
+ * @returns {Promise<unknown>}
+ */
+async function fetchBccrSeriesOnce({ url, token }) {
   const controller = new AbortController();
   const tid = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(url, {
-      method: 'POST',
+      method: 'GET',
       redirect: 'manual',
       headers: {
-        'Content-Type': 'text/xml; charset=utf-8',
-        SOAPAction: SOAP_ACTION,
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
       },
-      body,
       signal: controller.signal,
     });
+
     if (res.status >= 300 && res.status < 400) {
       const err = new Error(`BCCR rechazado: redirección HTTP ${res.status} (no permitida por SSRF)`);
       err.status = 502;
       throw err;
     }
+
     const text = await res.text();
+
     if (!res.ok) {
-      const err = new Error(`BCCR HTTP ${res.status}`);
+      throw errorFromBccrHttpStatus(res.status, text);
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      const err = new Error('El BCCR no devolvió JSON válido.');
       err.status = 502;
       throw err;
     }
-    return text;
   } finally {
     clearTimeout(tid);
   }
@@ -207,7 +207,13 @@ async function fetchBccrSoapOnce({ url, body }) {
  */
 async function getUsdExchangeRate(opts) {
   const kind = opts.kind === 'compra' ? 'compra' : 'venta';
-  const { date } = opts;
+  const date = String(opts.date || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const err = new Error('La fecha debe ser YYYY-MM-DD.');
+    err.status = 400;
+    throw err;
+  }
+
   const key = cacheKey(date, kind);
 
   const fresh = readFreshCache(key);
@@ -215,23 +221,16 @@ async function getUsdExchangeRate(opts) {
     return { date, kind, rate: fresh.rate, source: fresh.source, stale: false, warning: null };
   }
 
-  const { url, token, nombre, correo } = getBccrEnvOrThrow();
-  const validatedUrl = await validateBccrFetchTarget(url);
+  const { url, token } = getBccrEnvOrThrow();
+  const validatedBase = await validateBccrFetchTarget(url);
   const indicador = getIndicatorForKind(kind);
-  const fechaSoap = isoToDdMmYyyy(date);
-  const body = buildSoapEnvelope({
-    indicador,
-    fechaDdMmYyyy: fechaSoap,
-    nombre,
-    correo,
-    token,
-  });
+  const seriesUrl = buildBccrSeriesUrl(validatedBase, indicador, date);
 
   let lastErr = null;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
-      const xml = await fetchBccrSoapOnce({ url: validatedUrl, body });
-      const rate = extractRateFromSoap(xml);
+      const json = await fetchBccrSeriesOnce({ url: seriesUrl, token });
+      const rate = extractRateFromJson(json, date);
       writeCache(key, rate);
       return { date, kind, rate, source: 'bccr', stale: false, warning: null };
     } catch (e) {
@@ -244,19 +243,27 @@ async function getUsdExchangeRate(opts) {
     return { date, kind, rate: stale.rate, source: 'cache', stale: true, warning: stale.warning };
   }
 
-  const msg =
-    lastErr && lastErr.name === 'AbortError'
-      ? 'Tiempo de espera agotado al consultar el BCCR.'
-      : 'No se pudo obtener el tipo de cambio del BCCR.';
+  let msg = 'No se pudo obtener el tipo de cambio del BCCR.';
+  let status = 503;
+
+  if (lastErr) {
+    if (lastErr.name === 'AbortError') {
+      msg = 'Tiempo de espera agotado al consultar el BCCR.';
+    } else if (lastErr.message) {
+      msg = lastErr.message;
+    }
+    if (Number.isFinite(Number(lastErr.status))) {
+      status = Number(lastErr.status);
+    }
+  }
+
   const err = new Error(msg);
-  err.status = 503;
+  err.status = status;
   err.cause = lastErr;
   throw err;
 }
 
 module.exports = {
   getUsdExchangeRate,
-  buildSoapEnvelope,
-  extractRateFromSoap,
-  isoToDdMmYyyy,
+  extractRateFromJson,
 };

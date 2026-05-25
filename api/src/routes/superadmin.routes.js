@@ -5,6 +5,7 @@ const { requireSuperadmin } = require('../middleware/roles.middleware');
 const auditService = require('../services/audit.service');
 const authService = require('../services/auth.service');
 const superadminService = require('../services/superadmin.service');
+const superadminPlansService = require('../services/superadmin-plans.service');
 
 const router = express.Router();
 
@@ -15,6 +16,95 @@ router.get('/plans', async (req, res, next) => {
     const rows = await superadminService.listPlans();
     res.json(rows);
   } catch (e) {
+    next(e);
+  }
+});
+
+router.get('/plans/all', async (req, res, next) => {
+  try {
+    res.json(await superadminPlansService.listAllPlans());
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.get('/plans/:planId/impact', async (req, res, next) => {
+  try {
+    res.json(await superadminPlansService.getPlanImpact(req.params.planId));
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ message: e.message });
+    next(e);
+  }
+});
+
+router.post('/plans', requireCsrf, async (req, res, next) => {
+  try {
+    const row = await superadminPlansService.createPlan(req.body || {});
+    auditService.logSecurityEvent({
+      eventType: 'superadmin_plan_created',
+      userId: req.user.id,
+      clientId: null,
+      ipAddress: clientIp(req),
+      userAgent: req.headers['user-agent'] || null,
+      metadata: { planId: row.id, planName: row.name },
+    });
+    res.status(201).json(row);
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ message: e.message });
+    next(e);
+  }
+});
+
+router.patch('/plans/:planId', requireCsrf, async (req, res, next) => {
+  try {
+    const row = await superadminPlansService.updatePlan(req.params.planId, req.body || {}, {
+      acknowledgeAffectedClients: req.body?.acknowledge_affected_clients === true,
+    });
+    auditService.logSecurityEvent({
+      eventType: 'superadmin_plan_updated',
+      userId: req.user.id,
+      clientId: null,
+      ipAddress: clientIp(req),
+      userAgent: req.headers['user-agent'] || null,
+      metadata: { planId: row.id, planName: row.name },
+    });
+    res.json(row);
+  } catch (e) {
+    if (e.status === 409 && e.code === superadminPlansService.PLAN_IMPACT_CODE) {
+      return res.status(409).json({
+        message: e.message,
+        code: e.code,
+        impact: e.impact,
+      });
+    }
+    if (e.status) return res.status(e.status).json({ message: e.message });
+    next(e);
+  }
+});
+
+router.post('/plans/:planId/deactivate', requireCsrf, async (req, res, next) => {
+  try {
+    const row = await superadminPlansService.deactivatePlan(req.params.planId, {
+      acknowledgeAffectedClients: req.body?.acknowledge_affected_clients === true,
+    });
+    auditService.logSecurityEvent({
+      eventType: 'superadmin_plan_deactivated',
+      userId: req.user.id,
+      clientId: null,
+      ipAddress: clientIp(req),
+      userAgent: req.headers['user-agent'] || null,
+      metadata: { planId: row.id, planName: row.name },
+    });
+    res.json(row);
+  } catch (e) {
+    if (e.status === 409 && e.code === superadminPlansService.PLAN_IMPACT_CODE) {
+      return res.status(409).json({
+        message: e.message,
+        code: e.code,
+        impact: e.impact,
+      });
+    }
+    if (e.status) return res.status(e.status).json({ message: e.message });
     next(e);
   }
 });
@@ -34,6 +124,9 @@ router.post('/clients', requireCsrf, async (req, res, next) => {
     const row = await superadminService.createClientWithAdmin({
       clientName: b.client_name,
       planId: b.plan_id,
+      licenseStartsOn: b.license_starts_on,
+      billingAnchorDay: b.billing_anchor_day,
+      trialDaysOverride: b.trial_days_override,
       adminEmail: b.admin_email,
       adminPasswordPlain: b.admin_password,
       adminFirstName: b.admin_first_name,
@@ -54,6 +147,33 @@ router.post('/clients', requireCsrf, async (req, res, next) => {
       },
     });
     res.status(201).json(row);
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ message: e.message });
+    next(e);
+  }
+});
+
+router.post('/clients/:clientId/license/renew', requireCsrf, async (req, res, next) => {
+  try {
+    const row = await superadminService.renewClientLicense({
+      clientId: req.params.clientId,
+      planId: req.body?.plan_id,
+      licenseStartsOn: req.body?.license_starts_on,
+      billingAnchorDay: req.body?.billing_anchor_day,
+      trialDaysOverride: req.body?.trial_days_override,
+    });
+    auditService.logSecurityEvent({
+      eventType: 'superadmin_license_renewed',
+      userId: req.user.id,
+      clientId: row?.id || null,
+      ipAddress: clientIp(req),
+      userAgent: req.headers['user-agent'] || null,
+      metadata: {
+        planId: row?.plan_id || null,
+        licenseExpiresOn: row?.license_expires_on || null,
+      },
+    });
+    res.json(row);
   } catch (e) {
     if (e.status) return res.status(e.status).json({ message: e.message });
     next(e);

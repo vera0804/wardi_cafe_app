@@ -2,6 +2,16 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const { pool } = require('../db');
 const { assertPasswordPolicy } = require('../lib/passwordPolicy');
+const {
+  buildLicenseFieldsFromPlan,
+  fetchPlanForLicense,
+} = require('./client-license.service');
+const {
+  formatLicenseExpiryDisplay,
+  normalizeBillingModel,
+  toIsoDateFromDb,
+} = require('../lib/licenseDates');
+const { listActivePlans } = require('./superadmin-plans.service');
 
 const BCRYPT_ROUNDS = 12;
 
@@ -30,6 +40,26 @@ function normalizeName(value, field) {
   return v;
 }
 
+function mapClientRow(row) {
+  const expiresOn = toIsoDateFromDb(row.license_expires_on);
+  const startsOn = toIsoDateFromDb(row.license_starts_on);
+  return {
+    id: row.id,
+    name: row.name,
+    status: row.status,
+    plan_id: row.plan_id,
+    plan_name: row.plan_name,
+    plan_billing_model: row.plan_billing_model
+      ? normalizeBillingModel(row.plan_billing_model)
+      : null,
+    license_starts_on: startsOn,
+    license_expires_on: expiresOn,
+    license_expires_on_display: formatLicenseExpiryDisplay(expiresOn),
+    billing_anchor_day: row.billing_anchor_day,
+    created_at: row.created_at,
+  };
+}
+
 async function assertGlobalActiveEmailFree({ db, email, excludeUserId = null }) {
   const res = await db.query(
     `SELECT id FROM users
@@ -47,27 +77,25 @@ async function assertGlobalActiveEmailFree({ db, email, excludeUserId = null }) 
 }
 
 async function listPlans() {
-  const res = await pool.query(
-    `SELECT id, name, max_farms, max_lots_per_farm, max_users_admin, max_users_operario, price, created_at
-     FROM plans
-     ORDER BY name ASC`
-  );
-  return res.rows;
+  return listActivePlans();
 }
 
 async function listClients() {
   const res = await pool.query(
     `SELECT c.id, c.name, c.status, c.plan_id, c.created_at,
-            p.name AS plan_name
+            c.license_starts_on, c.license_expires_on, c.billing_anchor_day,
+            p.name AS plan_name, p.billing_model AS plan_billing_model
      FROM clients c
      LEFT JOIN plans p ON p.id = c.plan_id
      ORDER BY c.name ASC`
   );
-  return res.rows;
+  return res.rows.map(mapClientRow);
 }
 
 async function getRoleIdByName(db, roleNameNorm) {
-  const res = await db.query(`SELECT id FROM roles WHERE lower(trim(name)) = $1 LIMIT 1`, [roleNameNorm]);
+  const res = await db.query(`SELECT id FROM roles WHERE lower(trim(name)) = $1 LIMIT 1`, [
+    roleNameNorm,
+  ]);
   return res.rows[0]?.id || null;
 }
 
@@ -77,6 +105,9 @@ async function getRoleIdByName(db, roleNameNorm) {
 async function createClientWithAdmin({
   clientName,
   planId,
+  licenseStartsOn,
+  billingAnchorDay,
+  trialDaysOverride,
   adminEmail,
   adminPasswordPlain,
   adminFirstName,
@@ -100,24 +131,46 @@ async function createClientWithAdmin({
   const pwd = assertPasswordPolicy(adminPasswordPlain);
   const fn = normalizeName(adminFirstName, 'Nombre del administrador');
   const ln1 = normalizeName(adminLastName1, 'Primer apellido');
-  const ln2 = adminLastName2 != null && String(adminLastName2).trim() ? String(adminLastName2).trim() : null;
+  const ln2 =
+    adminLastName2 != null && String(adminLastName2).trim() ? String(adminLastName2).trim() : null;
 
   const db = await pool.connect();
   try {
     await db.query('BEGIN');
-    const planRow = await db.query(`SELECT id FROM plans WHERE id = $1::uuid LIMIT 1`, [plan]);
-    if (!planRow.rows[0]) {
+    const planRow = await fetchPlanForLicense(db, plan);
+    if (!planRow) {
       const err = new Error('El plan indicado no existe.');
       err.status = 400;
       throw err;
     }
+    if (planRow.is_active === false) {
+      const err = new Error('El plan seleccionado está inactivo. Elija otro plan o reactive este plan.');
+      err.status = 400;
+      throw err;
+    }
+    const license = buildLicenseFieldsFromPlan({
+      planRow,
+      licenseStartsOn,
+      billingAnchorDay,
+      trialDaysOverride,
+    });
     await assertGlobalActiveEmailFree({ db, email, excludeUserId: null });
 
     const insClient = await db.query(
-      `INSERT INTO clients (name, plan_id, status)
-       VALUES ($1, $2::uuid, 'active')
-       RETURNING id, name, plan_id, status, created_at`,
-      [name, plan]
+      `INSERT INTO clients (
+         name, plan_id, status,
+         license_starts_on, license_expires_on, billing_anchor_day
+       )
+       VALUES ($1, $2::uuid, 'active', $3::date, $4::date, $5)
+       RETURNING id, name, plan_id, status, license_starts_on, license_expires_on,
+                 billing_anchor_day, created_at`,
+      [
+        name,
+        plan,
+        license.license_starts_on,
+        license.license_expires_on,
+        license.billing_anchor_day,
+      ]
     );
     const client = insClient.rows[0];
     const adminRoleId = await getRoleIdByName(db, 'admin');
@@ -140,13 +193,15 @@ async function createClientWithAdmin({
     await db.query('COMMIT');
 
     const list = await pool.query(
-      `SELECT c.id, c.name, c.status, c.plan_id, c.created_at, p.name AS plan_name
+      `SELECT c.id, c.name, c.status, c.plan_id, c.created_at,
+              c.license_starts_on, c.license_expires_on, c.billing_anchor_day,
+              p.name AS plan_name, p.billing_model AS plan_billing_model
        FROM clients c
        LEFT JOIN plans p ON p.id = c.plan_id
        WHERE c.id = $1`,
       [client.id]
     );
-    return list.rows[0];
+    return mapClientRow(list.rows[0]);
   } catch (e) {
     await db.query('ROLLBACK');
     if (e.code === '23505') {
@@ -160,8 +215,94 @@ async function createClientWithAdmin({
   }
 }
 
+/**
+ * Renueva licencia del cliente (nueva fecha inicio + recálculo de vencimiento).
+ */
+async function renewClientLicense({
+  clientId,
+  planId,
+  licenseStartsOn,
+  billingAnchorDay,
+  trialDaysOverride,
+}) {
+  const cid = String(clientId || '').trim();
+  if (!cid) {
+    const err = new Error('client_id es obligatorio.');
+    err.status = 400;
+    throw err;
+  }
+
+  const db = await pool.connect();
+  try {
+    await db.query('BEGIN');
+    const clientRes = await db.query(
+      `SELECT id, plan_id FROM clients WHERE id = $1::uuid FOR UPDATE`,
+      [cid]
+    );
+    const client = clientRes.rows[0];
+    if (!client) {
+      const err = new Error('Organización no encontrada.');
+      err.status = 404;
+      throw err;
+    }
+    const effectivePlanId = planId != null && String(planId).trim() ? String(planId).trim() : client.plan_id;
+    const planRow = await fetchPlanForLicense(db, effectivePlanId);
+    if (!planRow) {
+      const err = new Error('Plan no encontrado.');
+      err.status = 400;
+      throw err;
+    }
+    const license = buildLicenseFieldsFromPlan({
+      planRow,
+      licenseStartsOn,
+      billingAnchorDay,
+      trialDaysOverride,
+    });
+    const upd = await db.query(
+      `UPDATE clients
+       SET plan_id = $2::uuid,
+           status = 'active',
+           license_starts_on = $3::date,
+           license_expires_on = $4::date,
+           billing_anchor_day = $5
+       WHERE id = $1::uuid
+       RETURNING id`,
+      [
+        cid,
+        effectivePlanId,
+        license.license_starts_on,
+        license.license_expires_on,
+        license.billing_anchor_day,
+      ]
+    );
+    if (!upd.rowCount) {
+      const err = new Error('No se pudo renovar la licencia.');
+      err.status = 500;
+      throw err;
+    }
+    await db.query('COMMIT');
+
+    const list = await pool.query(
+      `SELECT c.id, c.name, c.status, c.plan_id, c.created_at,
+              c.license_starts_on, c.license_expires_on, c.billing_anchor_day,
+              p.name AS plan_name, p.billing_model AS plan_billing_model
+       FROM clients c
+       LEFT JOIN plans p ON p.id = c.plan_id
+       WHERE c.id = $1`,
+      [cid]
+    );
+    return mapClientRow(list.rows[0]);
+  } catch (e) {
+    await db.query('ROLLBACK');
+    throw e;
+  } finally {
+    db.release();
+  }
+}
+
 module.exports = {
   listPlans,
   listClients,
   createClientWithAdmin,
+  renewClientLicense,
 };

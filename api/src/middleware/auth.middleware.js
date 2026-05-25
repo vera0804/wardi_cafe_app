@@ -157,7 +157,21 @@ async function requireAuth(req, res, next) {
       console.error('requireAuth inactive client revoke', e);
     }
     clearSessionCookie(res);
+    const statusNorm = String(row.client_status || '').trim().toLowerCase();
+    if (statusNorm === 'license_expired') {
+      return res.status(403).json({ message: 'Licencia vencida.', code: 'LICENSE_EXPIRED' });
+    }
     return res.status(403).json({ message: 'Cliente no disponible.' });
+  }
+
+  if (!authService.assertSessionClientLicense(row)) {
+    try {
+      await authService.revokeSessionByTokenHash(tokenHash);
+    } catch (e) {
+      console.error('requireAuth license revoke', e);
+    }
+    clearSessionCookie(res);
+    return res.status(403).json({ message: 'Licencia vencida.', code: 'LICENSE_EXPIRED' });
   }
 
   // Anti session theft / suspicious change detection (optional, configurable).

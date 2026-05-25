@@ -44,6 +44,20 @@ function requireWritePermission(req, res, next) {
   return next();
 }
 
+/** Catálogos de configuración: solo admin o superadmin con organización activa. */
+function requireTenantAdminWrite(req, res, next) {
+  const role = String(req.user?.role || '').trim().toLowerCase();
+  if (role === 'admin') return next();
+  if (role === 'superadmin' && req.user?.actingClientId) return next();
+  if (role === 'operario') {
+    return res.status(403).json({ message: 'Tu rol solo tiene permisos de lectura.' });
+  }
+  if (role === 'tecnico') {
+    return res.status(403).json({ message: 'Tu rol solo tiene permisos de consulta.' });
+  }
+  return res.status(403).json({ message: 'No tienes permiso para esta acción.' });
+}
+
 const { bindTenantRlsContext } = require('./tenant-rls.middleware');
 
 /**
@@ -73,4 +87,5 @@ module.exports = {
   requireSuperadmin,
   requireEffectiveClient,
   requireWritePermission,
+  requireTenantAdminWrite,
 };

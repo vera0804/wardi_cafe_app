@@ -21,10 +21,10 @@ import FarmsPage from './FarmsPage.jsx';
 import LotsPage from './LotsPage.jsx';
 import WorkersPage from './WorkersPage.jsx';
 import LaborEntriesPage from './LaborEntriesPage.jsx';
-import CalibersSettingsSection from './CalibersSettingsSection.jsx';
-import AvocadoProductionPage from './AvocadoProductionPage.jsx';
+import CoffeeProductionPage from './CoffeeProductionPage.jsx';
 import InventoryPage from './InventoryPage.jsx';
 import InventoryBrandsSettingsSection from './InventoryBrandsSettingsSection.jsx';
+import HarvestSettingsShell from './settings/HarvestSettingsShell.jsx';
 import ApplicationsPage from './ApplicationsPage.jsx';
 import Cronograma from './Cronograma.jsx';
 import PayrollSection from './payroll/PayrollSection.jsx';
@@ -141,9 +141,9 @@ export default function Dashboard() {
               <OfflineModuleGate menuLabel="Aplicaciones">
                 <ApplicationsPage user={user} />
               </OfflineModuleGate>
-            ) : activeMenu === 'Producción de aguacate' ? (
-              <OfflineModuleGate menuLabel="Producción de aguacate">
-                <AvocadoProductionPage user={user} />
+            ) : activeMenu === 'Producción de café' ? (
+              <OfflineModuleGate menuLabel="Producción de café">
+                <CoffeeProductionPage user={user} />
               </OfflineModuleGate>
             ) : activeMenu === 'Registro de labores' ? (
               <OfflineModuleGate menuLabel="Registro de labores">
@@ -160,7 +160,8 @@ export default function Dashboard() {
             ) : activeMenu === 'Configuración' ? (
               <OfflineModuleGate menuLabel="Configuración">
               <>
-                {activeSettingItem === 'Definir calibres del aguacate' ? (
+                {activeSettingItem === 'Marcas de fabricantes' ||
+                activeSettingItem === 'Definición de períodos de cosecha' ? (
                   <>
                     <div className="mb-3">
                       <button
@@ -171,20 +172,11 @@ export default function Dashboard() {
                         ← Volver a Configuración
                       </button>
                     </div>
-                    <CalibersSettingsSection user={user} />
-                  </>
-                ) : activeSettingItem === 'Marcas de fabricantes' ? (
-                  <>
-                    <div className="mb-3">
-                      <button
-                        type="button"
-                        onClick={() => setActiveSettingItem('')}
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-                      >
-                        ← Volver a Configuración
-                      </button>
-                    </div>
-                    <InventoryBrandsSettingsSection user={user} />
+                    {activeSettingItem === 'Marcas de fabricantes' ? (
+                      <InventoryBrandsSettingsSection user={user} />
+                    ) : (
+                      <HarvestSettingsShell user={user} />
+                    )}
                   </>
                 ) : (
                   <section className="rounded-2xl border border-white/50 bg-white/85 p-5 text-slate-800 shadow">
@@ -209,8 +201,9 @@ export default function Dashboard() {
                                 return true;
                               })
                               .map((item) => {
-                              const isCalibersItem = item.label === 'Definir calibres del aguacate';
                               const isBrandsItem = item.label === 'Marcas de fabricantes';
+                              const isHarvestSettings =
+                                item.label === 'Definición de períodos de cosecha';
                               const isAssetCats = item.label === 'Categorías de activos';
                               const isExpenseCats = item.label === 'Categorías de gastos';
                               const isUsersMgmt = item.label === 'Gestión de usuarios';
@@ -236,7 +229,7 @@ export default function Dashboard() {
                                       navigate('/settings/change-password');
                                       return;
                                     }
-                                    if (isCalibersItem || isBrandsItem) setActiveSettingItem(item.label);
+                                    if (isBrandsItem || isHarvestSettings) setActiveSettingItem(item.label);
                                   }}
                                   className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-sm hover:border-lime-300 hover:bg-lime-50/50"
                                 >
@@ -283,7 +276,7 @@ const HOME_CARD_DESCRIPTION = {
   Lotes: 'Gestiona lotes por finca.',
   Inventario: 'Stock, insumos y movimientos.',
   Aplicaciones: 'Registro y seguimiento de aplicaciones.',
-  'Producción de aguacate': 'Cosechas, calibres y producción.',
+  'Producción de café': 'Cajuelas y fanegas cosechadas por lote.',
   Trabajadores: 'Directorio y datos del personal.',
   'Registro de labores': 'Labores diarias en campo.',
   Cronograma: 'Planificación de actividades.',

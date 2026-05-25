@@ -13,9 +13,9 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-512-maskable.png'],
       manifest: {
         id: '/',
-        name: 'Wardi — Gestión de fincas aguacateras',
+        name: 'Wardi — Gestión de fincas cafetaleras',
         short_name: 'Wardi',
-        description: 'Gestión operativa de fincas, lotes, labores y producción de aguacate.',
+        description: 'Gestión operativa de fincas cafetaleras, lotes, labores y producción de café.',
         lang: 'es',
         dir: 'ltr',
         theme_color: '#4d7c0f',

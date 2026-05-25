@@ -2,7 +2,7 @@ const { pool } = require('../db');
 const allocationsService = require('./labor-entry-allocations.service');
 const calendarActivitiesService = require('./calendar-activities.service');
 
-const ALLOWED_UNITS = new Set(['jornal', 'hora', 'caja', 'bolsas']);
+const ALLOWED_UNITS = new Set(['jornal', 'hora', 'caja', 'bolsas', 'cajuela']);
 const JOURNAL_UNIT = 'jornal';
 
 function toDbUnit(unit) {
@@ -35,7 +35,7 @@ function normalizeUnit(value, { required = false } = {}) {
   if (value === undefined && !required) return undefined;
   const v = String(value || '').trim().toLowerCase();
   if (!ALLOWED_UNITS.has(v)) {
-    const err = new Error('unit debe ser jornal, hora, caja o bolsas.');
+    const err = new Error('unit debe ser jornal, hora, caja, bolsas o cajuela.');
     err.status = 400;
     throw err;
   }
@@ -954,7 +954,7 @@ async function getMeta({ clientId }) {
       display_name: [w.first_name, w.last_name_1, w.last_name_2].filter(Boolean).join(' '),
     })),
     laborTypes: laborTypes.rows,
-    units: ['jornal', 'hora', 'caja', 'bolsas'],
+    units: ['jornal', 'hora', 'caja', 'bolsas', 'cajuela'],
   };
 }
 

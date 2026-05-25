@@ -6,7 +6,7 @@ export const MENU_ITEMS = [
   { label: 'Lotes', icon: 'lot' },
   { label: 'Inventario', icon: 'inventory' },
   { label: 'Aplicaciones', icon: 'spray' },
-  { label: 'Producción de aguacate', icon: 'production' },
+  { label: 'Producción de café', icon: 'production' },
   { label: 'Trabajadores', icon: 'workers' },
   { label: 'Registro de labores', icon: 'tasks' },
   { label: 'Cronograma', icon: 'calendar' },
@@ -31,7 +31,7 @@ export const CONFIG_GROUPS = [
       { label: 'Categorías de activos', icon: 'assets' },
       { label: 'Categorías de gastos', icon: 'expenses' },
       { label: 'Marcas de fabricantes', icon: 'factory' },
-      { label: 'Definir calibres del aguacate', icon: 'avocado' },
+      { label: 'Definición de períodos de cosecha', icon: 'harvest' },
     ],
   },
 ];
@@ -73,7 +73,14 @@ export function canAccessPlanilla(user) {
   return isTenantAdmin(user);
 }
 
-/** Catálogos operativos en Configuración (categorías, marcas, calibres). */
+/** Catálogos operativos en Configuración (categorías, marcas). */
 export function canManageOperationalCatalogs(user) {
   return canManageExpenses(user);
+}
+
+/** Crear, editar o activar/inactivar producción de café. */
+export function canWriteCoffeeProduction(user) {
+  const r = String(user?.role || '').trim().toLowerCase();
+  if (r === 'superadmin' && user?.actingClientId) return true;
+  return r === 'admin';
 }

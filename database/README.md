@@ -2,6 +2,9 @@
 
 ## Migraciones reproducibles
 
+- **`20260521170000_client_license_plans.sql`** — planes con `billing_model` / `trial_days` / `description` y clientes con `license_starts_on`, `license_expires_on`, `billing_anchor_day`. Ver guía completa en [`docs/LICENSE.md`](docs/LICENSE.md).
+- **`20260522120000_plans_is_active.sql`** — `plans.is_active` para catálogo editable (CRUD superadmin en `/superadmin/plans`). Ver [`docs/PLANS.md`](docs/PLANS.md).
+- `20260521130000_coffee_varieties_seed.sql` reemplaza el catálogo de variedades de aguacate por **15 variedades de café** habituales en Costa Rica y vacía los vínculos lote↔variedad (hay que reasignar variedades en **Lotes** tras migrar).
 - Los archivos están en `database/migrations/` y se aplican **en orden léxico** (`*.sql`).
 - El runner registra cada archivo ejecutado en `public.schema_migrations`.
 - Ejecutar desde la raíz del monorepo (requiere haber ejecutado `npm install` en `./api` para `pg`):
@@ -31,8 +34,14 @@ ON CONFLICT DO NOTHING;
 
 1. **`20260718100000_app_tenant_session_function.sql`** define `public.app_current_tenant_id()` leyendo el GUC `app.tenant_id`.
 2. **`20260718101000_rls_client_id_tables_dynamic.sql`** activa RLS en tablas públicas que tienen `client_id UUID`, excluyendo `sessions`, `users`, `clients`, `schema_migrations`.
+3. **`20260521160000_rls_coffee_production_payroll.sql`** añade RLS en `coffee_lot_production` y tablas hijas de planilla sin `client_id`:
+   - `fixed_payroll` (vía `workers.client_id`)
+   - `fixed_payroll_allocations` (vía `fixed_payroll` + `lots.client_id`)
+   - `payroll_slip_lot_allocations` (vía `payroll_slips.client_id` + `lots.client_id`)
 
 Las tablas cuya columna `client_id` **no sea tipo UUID** no son incluidas automáticamente (necesitan políticas manuales o cambio de tipo antes de confiar en esta migración).
+
+**Planilla sin RLS en este parche:** `payroll_periods` y `payroll_settings` (sin `client_id`; calendario/reglas compartidas). `payroll_slips` queda cubierta por la migración dinámica si ya se aplicó.
 
 Los **superusuarios** ignoran RLS: el comportamiento actual de desarrollo típico (conexión `postgres`) no cambia.
 
@@ -87,9 +96,11 @@ Para aplicar políticas:
 
 ### BCCR / SSRF (API)
 
-Variables relevantes para `api/src/services/bccr-exchange.service.js`:
+Variables relevantes para `api/src/services/bccr-exchange.service.js` (REST JSON + Bearer, no SOAP):
 
 | Variable             | Rol |
 |----------------------|-----|
-| `BCCR_API_URL`       | Solo **HTTPS**. |
-| `BCCR_ALLOWED_HOSTS` | Lista separada por comas **opcional**. Si falta: `ws.sdde.bccr.fi.cr`. |
+| `BCCR_API_URL`       | Base HTTPS del API público SDDE (ej. `https://apim.bccr.fi.cr/SDDE/api/Bccr.Ge.SDDE.Publico.Indicadores.API`). |
+| `BCCR_TOKEN`         | Bearer token (header `Authorization`). |
+| `BCCR_INDICADOR_COMPRA` / `BCCR_INDICADOR_VENTA` | Códigos 317 / 318 por defecto. |
+| `BCCR_ALLOWED_HOSTS` | Lista separada por comas **opcional**. Si falta: `apim.bccr.fi.cr`. |

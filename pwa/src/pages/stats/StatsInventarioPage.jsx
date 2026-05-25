@@ -7,38 +7,12 @@ export default function StatsInventarioPage() {
   const st = useStatsOverview({ includeLowStockInRequest: true });
   if (st.blocked) return <StatsAccessDenied />;
 
-  const periodLine = st.data?.period
-    ? `Periodo aplicado: ${st.data.period.from} — ${st.data.period.to}${
-        st.data.filters?.farm_id ? ' · Finca filtrada' : ''
-      }${st.data.filters?.lot_id ? ' · Lote filtrado' : ''}`
-    : null;
-
-  const filtersProps = {
-    from: st.from,
-    to: st.to,
-    farmId: st.farmId,
-    lotId: st.lotId,
-    lowStock: st.lowStock,
-    farms: st.farms,
-    lots: st.lots,
-    loading: st.loading,
-    onFromChange: st.setFrom,
-    onToChange: st.setTo,
-    onFarmChange: (v) => {
-      st.setFarmId(v);
-      st.setLotId('');
-    },
-    onLotChange: st.setLotId,
-    onLowStockChange: st.setLowStock,
-    onRefresh: st.refresh,
-  };
-
   return (
     <StatsSectionShell
       title="Inventario y agroinsumos"
       description="Productos más utilizados, costo por combinación insumo–lote en el periodo y alertas de existencia baja."
-      filtersProps={filtersProps}
-      periodLine={periodLine}
+      filtersProps={st.filtersProps}
+      periodLine={st.periodLine}
       showLowStockInFilters
     >
       {st.loading && !st.data ? <p className="text-sm text-stone-500">Cargando datos…</p> : null}

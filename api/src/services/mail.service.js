@@ -41,7 +41,7 @@ function getEmailLogoHeaderHtmlAndAttachments() {
             : 'image/jpeg';
       const filename = `logo${ext || '.jpg'}`;
       return {
-        logoBlockHtml: `<img src="cid:${EMAIL_LOGO_CID}" alt="Wardi Aguacate" width="140" height="auto" style="display:block;margin:0 auto 24px;max-width:140px;height:auto;border:0;"/>`,
+        logoBlockHtml: `<img src="cid:${EMAIL_LOGO_CID}" alt="Wardi Café" width="140" height="auto" style="display:block;margin:0 auto 24px;max-width:140px;height:auto;border:0;"/>`,
         attachments: [
           {
             filename,
@@ -58,7 +58,7 @@ function getEmailLogoHeaderHtmlAndAttachments() {
 
   return {
     logoBlockHtml:
-      '<div style="font-size:22px;font-weight:700;color:#65a30c;margin:0 auto 24px;text-align:center;">Wardi Aguacate</div>',
+      '<div style="font-size:22px;font-weight:700;color:#65a30c;margin:0 auto 24px;text-align:center;">Wardi Café</div>',
     attachments: [],
   };
 }
@@ -115,7 +115,7 @@ async function sendPasswordResetEmail({ to, resetLink, firstName }) {
               <h1 style="margin:0 0 22px;font-size:22px;line-height:1.25;color:#14532d;font-weight:700;">Recuperación de contraseña</h1>
               <p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#44403c;text-align:left;">${greeting}</p>
               <p style="margin:0 0 24px;font-size:15px;line-height:1.55;color:#44403c;text-align:left;">
-                Recibimos una solicitud para restablecer la contraseña de tu cuenta en <strong style="color:#365314;">Wardi Aguacate</strong>.
+                Recibimos una solicitud para restablecer la contraseña de tu cuenta en <strong style="color:#365314;">Wardi Café</strong>.
               </p>
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
                 <tr>
@@ -153,7 +153,7 @@ async function sendPasswordResetEmail({ to, resetLink, firstName }) {
     body: JSON.stringify({
       from,
       to: [to],
-      subject: 'Recuperación de contraseña — Wardi Aguacate',
+      subject: 'Recuperación de contraseña — Wardi Café',
       html,
       ...(attachments.length ? { attachments } : {}),
     }),

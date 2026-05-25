@@ -84,47 +84,17 @@ async function runDbChecks(client) {
   if (!indexNames.has('idx_labor_entries_client')) fail('missing index idx_labor_entries_client');
   else ok('index idx_labor_entries_client exists');
 
-  const nullCalibers = await queryOne(
-    client,
-    `SELECT COUNT(*)::int AS total FROM calibers WHERE client_id IS NULL`
-  );
-  if (nullCalibers.total !== 0) fail(`calibers with null client_id: ${nullCalibers.total}`);
-  else ok('calibers: no null client_id');
-
   const mismatchProductionLot = await queryOne(
     client,
     `SELECT COUNT(*)::int AS total
-     FROM lot_production lp
-     JOIN lots l ON l.id = lp.lot_id
-     WHERE lp.lot_id IS NOT NULL
-       AND lp.client_id IS DISTINCT FROM l.client_id`
-  );
-  const mismatchProductionFarm = await queryOne(
-    client,
-    `SELECT COUNT(*)::int AS total
-     FROM lot_production lp
-     JOIN farms f ON f.id = lp.farm_id
-     WHERE lp.farm_id IS NOT NULL
-       AND lp.client_id IS DISTINCT FROM f.client_id`
-  );
-  const mismatchProductionCaliber = await queryOne(
-    client,
-    `SELECT COUNT(*)::int AS total
-     FROM lot_production lp
-     JOIN lot_production_details d ON d.lot_production_id = lp.id
-     JOIN calibers c ON c.id = d.caliber_id
-     WHERE lp.client_id IS DISTINCT FROM c.client_id`
+     FROM coffee_lot_production clp
+     JOIN lots l ON l.id = clp.lot_id
+     WHERE clp.client_id IS DISTINCT FROM l.client_id`
   );
 
   if (mismatchProductionLot.total !== 0) {
-    fail(`lot_production/lot client mismatch: ${mismatchProductionLot.total}`);
-  } else ok('lot_production matches lot tenant');
-  if (mismatchProductionFarm.total !== 0) {
-    fail(`lot_production/farm client mismatch: ${mismatchProductionFarm.total}`);
-  } else ok('lot_production matches farm tenant');
-  if (mismatchProductionCaliber.total !== 0) {
-    fail(`lot_production/caliber client mismatch: ${mismatchProductionCaliber.total}`);
-  } else ok('lot_production details match caliber tenant');
+    fail(`coffee_lot_production/lot client mismatch: ${mismatchProductionLot.total}`);
+  } else ok('coffee_lot_production matches lot tenant');
 }
 
 function requireFetch() {
@@ -234,61 +204,28 @@ async function runApiChecks() {
     info('Skipping PATCH cross-tenant checks: SMOKE_CSRF_A not set.');
   }
 
-  const calibersB = await fetchJson(baseUrl, '/calibers?include_inactive=true', cookieB, {
-    userAgent: userAgentB,
-  });
-  if (calibersB.status !== 200 || !Array.isArray(calibersB.json)) {
-    fail(`could not fetch calibers for client B, got ${calibersB.status}`);
-    return;
-  }
-  if (calibersB.json.length > 0) {
-    const caliberB = calibersB.json[0];
-    ok(`sample caliber B: ${caliberB.id}`);
-
-    const caliberCross = await fetchJson(baseUrl, `/calibers/${caliberB.id}`, cookieA, {
-      userAgent: userAgentA,
-    });
-    if (caliberCross.status !== 404) {
-      fail(`expected 404 reading caliberB with cookieA, got ${caliberCross.status}`);
-    } else ok('cross-tenant GET /calibers/:id returns 404');
-
-    if (csrfA) {
-      const patchCaliber = await fetchJson(baseUrl, `/calibers/${caliberB.id}/active`, cookieA, {
-        method: 'PATCH',
-        userAgent: userAgentA,
-        csrfToken: csrfA,
-        body: { is_active: false },
-      });
-      if (!isCrossTenantMutationBlocked(patchCaliber.status)) {
-        fail(`expected 403/404 patching caliberB with cookieA, got ${patchCaliber.status}`);
-      } else ok('cross-tenant PATCH /calibers/:id/active blocked (403/404)');
-    }
-  } else {
-    info('Skipping calibers cross-tenant id checks: client B has no calibers.');
-  }
-
-  const productionB = await fetchJson(baseUrl, '/avocado-production?active=all', cookieB, {
+  const productionB = await fetchJson(baseUrl, '/lot-production?active=all', cookieB, {
     userAgent: userAgentB,
   });
   if (productionB.status !== 200 || !Array.isArray(productionB.json)) {
-    fail(`could not fetch avocado production for client B, got ${productionB.status}`);
+    fail(`could not fetch lot production for client B, got ${productionB.status}`);
     return;
   }
   if (productionB.json.length > 0) {
     const productionEntryB = productionB.json[0];
-    ok(`sample avocado production B: ${productionEntryB.id}`);
+    ok(`sample coffee production B: ${productionEntryB.id}`);
 
-    const prodCross = await fetchJson(baseUrl, `/avocado-production/${productionEntryB.id}`, cookieA, {
+    const prodCross = await fetchJson(baseUrl, `/lot-production/${productionEntryB.id}`, cookieA, {
       userAgent: userAgentA,
     });
     if (prodCross.status !== 404) {
-      fail(`expected 404 reading avocadoProductionB with cookieA, got ${prodCross.status}`);
-    } else ok('cross-tenant GET /avocado-production/:id returns 404');
+      fail(`expected 404 reading coffeeProductionB with cookieA, got ${prodCross.status}`);
+    } else ok('cross-tenant GET /lot-production/:id returns 404');
 
     if (csrfA) {
       const patchProd = await fetchJson(
         baseUrl,
-        `/avocado-production/${productionEntryB.id}/active`,
+        `/lot-production/${productionEntryB.id}/active`,
         cookieA,
         {
           method: 'PATCH',
@@ -298,11 +235,11 @@ async function runApiChecks() {
         }
       );
       if (!isCrossTenantMutationBlocked(patchProd.status)) {
-        fail(`expected 403/404 patching avocadoProductionB with cookieA, got ${patchProd.status}`);
-      } else ok('cross-tenant PATCH /avocado-production/:id/active blocked (403/404)');
+        fail(`expected 403/404 patching coffeeProductionB with cookieA, got ${patchProd.status}`);
+      } else ok('cross-tenant PATCH /lot-production/:id/active blocked (403/404)');
     }
   } else {
-    info('Skipping avocado production cross-tenant id checks: client B has no production rows.');
+    info('Skipping coffee production cross-tenant id checks: client B has no production rows.');
   }
 }
 

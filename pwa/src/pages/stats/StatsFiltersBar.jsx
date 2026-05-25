@@ -6,6 +6,9 @@ export default function StatsFiltersBar({
   to,
   farmId,
   lotId,
+  harvestId,
+  harvests,
+  onHarvestChange,
   lowStock,
   farms,
   lots,
@@ -17,6 +20,7 @@ export default function StatsFiltersBar({
   onLowStockChange,
   onRefresh,
   showLowStock = false,
+  showHarvest = true,
 }) {
   return (
     <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm md:p-5">
@@ -39,6 +43,23 @@ export default function StatsFiltersBar({
             className="rounded-lg border border-stone-300 px-3 py-2 text-stone-800"
           />
         </div>
+        {showHarvest ? (
+          <div>
+            <label className="mb-1 block text-xs font-medium text-stone-500">Cosecha</label>
+            <select
+              value={harvestId || ''}
+              onChange={(e) => onHarvestChange?.(e.target.value)}
+              className="min-w-[12rem] rounded-lg border border-stone-300 px-3 py-2 text-stone-800"
+            >
+              <option value="">Rango manual</option>
+              {(harvests || []).map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
         <div>
           <label className="mb-1 block text-xs font-medium text-stone-500">Finca</label>
           <select

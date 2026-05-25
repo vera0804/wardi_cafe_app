@@ -1,83 +1,25 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../auth/AuthContext.jsx';
-import { canAccessEstadisticas } from '../../layouts/dashboardMenuData.js';
-import { fetchStatsOverview } from '../../services/statsApi.js';
-import { apiRequest } from '../../services/api.js';
+import StatsAccessDenied from './StatsAccessDenied.jsx';
+import StatsFiltersBar from './StatsFiltersBar.jsx';
+import { useStatsOverview } from './useStatsOverview.js';
 import KpiCard from './KpiCard.jsx';
-import { crc, num, defaultDateRange, TableWrap } from './statsFormat.jsx';
+import {
+  crc,
+  num,
+  TableWrap,
+  fanegasOf,
+  formatMarginPerFanega,
+  marginToneClass,
+} from './statsFormat.jsx';
 
 export default function StatsResumenPage() {
-  const { user } = useAuth();
   const location = useLocation();
-  const def = defaultDateRange();
-  const [from, setFrom] = useState(def.from);
-  const [to, setTo] = useState(def.to);
-  const [farmId, setFarmId] = useState('');
-  const [lotId, setLotId] = useState('');
-  const [lowStock, setLowStock] = useState('10');
-  const [farms, setFarms] = useState([]);
-  const [lots, setLots] = useState([]);
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const blocked = !canAccessEstadisticas(user);
-
-  const loadFarms = useCallback(async () => {
-    try {
-      const rows = await apiRequest('/api/farms');
-      setFarms(Array.isArray(rows) ? rows : []);
-    } catch {
-      setFarms([]);
-    }
-  }, []);
-
-  const loadLots = useCallback(async (fid) => {
-    if (!fid) {
-      setLots([]);
-      return;
-    }
-    try {
-      const rows = await apiRequest(`/api/lots?farm_id=${encodeURIComponent(fid)}`);
-      setLots(Array.isArray(rows) ? rows : []);
-    } catch {
-      setLots([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadFarms();
-  }, [loadFarms]);
-
-  useEffect(() => {
-    loadLots(farmId);
-    if (!farmId) setLotId('');
-  }, [farmId, loadLots]);
-
-  const refresh = useCallback(async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const overview = await fetchStatsOverview({
-        from,
-        to,
-        farmId: farmId || undefined,
-        lotId: lotId || undefined,
-        lowStockThreshold: lowStock === '' ? undefined : Number(lowStock),
-      });
-      setData(overview);
-    } catch (e) {
-      setData(null);
-      setError(e?.message || 'No se pudieron cargar las estadísticas.');
-    } finally {
-      setLoading(false);
-    }
-  }, [from, to, farmId, lotId, lowStock]);
-
-  useEffect(() => {
-    if (!blocked) refresh();
-  }, [blocked, refresh]);
+  const st = useStatsOverview({ includeLowStockInRequest: true });
+  const data = st.data;
+  const loading = st.loading;
+  const error = st.error;
+  const blocked = st.blocked;
 
   useEffect(() => {
     const id = location.hash?.replace('#', '');
@@ -88,29 +30,7 @@ export default function StatsResumenPage() {
     return () => window.clearTimeout(t);
   }, [location.hash, data]);
 
-  if (blocked) {
-    return (
-      <div className="mx-auto max-w-2xl rounded-xl border border-amber-200 bg-amber-50/80 p-5 text-sm text-amber-950">
-        <p className="font-medium">Acceso restringido</p>
-        <p className="mt-1 text-amber-900/90">
-          {user?.isSuperadmin && user?.needsTenantSelection ? (
-            <>
-              Como superadministrador debe{' '}
-              <Link to="/superadmin/clients" className="font-medium text-lime-900 underline hover:text-lime-950">
-                elegir una organización
-              </Link>{' '}
-              para ver las estadísticas de ese cliente.
-            </>
-          ) : (
-            <>Tu rol no tiene permiso para ver estadísticas operativas.</>
-          )}
-        </p>
-        <Link to="/stats" className="mt-3 inline-block text-lime-800 hover:underline">
-          ← Volver al índice
-        </Link>
-      </div>
-    );
-  }
+  if (blocked) return <StatsAccessDenied />;
 
   const cp = data?.cost_production;
 
@@ -122,93 +42,13 @@ export default function StatsResumenPage() {
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight text-stone-900">Resumen operativo</h1>
         <p className="mt-1 max-w-2xl text-sm text-stone-600">
-          Costo por kilogramo producido, ingresos según valor declarado en producción, costos operativos asignados a
-          lotes y rentabilidad por lote y finca. Ajuste el periodo y los filtros para actualizar los KPI.
+          Costo por fanega, ingresos según precio de cosecha configurado, costos directos imputados a lotes y
+          rentabilidad por lote y finca. Ajuste el periodo, la cosecha o los filtros territoriales.
         </p>
       </div>
 
-      <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm md:p-5">
-        <div className="flex flex-wrap items-end gap-4">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-stone-500">Desde</label>
-            <input
-              type="date"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              className="rounded-lg border border-stone-300 px-3 py-2 text-stone-800"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-stone-500">Hasta</label>
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="rounded-lg border border-stone-300 px-3 py-2 text-stone-800"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-stone-500">Finca</label>
-            <select
-              value={farmId}
-              onChange={(e) => {
-                setFarmId(e.target.value);
-                setLotId('');
-              }}
-              className="min-w-[10rem] rounded-lg border border-stone-300 px-3 py-2 text-stone-800"
-            >
-              <option value="">Todas</option>
-              {farms.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-stone-500">Lote</label>
-            <select
-              value={lotId}
-              onChange={(e) => setLotId(e.target.value)}
-              disabled={!farmId}
-              className="min-w-[10rem] rounded-lg border border-stone-300 px-3 py-2 text-stone-800 disabled:bg-stone-100"
-            >
-              <option value="">Todos</option>
-              {lots.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-stone-500">Stock bajo (&lt;)</label>
-            <input
-              type="number"
-              min={0}
-              step={1}
-              value={lowStock}
-              onChange={(e) => setLowStock(e.target.value)}
-              className="w-24 rounded-lg border border-stone-300 px-3 py-2 text-stone-800"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => refresh()}
-            disabled={loading}
-            className="rounded-lg bg-lime-700 px-4 py-2 text-sm font-medium text-white hover:bg-lime-800 disabled:opacity-50"
-          >
-            {loading ? 'Cargando…' : 'Actualizar'}
-          </button>
-        </div>
-        {data?.period ? (
-          <p className="mt-3 text-xs text-stone-500">
-            Periodo aplicado: {data.period.from} — {data.period.to}
-            {data.filters?.farm_id ? ' · Finca filtrada' : ''}
-            {data.filters?.lot_id ? ' · Lote filtrado' : ''}
-          </p>
-        ) : null}
-      </div>
+      <StatsFiltersBar {...st.filtersProps} showLowStock />
+      {st.periodLine ? <p className="text-xs text-stone-500">{st.periodLine}</p> : null}
 
       {loading && !data ? <p className="text-sm text-stone-500">Cargando datos…</p> : null}
 
@@ -220,24 +60,38 @@ export default function StatsResumenPage() {
         <>
           <section>
             <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold text-stone-900">
-              <span aria-hidden>🥑</span> 1.1 Costo y producción
+              <span aria-hidden>☕</span> 1.1 Costo y producción
             </h2>
             <p className="mb-4 text-sm text-stone-600">
-              Kilos registrados en producción (detalle por calibre), valor de esa producción y costos directos
+              Fanegas y cajuelas de producción diaria, ingresos valorizados por precio de cosecha y costos directos
               imputados a lotes en el mismo rango de fechas.
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <KpiCard
                 highlight
-                title="Costo por kg"
-                value={cp.cost_per_kg_crc != null ? crc(cp.cost_per_kg_crc) : '—'}
-                subtitle={cp.total_kg > 0 ? `Sobre ${num(cp.total_kg, 3)} kg` : 'Sin kilos en el periodo'}
+                title="Costo por fanega"
+                value={
+                  cp.cost_per_fanega_crc != null
+                    ? crc(cp.cost_per_fanega_crc)
+                    : cp.cost_per_kg_crc != null
+                      ? crc(cp.cost_per_kg_crc)
+                      : '—'
+                }
+                subtitle={
+                  Number(cp.total_fanegas ?? cp.total_kg) > 0
+                    ? `Sobre ${num(cp.total_fanegas ?? cp.total_kg, 4)} fanegas`
+                    : 'Sin fanegas en el periodo'
+                }
               />
-              <KpiCard title="Kg producidos" value={`${num(cp.total_kg, 3)} kg`} subtitle="Suma en el periodo" />
+              <KpiCard
+                title="Producción total"
+                value={`${num(cp.total_fanegas ?? cp.total_kg, 4)} fanegas`}
+                subtitle={`${num(cp.total_cajuelas, 2)} cajuelas`}
+              />
               <KpiCard
                 title="Ingresos (valor producción)"
                 value={crc(cp.total_revenue_crc)}
-                subtitle="Según precio declarado"
+                subtitle="Fanegas × precio por fanega de cosecha"
               />
               <KpiCard title="Costos directos" value={crc(cp.total_direct_costs_crc)} subtitle="Suma de rubros" />
             </div>
@@ -271,11 +125,12 @@ export default function StatsResumenPage() {
                   <tr>
                     <th className="p-3 text-left font-medium text-stone-700">Finca</th>
                     <th className="p-3 text-left font-medium text-stone-700">Lote</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Kg</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Cajuelas</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fanegas</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Ingreso</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Costo</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Margen</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">$/kg</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Margen/fanega</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -283,19 +138,14 @@ export default function StatsResumenPage() {
                     <tr key={r.lot_id} className="border-b border-stone-100 hover:bg-stone-50/80">
                       <td className="p-3 text-stone-800">{r.farm_name}</td>
                       <td className="p-3 text-stone-800">{r.lot_name}</td>
-                      <td className="p-3 text-right tabular-nums text-stone-800">{num(r.kg, 3)}</td>
+                      <td className="p-3 text-right tabular-nums text-stone-800">{num(r.cajuelas, 2)}</td>
+                      <td className="p-3 text-right tabular-nums text-stone-800">{num(fanegasOf(r), 4)}</td>
                       <td className="p-3 text-right tabular-nums text-emerald-700">{crc(r.revenue_crc)}</td>
                       <td className="p-3 text-right tabular-nums text-rose-700">{crc(r.cost_crc)}</td>
-                      <td
-                        className={`p-3 text-right font-medium tabular-nums ${
-                          Number(r.margin_crc) >= 0 ? 'text-emerald-700' : 'text-red-700'
-                        }`}
-                      >
+                      <td className={`p-3 text-right font-medium tabular-nums ${marginToneClass(r.margin_crc)}`}>
                         {crc(r.margin_crc)}
                       </td>
-                      <td className="p-3 text-right tabular-nums text-stone-700">
-                        {r.margin_per_kg_crc != null ? crc(r.margin_per_kg_crc) : '—'}
-                      </td>
+                      <td className="p-3 text-right tabular-nums text-stone-700">{formatMarginPerFanega(r)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -317,30 +167,24 @@ export default function StatsResumenPage() {
                 <thead className="border-b border-stone-200 bg-stone-50">
                   <tr>
                     <th className="p-3 text-left font-medium text-stone-700">Finca</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Kg</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fanegas</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Ingreso</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Costo</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Margen</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Margen/kg</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Margen/fanega</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.rentability_farms.map((r) => (
                     <tr key={r.farm_id || r.farm_name} className="border-b border-stone-100 hover:bg-stone-50/80">
                       <td className="p-3 text-stone-800">{r.farm_name}</td>
-                      <td className="p-3 text-right tabular-nums text-stone-800">{num(r.kg, 3)}</td>
+                      <td className="p-3 text-right tabular-nums text-stone-800">{num(fanegasOf(r), 4)}</td>
                       <td className="p-3 text-right tabular-nums text-emerald-700">{crc(r.revenue_crc)}</td>
                       <td className="p-3 text-right tabular-nums text-rose-700">{crc(r.cost_crc)}</td>
-                      <td
-                        className={`p-3 text-right font-medium tabular-nums ${
-                          Number(r.margin_crc) >= 0 ? 'text-emerald-700' : 'text-red-700'
-                        }`}
-                      >
+                      <td className={`p-3 text-right font-medium tabular-nums ${marginToneClass(r.margin_crc)}`}>
                         {crc(r.margin_crc)}
                       </td>
-                      <td className="p-3 text-right tabular-nums text-stone-700">
-                        {r.margin_per_kg_crc != null ? crc(r.margin_per_kg_crc) : '—'}
-                      </td>
+                      <td className="p-3 text-right tabular-nums text-stone-700">{formatMarginPerFanega(r)}</td>
                     </tr>
                   ))}
                 </tbody>
