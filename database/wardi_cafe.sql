@@ -2,17 +2,17 @@
 -- PostgreSQL database dump
 --
 
-\restrict 2aV7YPbL8qkKDyvlNnvCqyhO33VuN6QT1WRqCcBB7TxxUmahsioVcJaRrzfUx3q
+\restrict bzoBXGZnOiGQlAWbzXYXyaddSl5XZKyWd7O9eFOC0xxT66fXjYjyl0co5P9F74K
 
 -- Dumped from database version 18.1
 -- Dumped by pg_dump version 18.1
 
--- Started on 2026-05-21 09:26:32
+-- Started on 2026-05-25 17:13:16
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
+-- SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -22,7 +22,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 11 (class 2615 OID 54745)
+-- TOC entry 13 (class 2615 OID 54745)
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
@@ -30,8 +30,8 @@ SET row_security = off;
 
 
 --
--- TOC entry 7521 (class 0 OID 0)
--- Dependencies: 11
+-- TOC entry 7495 (class 0 OID 0)
+-- Dependencies: 13
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
 --
 
@@ -39,24 +39,24 @@ COMMENT ON SCHEMA public IS '';
 
 
 --
--- TOC entry 12 (class 2615 OID 54746)
+-- TOC entry 11 (class 2615 OID 54746)
 -- Name: tiger; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA tiger;
+CREATE SCHEMA IF NOT EXISTS tiger;
 
 
 --
--- TOC entry 13 (class 2615 OID 54747)
+-- TOC entry 12 (class 2615 OID 54747)
 -- Name: topology; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA topology;
+CREATE SCHEMA IF NOT EXISTS topology;
 
 
 --
--- TOC entry 7522 (class 0 OID 0)
--- Dependencies: 13
+-- TOC entry 7496 (class 0 OID 0)
+-- Dependencies: 12
 -- Name: SCHEMA topology; Type: COMMENT; Schema: -; Owner: -
 --
 
@@ -72,7 +72,7 @@ CREATE EXTENSION IF NOT EXISTS fuzzystrmatch WITH SCHEMA public;
 
 
 --
--- TOC entry 7523 (class 0 OID 0)
+-- TOC entry 7497 (class 0 OID 0)
 -- Dependencies: 2
 -- Name: EXTENSION fuzzystrmatch; Type: COMMENT; Schema: -; Owner: -
 --
@@ -89,7 +89,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 
 --
--- TOC entry 7524 (class 0 OID 0)
+-- TOC entry 7498 (class 0 OID 0)
 -- Dependencies: 3
 -- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: -
 --
@@ -106,7 +106,7 @@ CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 
 
 --
--- TOC entry 7525 (class 0 OID 0)
+-- TOC entry 7499 (class 0 OID 0)
 -- Dependencies: 4
 -- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: -
 --
@@ -123,7 +123,7 @@ CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder WITH SCHEMA tiger;
 
 
 --
--- TOC entry 7526 (class 0 OID 0)
+-- TOC entry 7500 (class 0 OID 0)
 -- Dependencies: 5
 -- Name: EXTENSION postgis_tiger_geocoder; Type: COMMENT; Schema: -; Owner: -
 --
@@ -140,7 +140,7 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology WITH SCHEMA topology;
 
 
 --
--- TOC entry 7527 (class 0 OID 0)
+-- TOC entry 7501 (class 0 OID 0)
 -- Dependencies: 6
 -- Name: EXTENSION postgis_topology; Type: COMMENT; Schema: -; Owner: -
 --
@@ -157,7 +157,7 @@ CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
 
 
 --
--- TOC entry 7528 (class 0 OID 0)
+-- TOC entry 7502 (class 0 OID 0)
 -- Dependencies: 7
 -- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner: -
 --
@@ -166,7 +166,7 @@ COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
 
 
 --
--- TOC entry 2067 (class 1247 OID 56509)
+-- TOC entry 2065 (class 1247 OID 56509)
 -- Name: activity_status; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -178,7 +178,7 @@ CREATE TYPE public.activity_status AS ENUM (
 
 
 --
--- TOC entry 2070 (class 1247 OID 56516)
+-- TOC entry 2068 (class 1247 OID 56516)
 -- Name: aguinaldo_statement_status; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -190,7 +190,7 @@ CREATE TYPE public.aguinaldo_statement_status AS ENUM (
 
 
 --
--- TOC entry 2073 (class 1247 OID 56524)
+-- TOC entry 2071 (class 1247 OID 56524)
 -- Name: id_type; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -201,7 +201,7 @@ CREATE TYPE public.id_type AS ENUM (
 
 
 --
--- TOC entry 2076 (class 1247 OID 56530)
+-- TOC entry 2074 (class 1247 OID 56530)
 -- Name: movement_type; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -213,7 +213,7 @@ CREATE TYPE public.movement_type AS ENUM (
 
 
 --
--- TOC entry 2079 (class 1247 OID 56538)
+-- TOC entry 2077 (class 1247 OID 56538)
 -- Name: pay_unit; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -229,7 +229,7 @@ CREATE TYPE public.pay_unit AS ENUM (
 
 
 --
--- TOC entry 2082 (class 1247 OID 56552)
+-- TOC entry 2080 (class 1247 OID 56552)
 -- Name: payroll_slip_status; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -241,7 +241,7 @@ CREATE TYPE public.payroll_slip_status AS ENUM (
 
 
 --
--- TOC entry 2085 (class 1247 OID 56560)
+-- TOC entry 2083 (class 1247 OID 56560)
 -- Name: worker_type; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -253,7 +253,7 @@ CREATE TYPE public.worker_type AS ENUM (
 
 
 --
--- TOC entry 455 (class 1255 OID 56567)
+-- TOC entry 453 (class 1255 OID 56567)
 -- Name: allocate_general_expense_by_area(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -374,7 +374,7 @@ $$;
 
 
 --
--- TOC entry 1150 (class 1255 OID 56568)
+-- TOC entry 1148 (class 1255 OID 56568)
 -- Name: app_current_tenant_id(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -412,8 +412,8 @@ $$;
 
 
 --
--- TOC entry 7529 (class 0 OID 0)
--- Dependencies: 1150
+-- TOC entry 7503 (class 0 OID 0)
+-- Dependencies: 1148
 -- Name: FUNCTION app_current_tenant_id(); Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -421,7 +421,7 @@ COMMENT ON FUNCTION public.app_current_tenant_id() IS 'Lee el tenant actual desd
 
 
 --
--- TOC entry 678 (class 1255 OID 56569)
+-- TOC entry 676 (class 1255 OID 56569)
 -- Name: generate_asset_plate(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -443,7 +443,7 @@ $$;
 
 
 --
--- TOC entry 748 (class 1255 OID 56570)
+-- TOC entry 746 (class 1255 OID 56570)
 -- Name: generate_unique_asset_plate(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -477,7 +477,7 @@ $$;
 
 
 --
--- TOC entry 1136 (class 1255 OID 56571)
+-- TOC entry 1134 (class 1255 OID 56571)
 -- Name: generate_unique_asset_plate(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -509,7 +509,7 @@ $$;
 
 
 --
--- TOC entry 910 (class 1255 OID 56572)
+-- TOC entry 908 (class 1255 OID 56572)
 -- Name: set_asset_plate(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -526,7 +526,7 @@ $$;
 
 
 --
--- TOC entry 1332 (class 1255 OID 56573)
+-- TOC entry 1330 (class 1255 OID 56573)
 -- Name: set_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -541,7 +541,7 @@ $$;
 
 
 --
--- TOC entry 1003 (class 1255 OID 56574)
+-- TOC entry 1001 (class 1255 OID 56574)
 -- Name: trg_asset_categories_set_name_norm(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -556,7 +556,7 @@ $$;
 
 
 --
--- TOC entry 901 (class 1255 OID 56575)
+-- TOC entry 899 (class 1255 OID 56575)
 -- Name: trg_expense_categories_set_name_norm(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -571,7 +571,7 @@ $$;
 
 
 --
--- TOC entry 1275 (class 1255 OID 56576)
+-- TOC entry 1273 (class 1255 OID 56576)
 -- Name: trg_general_expense_recalc(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -725,23 +725,6 @@ CREATE TABLE public.assets (
 
 
 --
--- TOC entry 293 (class 1259 OID 56675)
--- Name: coffee_varieties; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.coffee_varieties (
-    id uuid DEFAULT gen_random_uuid() CONSTRAINT coffee_varieties_id_not_null NOT NULL,
-    name text CONSTRAINT coffee_varieties_name_not_null NOT NULL,
-    is_active boolean DEFAULT true CONSTRAINT coffee_varieties_is_active_not_null NOT NULL,
-    created_at timestamp with time zone DEFAULT now() CONSTRAINT coffee_varieties_created_at_not_null NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() CONSTRAINT coffee_varieties_updated_at_not_null NOT NULL,
-    created_by_user_id uuid,
-    updated_by_user_id uuid,
-    display_name text
-);
-
-
---
 -- TOC entry 294 (class 1259 OID 56689)
 -- Name: calendar_activities; Type: TABLE; Schema: public; Owner: -
 --
@@ -814,7 +797,78 @@ CREATE TABLE public.clients (
     name character varying(150) NOT NULL,
     plan_id uuid,
     status character varying(20) DEFAULT 'active'::character varying,
-    created_at timestamp without time zone DEFAULT now()
+    created_at timestamp without time zone DEFAULT now(),
+    license_starts_on date,
+    license_expires_on date,
+    billing_anchor_day smallint
+);
+
+
+--
+-- TOC entry 7504 (class 0 OID 0)
+-- Dependencies: 298
+-- Name: COLUMN clients.license_starts_on; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.clients.license_starts_on IS 'Inicio de vigencia (creación o última renovación).';
+
+
+--
+-- TOC entry 7505 (class 0 OID 0)
+-- Dependencies: 298
+-- Name: COLUMN clients.license_expires_on; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.clients.license_expires_on IS 'Último día inclusive de vigencia; el cron de medianoche revoca sesiones si hoy > esta fecha.';
+
+
+--
+-- TOC entry 7506 (class 0 OID 0)
+-- Dependencies: 298
+-- Name: COLUMN clients.billing_anchor_day; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.clients.billing_anchor_day IS 'Día del mes (1-28) para renovación mensual cuando el plan usa monthly_anchor.';
+
+
+--
+-- TOC entry 344 (class 1259 OID 58686)
+-- Name: coffee_lot_production; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.coffee_lot_production (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    client_id uuid NOT NULL,
+    lot_id uuid NOT NULL,
+    prod_date date NOT NULL,
+    cajuelas numeric(12,2) NOT NULL,
+    fanegas numeric(14,4) GENERATED ALWAYS AS ((cajuelas / 20.0)) STORED,
+    notes text,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_by_user_id uuid,
+    updated_by_user_id uuid,
+    CONSTRAINT coffee_lot_production_cajuelas_check CHECK ((cajuelas >= (0)::numeric))
+);
+
+ALTER TABLE ONLY public.coffee_lot_production FORCE ROW LEVEL SECURITY;
+
+
+--
+-- TOC entry 293 (class 1259 OID 56675)
+-- Name: coffee_varieties; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.coffee_varieties (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_by_user_id uuid,
+    updated_by_user_id uuid,
+    display_name text
 );
 
 
@@ -945,7 +999,7 @@ CREATE TABLE public.farms (
 
 
 --
--- TOC entry 7530 (class 0 OID 0)
+-- TOC entry 7507 (class 0 OID 0)
 -- Dependencies: 304
 -- Name: COLUMN farms.location; Type: COMMENT; Schema: public; Owner: -
 --
@@ -954,7 +1008,7 @@ COMMENT ON COLUMN public.farms.location IS 'Texto libre legado; preferir provinc
 
 
 --
--- TOC entry 7531 (class 0 OID 0)
+-- TOC entry 7508 (class 0 OID 0)
 -- Dependencies: 304
 -- Name: COLUMN farms.province_id; Type: COMMENT; Schema: public; Owner: -
 --
@@ -963,7 +1017,7 @@ COMMENT ON COLUMN public.farms.province_id IS 'Provincia (Costa Rica); obligator
 
 
 --
--- TOC entry 7532 (class 0 OID 0)
+-- TOC entry 7509 (class 0 OID 0)
 -- Dependencies: 304
 -- Name: COLUMN farms.canton_id; Type: COMMENT; Schema: public; Owner: -
 --
@@ -972,7 +1026,7 @@ COMMENT ON COLUMN public.farms.canton_id IS 'Cantón; opcional.';
 
 
 --
--- TOC entry 7533 (class 0 OID 0)
+-- TOC entry 7510 (class 0 OID 0)
 -- Dependencies: 304
 -- Name: COLUMN farms.district_id; Type: COMMENT; Schema: public; Owner: -
 --
@@ -981,7 +1035,7 @@ COMMENT ON COLUMN public.farms.district_id IS 'Distrito; opcional.';
 
 
 --
--- TOC entry 7534 (class 0 OID 0)
+-- TOC entry 7511 (class 0 OID 0)
 -- Dependencies: 304
 -- Name: COLUMN farms.community; Type: COMMENT; Schema: public; Owner: -
 --
@@ -1027,6 +1081,8 @@ CREATE TABLE public.fixed_payroll (
     CONSTRAINT fixed_payroll_social_charges_check CHECK ((social_charges >= (0)::numeric))
 );
 
+ALTER TABLE ONLY public.fixed_payroll FORCE ROW LEVEL SECURITY;
+
 
 --
 -- TOC entry 306 (class 1259 OID 56859)
@@ -1046,6 +1102,8 @@ CREATE TABLE public.fixed_payroll_allocations (
     updated_by_user_id uuid,
     CONSTRAINT fixed_payroll_allocations_check CHECK ((((allocation_pct IS NOT NULL) AND (amount_allocated IS NULL)) OR ((allocation_pct IS NULL) AND (amount_allocated IS NOT NULL))))
 );
+
+ALTER TABLE ONLY public.fixed_payroll_allocations FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -1117,6 +1175,8 @@ CREATE TABLE public.harvests (
     currency text DEFAULT 'CRC'::text,
     updated_by_user_id uuid,
     client_id uuid NOT NULL,
+    price_per_fanega_usd numeric(14,2),
+    price_fx_rate numeric(14,4),
     CONSTRAINT harvests_check CHECK ((end_date >= start_date))
 );
 
@@ -1430,11 +1490,11 @@ CREATE TABLE public.labor_types (
 --
 
 CREATE TABLE public.lot_coffee_varieties (
-    lot_id uuid CONSTRAINT lot_coffee_varieties_lot_id_not_null NOT NULL,
+    lot_id uuid NOT NULL,
     coffee_variety_id uuid CONSTRAINT lot_coffee_varieties_variety_id_not_null NOT NULL,
-    is_active boolean DEFAULT true CONSTRAINT lot_coffee_varieties_is_active_not_null NOT NULL,
-    created_at timestamp with time zone DEFAULT now() CONSTRAINT lot_coffee_varieties_created_at_not_null NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() CONSTRAINT lot_coffee_varieties_updated_at_not_null NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     created_by_user_id uuid,
     updated_by_user_id uuid
 );
@@ -1458,66 +1518,7 @@ CREATE TABLE public.lot_harvests (
 
 
 --
--- TOC entry 325 (class 1259 OID 57194)
--- Name: lot_production; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.lot_production (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    lot_id uuid,
-    harvest_id uuid,
-    prod_date date NOT NULL,
-    notes text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    is_active boolean DEFAULT true NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    created_by_user_id uuid,
-    updated_by_user_id uuid,
-    client_id uuid NOT NULL,
-    cost_scope text NOT NULL,
-    farm_id uuid,
-    CONSTRAINT lot_production_cost_scope_check CHECK ((cost_scope = ANY (ARRAY['lot'::text, 'farm'::text]))),
-    CONSTRAINT lot_production_scope_chk CHECK ((((cost_scope = 'lot'::text) AND (lot_id IS NOT NULL) AND (farm_id IS NULL)) OR ((cost_scope = 'farm'::text) AND (farm_id IS NOT NULL) AND (lot_id IS NULL))))
-);
-
-
---
--- TOC entry 326 (class 1259 OID 57212)
--- Name: lot_production_allocations; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.lot_production_allocations (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    lot_production_id uuid NOT NULL,
-    lot_id uuid NOT NULL,
-    allocation_pct numeric(6,3) NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    is_active boolean DEFAULT true NOT NULL,
-    CONSTRAINT lot_production_allocations_pct_check CHECK (((allocation_pct >= (0)::numeric) AND (allocation_pct <= (100)::numeric)))
-);
-
-
---
--- TOC entry 327 (class 1259 OID 57227)
--- Name: lot_production_details; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.lot_production_details (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    lot_production_id uuid NOT NULL,
-    caliber_id uuid NOT NULL,
-    kilos numeric(12,2) NOT NULL,
-    price_per_kg numeric(12,2),
-    total_amount numeric(14,2) GENERATED ALWAYS AS ((kilos * price_per_kg)) STORED,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT lot_production_details_kilos_check CHECK ((kilos >= (0)::numeric)),
-    CONSTRAINT lot_production_details_price_per_kg_check CHECK (((price_per_kg IS NULL) OR (price_per_kg >= (0)::numeric)))
-);
-
-
---
--- TOC entry 328 (class 1259 OID 57240)
+-- TOC entry 325 (class 1259 OID 57240)
 -- Name: lots; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1542,7 +1543,7 @@ CREATE TABLE public.lots (
 
 
 --
--- TOC entry 329 (class 1259 OID 57260)
+-- TOC entry 326 (class 1259 OID 57260)
 -- Name: mix_application_items; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1563,7 +1564,7 @@ CREATE TABLE public.mix_application_items (
 
 
 --
--- TOC entry 330 (class 1259 OID 57278)
+-- TOC entry 327 (class 1259 OID 57278)
 -- Name: mix_applications; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1589,7 +1590,7 @@ CREATE TABLE public.mix_applications (
 
 
 --
--- TOC entry 331 (class 1259 OID 57298)
+-- TOC entry 328 (class 1259 OID 57298)
 -- Name: password_reset_tokens; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1607,7 +1608,7 @@ CREATE TABLE public.password_reset_tokens (
 
 
 --
--- TOC entry 332 (class 1259 OID 57312)
+-- TOC entry 329 (class 1259 OID 57312)
 -- Name: payroll_employee_rates; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1626,7 +1627,7 @@ CREATE TABLE public.payroll_employee_rates (
 
 
 --
--- TOC entry 333 (class 1259 OID 57326)
+-- TOC entry 330 (class 1259 OID 57326)
 -- Name: payroll_nomina_contribution_rules; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1651,7 +1652,7 @@ CREATE TABLE public.payroll_nomina_contribution_rules (
 
 
 --
--- TOC entry 334 (class 1259 OID 57346)
+-- TOC entry 331 (class 1259 OID 57346)
 -- Name: payroll_periods; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1667,7 +1668,7 @@ CREATE TABLE public.payroll_periods (
 
 
 --
--- TOC entry 335 (class 1259 OID 57358)
+-- TOC entry 332 (class 1259 OID 57358)
 -- Name: payroll_settings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1691,7 +1692,7 @@ CREATE TABLE public.payroll_settings (
 
 
 --
--- TOC entry 336 (class 1259 OID 57380)
+-- TOC entry 333 (class 1259 OID 57380)
 -- Name: payroll_slip_lot_allocations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1705,9 +1706,11 @@ CREATE TABLE public.payroll_slip_lot_allocations (
     CONSTRAINT payroll_slip_lot_allocations_pct_chk CHECK (((allocation_pct >= (0)::numeric) AND (allocation_pct <= (100)::numeric)))
 );
 
+ALTER TABLE ONLY public.payroll_slip_lot_allocations FORCE ROW LEVEL SECURITY;
+
 
 --
--- TOC entry 337 (class 1259 OID 57391)
+-- TOC entry 334 (class 1259 OID 57391)
 -- Name: payroll_slips; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1744,7 +1747,7 @@ CREATE TABLE public.payroll_slips (
 
 
 --
--- TOC entry 338 (class 1259 OID 57428)
+-- TOC entry 335 (class 1259 OID 57428)
 -- Name: plans; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1756,12 +1759,52 @@ CREATE TABLE public.plans (
     created_at timestamp without time zone DEFAULT now(),
     max_lots_per_farm integer DEFAULT 50 NOT NULL,
     max_users_admin integer DEFAULT 1 NOT NULL,
-    max_users_operario integer DEFAULT 3 NOT NULL
+    max_users_operario integer DEFAULT 3 NOT NULL,
+    billing_model character varying(32) DEFAULT 'perpetual'::character varying NOT NULL,
+    trial_days integer,
+    description text,
+    is_active boolean DEFAULT true NOT NULL
 );
 
 
 --
--- TOC entry 339 (class 1259 OID 57443)
+-- TOC entry 7512 (class 0 OID 0)
+-- Dependencies: 335
+-- Name: COLUMN plans.billing_model; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.plans.billing_model IS 'perpetual | trial_days | monthly_anchor — define cómo se calcula license_expires_on del cliente.';
+
+
+--
+-- TOC entry 7513 (class 0 OID 0)
+-- Dependencies: 335
+-- Name: COLUMN plans.trial_days; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.plans.trial_days IS 'Días de vigencia para billing_model = trial_days (p. ej. demo 30 días).';
+
+
+--
+-- TOC entry 7514 (class 0 OID 0)
+-- Dependencies: 335
+-- Name: COLUMN plans.description; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.plans.description IS 'Texto descriptivo del plan para superadmin.';
+
+
+--
+-- TOC entry 7515 (class 0 OID 0)
+-- Dependencies: 335
+-- Name: COLUMN plans.is_active; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.plans.is_active IS 'false = no aparece al crear organizaciones; clientes ya asignados siguen usando el plan.';
+
+
+--
+-- TOC entry 336 (class 1259 OID 57443)
 -- Name: provinces; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1773,7 +1816,7 @@ CREATE TABLE public.provinces (
 
 
 --
--- TOC entry 340 (class 1259 OID 57448)
+-- TOC entry 337 (class 1259 OID 57448)
 -- Name: provinces_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1788,7 +1831,7 @@ ALTER TABLE public.provinces ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTIT
 
 
 --
--- TOC entry 341 (class 1259 OID 57449)
+-- TOC entry 338 (class 1259 OID 57449)
 -- Name: roles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1799,7 +1842,7 @@ CREATE TABLE public.roles (
 
 
 --
--- TOC entry 342 (class 1259 OID 57455)
+-- TOC entry 339 (class 1259 OID 57455)
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1810,7 +1853,7 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- TOC entry 343 (class 1259 OID 57463)
+-- TOC entry 340 (class 1259 OID 57463)
 -- Name: security_audit_logs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1828,7 +1871,7 @@ CREATE TABLE public.security_audit_logs (
 
 
 --
--- TOC entry 344 (class 1259 OID 57475)
+-- TOC entry 341 (class 1259 OID 57475)
 -- Name: sessions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1851,7 +1894,7 @@ CREATE TABLE public.sessions (
 
 
 --
--- TOC entry 345 (class 1259 OID 57489)
+-- TOC entry 342 (class 1259 OID 57489)
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1879,7 +1922,7 @@ CREATE TABLE public.users (
 
 
 --
--- TOC entry 346 (class 1259 OID 57511)
+-- TOC entry 343 (class 1259 OID 57511)
 -- Name: workers; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1903,7 +1946,7 @@ CREATE TABLE public.workers (
 
 
 --
--- TOC entry 7458 (class 0 OID 56577)
+-- TOC entry 7434 (class 0 OID 56577)
 -- Dependencies: 289
 -- Data for Name: aguinaldo_statements; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -1913,7 +1956,7 @@ INSERT INTO public.aguinaldo_statements (id, client_id, worker_id, legal_period_
 
 
 --
--- TOC entry 7459 (class 0 OID 56605)
+-- TOC entry 7435 (class 0 OID 56605)
 -- Dependencies: 290
 -- Data for Name: asset_categories; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -1923,7 +1966,7 @@ INSERT INTO public.asset_categories (id, name, status, created_by, updated_by, c
 
 
 --
--- TOC entry 7460 (class 0 OID 56622)
+-- TOC entry 7436 (class 0 OID 56622)
 -- Dependencies: 291
 -- Data for Name: asset_depreciation; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2015,7 +2058,7 @@ INSERT INTO public.asset_depreciation (id, asset_id, period_year, period_month, 
 
 
 --
--- TOC entry 7461 (class 0 OID 56646)
+-- TOC entry 7437 (class 0 OID 56646)
 -- Dependencies: 292
 -- Data for Name: assets; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2027,30 +2070,7 @@ INSERT INTO public.assets (id, category_id, alias, brand, model, name, purchase_
 
 
 --
--- TOC entry 7462 (class 0 OID 56675)
--- Dependencies: 293
--- Data for Name: coffee_varieties; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000001', 'caturra', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Caturra');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000002', 'catuai_amarillo', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Catuaí Amarillo');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000003', 'catuai_rojo', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Catuaí Rojo');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000004', 'catimor', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Catimor');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000005', 'villa_sarchi', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Villa Sarchí');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000006', 'obata', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Obatá');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000007', 'geisha', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Geisha');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000008', 'bourbon', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Bourbon');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000009', 'typica', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Típica');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000a', 'maragogipe', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Maragogipe');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000b', 'pacamara', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Pacamara');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000c', 'costa_rica_95', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Costa Rica 95');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000d', 'ihcafe_90', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'IHCAFE 90');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000e', 'sarchimor', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Sarchimor');
-INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000f', 'centroamericano', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', NULL, NULL, 'Centroamericano F1');
-
-
---
--- TOC entry 7463 (class 0 OID 56689)
+-- TOC entry 7439 (class 0 OID 56689)
 -- Dependencies: 294
 -- Data for Name: calendar_activities; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2065,7 +2085,7 @@ INSERT INTO public.calendar_activities (id, activity_date, farm_id, lot_id, labo
 
 
 --
--- TOC entry 7464 (class 0 OID 56706)
+-- TOC entry 7440 (class 0 OID 56706)
 -- Dependencies: 295
 -- Data for Name: calibers; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2084,7 +2104,7 @@ INSERT INTO public.calibers (id, name, description, is_active, client_id) VALUES
 
 
 --
--- TOC entry 7465 (class 0 OID 56717)
+-- TOC entry 7441 (class 0 OID 56717)
 -- Dependencies: 296
 -- Data for Name: cantons; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2176,18 +2196,51 @@ INSERT INTO public.cantons (id, province_id, name, official_code) VALUES (84, 6,
 
 
 --
--- TOC entry 7467 (class 0 OID 56724)
+-- TOC entry 7443 (class 0 OID 56724)
 -- Dependencies: 298
 -- Data for Name: clients; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.clients (id, name, plan_id, status, created_at) VALUES ('a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'Concurrency Test Client', '94c80683-d16d-40c7-bef0-49668c608963', 'active', '2026-05-05 11:23:37.951979');
-INSERT INTO public.clients (id, name, plan_id, status, created_at) VALUES ('80ee1408-ed96-4301-8d6e-f891e5db8889', 'Prueba', '94c80683-d16d-40c7-bef0-49668c608963', 'active', '2026-05-07 09:41:01.881641');
-INSERT INTO public.clients (id, name, plan_id, status, created_at) VALUES ('08545840-e851-4753-97f0-eefc09236e90', 'Ricardo', '94c80683-d16d-40c7-bef0-49668c608963', 'active', '2026-05-14 11:58:15.437104');
+INSERT INTO public.clients (id, name, plan_id, status, created_at, license_starts_on, license_expires_on, billing_anchor_day) VALUES ('a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'Concurrency Test Client', '94c80683-d16d-40c7-bef0-49668c608963', 'active', '2026-05-05 11:23:37.951979', NULL, NULL, NULL);
+INSERT INTO public.clients (id, name, plan_id, status, created_at, license_starts_on, license_expires_on, billing_anchor_day) VALUES ('80ee1408-ed96-4301-8d6e-f891e5db8889', 'Prueba', '94c80683-d16d-40c7-bef0-49668c608963', 'active', '2026-05-07 09:41:01.881641', NULL, NULL, NULL);
+INSERT INTO public.clients (id, name, plan_id, status, created_at, license_starts_on, license_expires_on, billing_anchor_day) VALUES ('08545840-e851-4753-97f0-eefc09236e90', 'Ricardo', '94c80683-d16d-40c7-bef0-49668c608963', 'active', '2026-05-14 11:58:15.437104', '2026-05-22', '2026-06-21', NULL);
+INSERT INTO public.clients (id, name, plan_id, status, created_at, license_starts_on, license_expires_on, billing_anchor_day) VALUES ('24d16b37-51ad-47ce-8f9d-68695ebbc0d8', 'Ricardo', '94c80683-d16d-40c7-bef0-49668c608963', 'active', '2026-05-22 09:44:35.877309', '2026-05-22', '2026-06-21', NULL);
 
 
 --
--- TOC entry 7468 (class 0 OID 56732)
+-- TOC entry 7489 (class 0 OID 58686)
+-- Dependencies: 344
+-- Data for Name: coffee_lot_production; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.coffee_lot_production (id, client_id, lot_id, prod_date, cajuelas, notes, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id) VALUES ('5761cd5c-b599-4eae-bcd1-c1a44ee958a8', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'b3f4dbf9-fb71-44d1-9c48-623ad1db5360', '2026-05-21', 30.00, NULL, true, '2026-05-21 10:00:42.925867-06', '2026-05-21 10:00:42.925867-06', '089c211c-3f84-4bf4-ab24-ae82ae6be122', '089c211c-3f84-4bf4-ab24-ae82ae6be122');
+
+
+--
+-- TOC entry 7438 (class 0 OID 56675)
+-- Dependencies: 293
+-- Data for Name: coffee_varieties; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000001', 'caturra', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Caturra');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000002', 'catuai_amarillo', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Catuaí Amarillo');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000003', 'catuai_rojo', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Catuaí Rojo');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000004', 'catimor', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Catimor');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000005', 'villa_sarchi', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Villa Sarchí');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000006', 'obata', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Obatá');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000007', 'geisha', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Geisha');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000008', 'bourbon', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Bourbon');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-000000000009', 'typica', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Típica');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000a', 'maragogipe', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Maragogipe');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000b', 'pacamara', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Pacamara');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000c', 'costa_rica_95', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Costa Rica 95');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000d', 'ihcafe_90', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'IHCAFE 90');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000e', 'sarchimor', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Sarchimor');
+INSERT INTO public.coffee_varieties (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id, display_name) VALUES ('b1000001-0001-4001-8001-00000000000f', 'centroamericano', true, '2026-05-21 09:43:16.751926-06', '2026-05-21 09:43:16.751926-06', NULL, NULL, 'Centroamericano F1');
+
+
+--
+-- TOC entry 7444 (class 0 OID 56732)
 -- Dependencies: 299
 -- Data for Name: districts; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2683,7 +2736,7 @@ INSERT INTO public.districts (id, canton_id, name, official_code) VALUES (488, 8
 
 
 --
--- TOC entry 7470 (class 0 OID 56739)
+-- TOC entry 7446 (class 0 OID 56739)
 -- Dependencies: 301
 -- Data for Name: expense_categories; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2692,7 +2745,7 @@ INSERT INTO public.expense_categories (id, client_id, name, name_norm, status, c
 
 
 --
--- TOC entry 7471 (class 0 OID 56756)
+-- TOC entry 7447 (class 0 OID 56756)
 -- Dependencies: 302
 -- Data for Name: expenses; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2702,7 +2755,7 @@ INSERT INTO public.expenses (id, lot_id, harvest_id, exp_date, description, amou
 
 
 --
--- TOC entry 7472 (class 0 OID 56780)
+-- TOC entry 7448 (class 0 OID 56780)
 -- Dependencies: 303
 -- Data for Name: farm_harvest_estimates; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2710,19 +2763,19 @@ INSERT INTO public.expenses (id, lot_id, harvest_id, exp_date, description, amou
 
 
 --
--- TOC entry 7473 (class 0 OID 56792)
+-- TOC entry 7449 (class 0 OID 56792)
 -- Dependencies: 304
 -- Data for Name: farms; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 INSERT INTO public.farms (id, name, location, created_at, is_active, deactivated_at, location_geom, created_by_user_id, updated_by_user_id, geom, updated_at, area_ha, labor_allocation_mode, client_id, province_id, canton_id, district_id, community) VALUES ('6771d0bf-09c0-4b32-afd3-b3ed94bf85e7', 'Prueba', NULL, '2026-05-07 10:30:24.191258-06', true, NULL, NULL, '89e2b58e-057c-4f7b-908b-30d1086c076d', '89e2b58e-057c-4f7b-908b-30d1086c076d', NULL, '2026-05-07 10:30:24.191258-06', 0.0000, 'manual', '80ee1408-ed96-4301-8d6e-f891e5db8889', NULL, NULL, NULL, NULL);
-INSERT INTO public.farms (id, name, location, created_at, is_active, deactivated_at, location_geom, created_by_user_id, updated_by_user_id, geom, updated_at, area_ha, labor_allocation_mode, client_id, province_id, canton_id, district_id, community) VALUES ('b7642e09-5cfc-4625-b2f9-d093172ea0ff', 'Finca de prueba', 'Cartago', '2026-05-06 09:06:19.721724-06', true, NULL, NULL, 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', NULL, '2026-05-15 06:22:40.803605-06', 5.0000, 'manual', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 3, 37, 244, NULL);
 INSERT INTO public.farms (id, name, location, created_at, is_active, deactivated_at, location_geom, created_by_user_id, updated_by_user_id, geom, updated_at, area_ha, labor_allocation_mode, client_id, province_id, canton_id, district_id, community) VALUES ('6fba7ade-b2e6-4195-be3b-86639c87f681', 'Prueba 2', 'Cartago', '2026-05-06 10:57:18.546695-06', false, '2026-05-15 06:23:01.22078-06', NULL, 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', NULL, '2026-05-15 06:23:01.22078-06', 5.0000, 'manual', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', NULL, NULL, NULL, NULL);
 INSERT INTO public.farms (id, name, location, created_at, is_active, deactivated_at, location_geom, created_by_user_id, updated_by_user_id, geom, updated_at, area_ha, labor_allocation_mode, client_id, province_id, canton_id, district_id, community) VALUES ('14cb1ab3-8cbf-40ca-b41c-1c2e4e5536ab', 'Vera', NULL, '2026-05-15 06:23:15.962751-06', true, NULL, NULL, 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', NULL, '2026-05-15 06:23:15.962751-06', 0.0000, 'manual', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 3, 39, 256, 'fsf');
+INSERT INTO public.farms (id, name, location, created_at, is_active, deactivated_at, location_geom, created_by_user_id, updated_by_user_id, geom, updated_at, area_ha, labor_allocation_mode, client_id, province_id, canton_id, district_id, community) VALUES ('b7642e09-5cfc-4625-b2f9-d093172ea0ff', 'El Cedral', 'Cartago', '2026-05-06 09:06:19.721724-06', true, NULL, NULL, 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', NULL, '2026-05-21 11:55:05.837131-06', 5.0000, 'manual', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 3, 37, 244, NULL);
 
 
 --
--- TOC entry 7474 (class 0 OID 56812)
+-- TOC entry 7450 (class 0 OID 56812)
 -- Dependencies: 305
 -- Data for Name: fixed_payroll; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2730,7 +2783,7 @@ INSERT INTO public.farms (id, name, location, created_at, is_active, deactivated
 
 
 --
--- TOC entry 7475 (class 0 OID 56859)
+-- TOC entry 7451 (class 0 OID 56859)
 -- Dependencies: 306
 -- Data for Name: fixed_payroll_allocations; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2738,7 +2791,7 @@ INSERT INTO public.farms (id, name, location, created_at, is_active, deactivated
 
 
 --
--- TOC entry 7476 (class 0 OID 56873)
+-- TOC entry 7452 (class 0 OID 56873)
 -- Dependencies: 307
 -- Data for Name: general_expense_allocations; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2748,7 +2801,7 @@ INSERT INTO public.general_expense_allocations (id, general_expense_id, lot_id, 
 
 
 --
--- TOC entry 7477 (class 0 OID 56892)
+-- TOC entry 7453 (class 0 OID 56892)
 -- Dependencies: 308
 -- Data for Name: general_expenses; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2757,15 +2810,17 @@ INSERT INTO public.general_expenses (id, farm_id, harvest_id, exp_date, descript
 
 
 --
--- TOC entry 7478 (class 0 OID 56917)
+-- TOC entry 7454 (class 0 OID 56917)
 -- Dependencies: 309
 -- Data for Name: harvests; Type: TABLE DATA; Schema: public; Owner: -
 --
 
+INSERT INTO public.harvests (id, name, start_date, end_date, created_by_user_id, created_at, is_active, updated_at, price_per_fanega, currency, updated_by_user_id, client_id, price_per_fanega_usd, price_fx_rate) VALUES ('667aa2bf-0489-403d-b25d-f3eb0908f79e', 'Cosecha 2025 - 2026', '2025-01-01', '2026-12-31', '089c211c-3f84-4bf4-ab24-ae82ae6be122', '2026-05-21 10:29:07.261923-06', true, '2026-05-21 10:29:07.261923-06', 50000.00, 'CRC', '089c211c-3f84-4bf4-ab24-ae82ae6be122', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', NULL, NULL);
+INSERT INTO public.harvests (id, name, start_date, end_date, created_by_user_id, created_at, is_active, updated_at, price_per_fanega, currency, updated_by_user_id, client_id, price_per_fanega_usd, price_fx_rate) VALUES ('99ec13df-4324-420c-904e-ea357c05d251', 'Cosecha 2026 - 2027', '2027-01-01', '2027-12-31', '089c211c-3f84-4bf4-ab24-ae82ae6be122', '2026-05-21 10:33:15.668974-06', true, '2026-05-21 10:33:15.668974-06', 10000.00, 'CRC', '089c211c-3f84-4bf4-ab24-ae82ae6be122', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', NULL, NULL);
 
 
 --
--- TOC entry 7479 (class 0 OID 56936)
+-- TOC entry 7455 (class 0 OID 56936)
 -- Dependencies: 310
 -- Data for Name: inventory_brands; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2779,7 +2834,7 @@ INSERT INTO public.inventory_brands (id, name, is_active, created_at, updated_at
 
 
 --
--- TOC entry 7480 (class 0 OID 56952)
+-- TOC entry 7456 (class 0 OID 56952)
 -- Dependencies: 311
 -- Data for Name: inventory_categories; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2802,7 +2857,7 @@ INSERT INTO public.inventory_categories (id, name, is_active, created_at, update
 
 
 --
--- TOC entry 7481 (class 0 OID 56967)
+-- TOC entry 7457 (class 0 OID 56967)
 -- Dependencies: 312
 -- Data for Name: inventory_consumption_layers; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2822,7 +2877,7 @@ INSERT INTO public.inventory_consumption_layers (id, consumption_id, layer_id, q
 
 
 --
--- TOC entry 7482 (class 0 OID 56981)
+-- TOC entry 7458 (class 0 OID 56981)
 -- Dependencies: 313
 -- Data for Name: inventory_consumptions; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2841,7 +2896,7 @@ INSERT INTO public.inventory_consumptions (id, lot_id, harvest_id, expense_id, i
 
 
 --
--- TOC entry 7483 (class 0 OID 57005)
+-- TOC entry 7459 (class 0 OID 57005)
 -- Dependencies: 314
 -- Data for Name: inventory_item_ingredients; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2849,7 +2904,7 @@ INSERT INTO public.inventory_consumptions (id, lot_id, harvest_id, expense_id, i
 
 
 --
--- TOC entry 7484 (class 0 OID 57019)
+-- TOC entry 7460 (class 0 OID 57019)
 -- Dependencies: 315
 -- Data for Name: inventory_items; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2866,7 +2921,7 @@ INSERT INTO public.inventory_items (id, name, unit, is_active, created_at, updat
 
 
 --
--- TOC entry 7485 (class 0 OID 57037)
+-- TOC entry 7461 (class 0 OID 57037)
 -- Dependencies: 316
 -- Data for Name: inventory_layers; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2886,7 +2941,7 @@ INSERT INTO public.inventory_layers (id, item_id, movement_in_id, layer_date, qt
 
 
 --
--- TOC entry 7486 (class 0 OID 57058)
+-- TOC entry 7462 (class 0 OID 57058)
 -- Dependencies: 317
 -- Data for Name: inventory_movement_layers; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2902,7 +2957,7 @@ INSERT INTO public.inventory_movement_layers (id, movement_id, layer_id, qty_use
 
 
 --
--- TOC entry 7487 (class 0 OID 57072)
+-- TOC entry 7463 (class 0 OID 57072)
 -- Dependencies: 318
 -- Data for Name: inventory_movements; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2926,7 +2981,7 @@ INSERT INTO public.inventory_movements (id, item_id, mov_date, movement, qty, un
 
 
 --
--- TOC entry 7488 (class 0 OID 57103)
+-- TOC entry 7464 (class 0 OID 57103)
 -- Dependencies: 319
 -- Data for Name: labor_entries; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2949,7 +3004,7 @@ INSERT INTO public.labor_entries (id, lot_id, worker_id, labor_type_id, work_dat
 
 
 --
--- TOC entry 7489 (class 0 OID 57128)
+-- TOC entry 7465 (class 0 OID 57128)
 -- Dependencies: 320
 -- Data for Name: labor_entry_allocations; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2974,7 +3029,7 @@ INSERT INTO public.labor_entry_allocations (id, labor_entry_id, lot_id, allocati
 
 
 --
--- TOC entry 7490 (class 0 OID 57144)
+-- TOC entry 7466 (class 0 OID 57144)
 -- Dependencies: 321
 -- Data for Name: labor_rates; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -2982,7 +3037,7 @@ INSERT INTO public.labor_entry_allocations (id, labor_entry_id, lot_id, allocati
 
 
 --
--- TOC entry 7491 (class 0 OID 57160)
+-- TOC entry 7467 (class 0 OID 57160)
 -- Dependencies: 322
 -- Data for Name: labor_types; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -3016,21 +3071,19 @@ INSERT INTO public.labor_types (id, name, is_active, created_at, updated_at, cre
 INSERT INTO public.labor_types (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id) VALUES ('bc6f28c0-3647-467f-8fc9-85ad43118bb0', 'Monitoreo de plagas', true, '2026-05-06 10:16:53.291998-06', '2026-05-06 10:16:53.291998-06', NULL, NULL);
 INSERT INTO public.labor_types (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id) VALUES ('9c2dac95-9837-49c6-8b78-f3980ae93601', 'Monitoreo nutricional', true, '2026-05-06 10:16:53.291998-06', '2026-05-06 10:16:53.291998-06', NULL, NULL);
 INSERT INTO public.labor_types (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id) VALUES ('9b71b942-0886-4223-ba48-d3de2285d35d', 'Llenado de bolsas', true, '2026-05-06 10:37:52.779472-06', '2026-05-06 10:37:52.779472-06', NULL, NULL);
+INSERT INTO public.labor_types (id, name, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id) VALUES ('226dea59-7590-493e-a543-eb95eaf11c9b', 'Recolección de café', true, '2026-05-21 09:33:48.721845-06', '2026-05-21 09:33:48.721845-06', NULL, NULL);
 
 
 --
--- TOC entry 7492 (class 0 OID 57174)
+-- TOC entry 7468 (class 0 OID 57174)
 -- Dependencies: 323
 -- Data for Name: lot_coffee_varieties; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.lot_coffee_varieties (lot_id, coffee_variety_id, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id) VALUES ('b3f4dbf9-fb71-44d1-9c48-623ad1db5360', 'b1000001-0001-4001-8001-000000000001', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b');
-INSERT INTO public.lot_coffee_varieties (lot_id, coffee_variety_id, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id) VALUES ('b3f4dbf9-fb71-44d1-9c48-623ad1db5360', 'b1000001-0001-4001-8001-000000000003', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b');
-INSERT INTO public.lot_coffee_varieties (lot_id, coffee_variety_id, is_active, created_at, updated_at, created_by_user_id, updated_by_user_id) VALUES ('6182d38d-bd26-4d7c-97e0-3932c8e779d9', 'b1000001-0001-4001-8001-000000000005', true, '2026-05-21 12:00:00-06', '2026-05-21 12:00:00-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b');
 
 
 --
--- TOC entry 7493 (class 0 OID 57185)
+-- TOC entry 7469 (class 0 OID 57185)
 -- Dependencies: 324
 -- Data for Name: lot_harvests; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -3038,61 +3091,8 @@ INSERT INTO public.lot_coffee_varieties (lot_id, coffee_variety_id, is_active, c
 
 
 --
--- TOC entry 7494 (class 0 OID 57194)
+-- TOC entry 7470 (class 0 OID 57240)
 -- Dependencies: 325
--- Data for Name: lot_production; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.lot_production (id, lot_id, harvest_id, prod_date, notes, created_at, is_active, updated_at, created_by_user_id, updated_by_user_id, client_id, cost_scope, farm_id) VALUES ('ef84a823-fd9c-481d-8135-ac67d6df16ac', 'b3f4dbf9-fb71-44d1-9c48-623ad1db5360', NULL, '2026-05-01', NULL, '2026-05-07 08:43:55.802588-06', true, '2026-05-07 08:43:55.802588-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'lot', NULL);
-INSERT INTO public.lot_production (id, lot_id, harvest_id, prod_date, notes, created_at, is_active, updated_at, created_by_user_id, updated_by_user_id, client_id, cost_scope, farm_id) VALUES ('99c714e1-411a-4bbd-9af6-905e10978674', 'b3f4dbf9-fb71-44d1-9c48-623ad1db5360', NULL, '2026-05-02', NULL, '2026-05-07 08:43:55.802588-06', true, '2026-05-07 08:43:55.802588-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'lot', NULL);
-INSERT INTO public.lot_production (id, lot_id, harvest_id, prod_date, notes, created_at, is_active, updated_at, created_by_user_id, updated_by_user_id, client_id, cost_scope, farm_id) VALUES ('a48cc16f-09cb-49b3-abd2-ba9f8d5a4850', 'b3f4dbf9-fb71-44d1-9c48-623ad1db5360', NULL, '2026-05-03', NULL, '2026-05-07 08:43:55.802588-06', true, '2026-05-07 08:43:55.802588-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'lot', NULL);
-INSERT INTO public.lot_production (id, lot_id, harvest_id, prod_date, notes, created_at, is_active, updated_at, created_by_user_id, updated_by_user_id, client_id, cost_scope, farm_id) VALUES ('91937124-aec1-458b-9f91-a25b919fe0b5', '6182d38d-bd26-4d7c-97e0-3932c8e779d9', NULL, '2026-05-06', NULL, '2026-05-07 08:21:47.165646-06', true, '2026-05-07 08:51:10.338147-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'lot', NULL);
-INSERT INTO public.lot_production (id, lot_id, harvest_id, prod_date, notes, created_at, is_active, updated_at, created_by_user_id, updated_by_user_id, client_id, cost_scope, farm_id) VALUES ('ad73ca86-7099-4cd8-b23b-b34c85ea1d67', '6182d38d-bd26-4d7c-97e0-3932c8e779d9', NULL, '2026-05-07', NULL, '2026-05-07 08:21:47.165646-06', true, '2026-05-07 09:00:17.925972-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'lot', NULL);
-INSERT INTO public.lot_production (id, lot_id, harvest_id, prod_date, notes, created_at, is_active, updated_at, created_by_user_id, updated_by_user_id, client_id, cost_scope, farm_id) VALUES ('38d67cf7-23b6-4ec6-aaa6-cdf9f09655db', NULL, NULL, '2026-05-07', NULL, '2026-05-07 10:31:55.160262-06', true, '2026-05-07 10:31:55.160262-06', '89e2b58e-057c-4f7b-908b-30d1086c076d', '89e2b58e-057c-4f7b-908b-30d1086c076d', '80ee1408-ed96-4301-8d6e-f891e5db8889', 'farm', '6771d0bf-09c0-4b32-afd3-b3ed94bf85e7');
-INSERT INTO public.lot_production (id, lot_id, harvest_id, prod_date, notes, created_at, is_active, updated_at, created_by_user_id, updated_by_user_id, client_id, cost_scope, farm_id) VALUES ('7566ab53-86e1-41bd-8745-2d47d9b597c4', 'b3f4dbf9-fb71-44d1-9c48-623ad1db5360', NULL, '2026-05-06', NULL, '2026-05-08 12:18:21.663486-06', true, '2026-05-08 12:18:21.663486-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'lot', NULL);
-INSERT INTO public.lot_production (id, lot_id, harvest_id, prod_date, notes, created_at, is_active, updated_at, created_by_user_id, updated_by_user_id, client_id, cost_scope, farm_id) VALUES ('de26f1f3-2c2d-4c3c-a93a-7f10ae4a9029', 'b3f4dbf9-fb71-44d1-9c48-623ad1db5360', NULL, '2026-05-07', NULL, '2026-05-08 12:18:21.663486-06', true, '2026-05-08 12:18:21.663486-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'lot', NULL);
-INSERT INTO public.lot_production (id, lot_id, harvest_id, prod_date, notes, created_at, is_active, updated_at, created_by_user_id, updated_by_user_id, client_id, cost_scope, farm_id) VALUES ('fc15fe44-ea83-4e03-90c3-f63831bee966', 'b3f4dbf9-fb71-44d1-9c48-623ad1db5360', NULL, '2026-05-08', NULL, '2026-05-08 12:18:21.663486-06', true, '2026-05-08 12:18:50.326076-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'lot', NULL);
-INSERT INTO public.lot_production (id, lot_id, harvest_id, prod_date, notes, created_at, is_active, updated_at, created_by_user_id, updated_by_user_id, client_id, cost_scope, farm_id) VALUES ('dd76fed1-7516-4976-bb3f-1643ef07e448', '6182d38d-bd26-4d7c-97e0-3932c8e779d9', NULL, '2026-05-15', NULL, '2026-05-15 14:53:27.452441-06', true, '2026-05-15 14:53:27.452441-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', 'lot', NULL);
-
-
---
--- TOC entry 7495 (class 0 OID 57212)
--- Dependencies: 326
--- Data for Name: lot_production_allocations; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.lot_production_allocations (id, lot_production_id, lot_id, allocation_pct, created_at, updated_at, is_active) VALUES ('75a146ef-ac7d-46ea-bfda-6cc485ad4b2b', '38d67cf7-23b6-4ec6-aaa6-cdf9f09655db', '3cbfb9b8-96ab-40b7-a469-bce2754c12ef', 100.000, '2026-05-07 10:31:55.160262-06', '2026-05-07 10:31:55.160262-06', true);
-
-
---
--- TOC entry 7496 (class 0 OID 57227)
--- Dependencies: 327
--- Data for Name: lot_production_details; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('113e648a-37d5-4e8e-ae14-e1b11c3fb73f', 'ad73ca86-7099-4cd8-b23b-b34c85ea1d67', '04731a16-25a0-4167-b845-b0d55a6d7405', 4.00, 1500.00, '2026-05-07 08:21:56.090099-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('da2a7302-fc8a-4930-bf8f-81137d56de59', 'ad73ca86-7099-4cd8-b23b-b34c85ea1d67', 'cca86be6-4445-4cad-b083-e422deaa870b', 5.00, 2000.00, '2026-05-07 08:21:56.090099-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('e58a4072-878b-4b6a-98cb-2ab693e80719', 'ad73ca86-7099-4cd8-b23b-b34c85ea1d67', '828433cf-ce51-40c9-ac81-7cc4d10801fb', 7.00, NULL, '2026-05-07 08:21:56.090099-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('79259abd-3bf5-4329-a869-b9391ed041d1', 'ef84a823-fd9c-481d-8135-ac67d6df16ac', '04731a16-25a0-4167-b845-b0d55a6d7405', 4.00, 1500.00, '2026-05-07 08:43:55.802588-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('b622fd78-6144-4a14-ab05-4dd727587473', 'ef84a823-fd9c-481d-8135-ac67d6df16ac', 'c1fe5415-cf29-4d8f-96ec-6bd1f896c493', 2.00, 2000.00, '2026-05-07 08:43:55.802588-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('bdc3b5dd-5cf6-4435-b483-886700eec681', '99c714e1-411a-4bbd-9af6-905e10978674', '04731a16-25a0-4167-b845-b0d55a6d7405', 3.00, 500.00, '2026-05-07 08:43:55.802588-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('5288bacb-fc09-4af1-b2fe-b51ce737c9c8', '99c714e1-411a-4bbd-9af6-905e10978674', 'b3da043f-3d69-4225-83f2-7fddb825ce3c', 1.00, 6000.00, '2026-05-07 08:43:55.802588-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('20c6a727-6133-4ecc-9da2-5751f960f730', 'a48cc16f-09cb-49b3-abd2-ba9f8d5a4850', '04731a16-25a0-4167-b845-b0d55a6d7405', 5.00, 2000.00, '2026-05-07 08:43:55.802588-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('57b5ff20-98a1-408a-934d-f11733d007b3', 'a48cc16f-09cb-49b3-abd2-ba9f8d5a4850', 'b3da043f-3d69-4225-83f2-7fddb825ce3c', 2.00, 3000.00, '2026-05-07 08:43:55.802588-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('a54b1092-c5b4-4c42-b990-2da13adb6fbd', '91937124-aec1-458b-9f91-a25b919fe0b5', '04731a16-25a0-4167-b845-b0d55a6d7405', 4.00, 1500.00, '2026-05-07 08:51:10.338147-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('4adb12f1-5e28-4c24-a1d4-96151f4a8575', '91937124-aec1-458b-9f91-a25b919fe0b5', 'cca86be6-4445-4cad-b083-e422deaa870b', 5.00, 2000.00, '2026-05-07 08:51:10.338147-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('de085ace-2641-4551-8a0e-132084941c11', '91937124-aec1-458b-9f91-a25b919fe0b5', '828433cf-ce51-40c9-ac81-7cc4d10801fb', 7.00, 2000.00, '2026-05-07 08:51:10.338147-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('4bcda7ff-2d8f-4ad3-b139-97d2831d9000', '38d67cf7-23b6-4ec6-aaa6-cdf9f09655db', 'e1c6204d-c182-48cc-8cba-0664291a4b71', 5.00, NULL, '2026-05-07 10:31:55.160262-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('064d545a-6b88-42d7-9a11-33538a666f49', '7566ab53-86e1-41bd-8745-2d47d9b597c4', '04731a16-25a0-4167-b845-b0d55a6d7405', 4.00, 200.00, '2026-05-08 12:18:21.663486-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('0350b093-ec40-429f-91eb-af9328765e0f', '7566ab53-86e1-41bd-8745-2d47d9b597c4', '828433cf-ce51-40c9-ac81-7cc4d10801fb', 3.00, NULL, '2026-05-08 12:18:21.663486-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('f050a994-44c6-4aa8-82f7-6f21260b7e38', 'de26f1f3-2c2d-4c3c-a93a-7f10ae4a9029', '828433cf-ce51-40c9-ac81-7cc4d10801fb', 3.00, NULL, '2026-05-08 12:18:21.663486-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('c0006aff-9f1d-4cf4-aa5e-4a7a1a00e73b', 'fc15fe44-ea83-4e03-90c3-f63831bee966', 'c1fe5415-cf29-4d8f-96ec-6bd1f896c493', 2.00, NULL, '2026-05-08 12:18:21.663486-06');
-INSERT INTO public.lot_production_details (id, lot_production_id, caliber_id, kilos, price_per_kg, created_at) VALUES ('2e7f3a5e-c181-480a-b22b-93fa9b37e272', 'dd76fed1-7516-4976-bb3f-1643ef07e448', '04731a16-25a0-4167-b845-b0d55a6d7405', 10.00, 1000.00, '2026-05-15 14:53:27.452441-06');
-
-
---
--- TOC entry 7497 (class 0 OID 57240)
--- Dependencies: 328
 -- Data for Name: lots; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3102,8 +3102,8 @@ INSERT INTO public.lots (id, farm_id, name, area_ha, plant_count, created_at, is
 
 
 --
--- TOC entry 7498 (class 0 OID 57260)
--- Dependencies: 329
+-- TOC entry 7471 (class 0 OID 57260)
+-- Dependencies: 326
 -- Data for Name: mix_application_items; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3118,8 +3118,8 @@ INSERT INTO public.mix_application_items (id, mix_application_id, item_id, dose_
 
 
 --
--- TOC entry 7499 (class 0 OID 57278)
--- Dependencies: 330
+-- TOC entry 7472 (class 0 OID 57278)
+-- Dependencies: 327
 -- Data for Name: mix_applications; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3130,8 +3130,8 @@ INSERT INTO public.mix_applications (id, lot_id, harvest_id, expense_id, app_dat
 
 
 --
--- TOC entry 7500 (class 0 OID 57298)
--- Dependencies: 331
+-- TOC entry 7473 (class 0 OID 57298)
+-- Dependencies: 328
 -- Data for Name: password_reset_tokens; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3145,16 +3145,16 @@ INSERT INTO public.password_reset_tokens (id, user_id, token_hash, expires_at, u
 
 
 --
--- TOC entry 7501 (class 0 OID 57312)
--- Dependencies: 332
+-- TOC entry 7474 (class 0 OID 57312)
+-- Dependencies: 329
 -- Data for Name: payroll_employee_rates; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 
 
 --
--- TOC entry 7502 (class 0 OID 57326)
--- Dependencies: 333
+-- TOC entry 7475 (class 0 OID 57326)
+-- Dependencies: 330
 -- Data for Name: payroll_nomina_contribution_rules; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3162,24 +3162,24 @@ INSERT INTO public.payroll_nomina_contribution_rules (id, client_id, valid_from,
 
 
 --
--- TOC entry 7503 (class 0 OID 57346)
--- Dependencies: 334
+-- TOC entry 7476 (class 0 OID 57346)
+-- Dependencies: 331
 -- Data for Name: payroll_periods; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 
 
 --
--- TOC entry 7504 (class 0 OID 57358)
--- Dependencies: 335
+-- TOC entry 7477 (class 0 OID 57358)
+-- Dependencies: 332
 -- Data for Name: payroll_settings; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 
 
 --
--- TOC entry 7505 (class 0 OID 57380)
--- Dependencies: 336
+-- TOC entry 7478 (class 0 OID 57380)
+-- Dependencies: 333
 -- Data for Name: payroll_slip_lot_allocations; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3192,8 +3192,8 @@ INSERT INTO public.payroll_slip_lot_allocations (id, payroll_slip_id, lot_id, al
 
 
 --
--- TOC entry 7506 (class 0 OID 57391)
--- Dependencies: 337
+-- TOC entry 7479 (class 0 OID 57391)
+-- Dependencies: 334
 -- Data for Name: payroll_slips; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3203,17 +3203,18 @@ INSERT INTO public.payroll_slips (id, client_id, worker_id, worker_kind, period_
 
 
 --
--- TOC entry 7507 (class 0 OID 57428)
--- Dependencies: 338
+-- TOC entry 7480 (class 0 OID 57428)
+-- Dependencies: 335
 -- Data for Name: plans; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.plans (id, name, max_farms, price, created_at, max_lots_per_farm, max_users_admin, max_users_operario) VALUES ('94c80683-d16d-40c7-bef0-49668c608963', 'Plan Demo', 2, 0.00, '2026-05-05 11:45:51.899294', 10, 1, 2);
+INSERT INTO public.plans (id, name, max_farms, price, created_at, max_lots_per_farm, max_users_admin, max_users_operario, billing_model, trial_days, description, is_active) VALUES ('94c80683-d16d-40c7-bef0-49668c608963', 'Plan Demo', 2, 0.00, '2026-05-05 11:45:51.899294', 10, 1, 2, 'trial_days', 31, 'Demostración: vigencia limitada desde la fecha de alta o renovación.', true);
+INSERT INTO public.plans (id, name, max_farms, price, created_at, max_lots_per_farm, max_users_admin, max_users_operario, billing_model, trial_days, description, is_active) VALUES ('beb877f4-0456-4fc9-a1ee-e7d6d85ac238', 'Prueba', 2, 50000.00, '2026-05-22 10:41:49.019808', 10, 2, 3, 'monthly_anchor', NULL, NULL, true);
 
 
 --
--- TOC entry 7508 (class 0 OID 57443)
--- Dependencies: 339
+-- TOC entry 7481 (class 0 OID 57443)
+-- Dependencies: 336
 -- Data for Name: provinces; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3227,8 +3228,8 @@ INSERT INTO public.provinces (id, name, official_code) VALUES (7, 'Limón', '7')
 
 
 --
--- TOC entry 7510 (class 0 OID 57449)
--- Dependencies: 341
+-- TOC entry 7483 (class 0 OID 57449)
+-- Dependencies: 338
 -- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3238,8 +3239,8 @@ INSERT INTO public.roles (id, name) VALUES ('7ee10aa4-9da8-47be-81cf-497d20bba0d
 
 
 --
--- TOC entry 7511 (class 0 OID 57455)
--- Dependencies: 342
+-- TOC entry 7484 (class 0 OID 57455)
+-- Dependencies: 339
 -- Data for Name: schema_migrations; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3247,8 +3248,8 @@ INSERT INTO public.schema_migrations (filename, applied_at) VALUES ('20260718120
 
 
 --
--- TOC entry 7512 (class 0 OID 57463)
--- Dependencies: 343
+-- TOC entry 7485 (class 0 OID 57463)
+-- Dependencies: 340
 -- Data for Name: security_audit_logs; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3385,16 +3386,15 @@ INSERT INTO public.security_audit_logs (id, event_type, user_id, client_id, iden
 
 
 --
--- TOC entry 7513 (class 0 OID 57475)
--- Dependencies: 344
+-- TOC entry 7486 (class 0 OID 57475)
+-- Dependencies: 341
 -- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.sessions (id, user_id, session_token_hash, created_at, expires_at, revoked_at, created_by_user_id, updated_by_user_id, last_activity, ip_address, user_agent, previous_session_token_hash, previous_token_expires_at, acting_client_id) VALUES ('f36eea02-2126-4464-a244-d4b7bfc98fc7', '089c211c-3f84-4bf4-ab24-ae82ae6be122', '2e92ed6eb3129367af69f192507090eebc4e37e665a33421106c452aec153787', '2026-05-21 08:42:30.226986-06', '2026-05-22 09:02:00.318473-06', NULL, NULL, NULL, '2026-05-21 09:02:00.318473-06', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', NULL, NULL, 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be');
 
 
 --
--- TOC entry 6386 (class 0 OID 55117)
+-- TOC entry 6380 (class 0 OID 55117)
 -- Dependencies: 228
 -- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -3402,21 +3402,21 @@ INSERT INTO public.sessions (id, user_id, session_token_hash, created_at, expire
 
 
 --
--- TOC entry 7514 (class 0 OID 57489)
--- Dependencies: 345
+-- TOC entry 7487 (class 0 OID 57489)
+-- Dependencies: 342
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.users (id, is_active, first_name, last_name_1, last_name_2, email, phone_1, phone_2, id_type, id_number, password_hash, created_at, updated_at, created_by_user_id, updated_by_user_id, client_id, role_id, failed_attempts, locked_until) VALUES ('85fe6b9f-d12a-40c8-8b62-6b890ba5f481', true, 'Ricardo', 'Rivera', 'Araya', 'crrivera27@gmail.com', NULL, NULL, 'extranjero', 'ADM-0196e2090dad432e9e3162328a4816a5', '$2b$12$I/1MAUF9105UOxXYarRMJuNnwbjfRNQwwc6FuIQy7QATEbh1zllAq', '2026-05-14 11:58:15.437104-06', '2026-05-14 11:58:42.755621-06', '089c211c-3f84-4bf4-ab24-ae82ae6be122', '089c211c-3f84-4bf4-ab24-ae82ae6be122', '08545840-e851-4753-97f0-eefc09236e90', '02a6e105-c800-468a-b64b-64f89e9e103c', 0, NULL);
 INSERT INTO public.users (id, is_active, first_name, last_name_1, last_name_2, email, phone_1, phone_2, id_type, id_number, password_hash, created_at, updated_at, created_by_user_id, updated_by_user_id, client_id, role_id, failed_attempts, locked_until) VALUES ('4b523322-cc8f-461e-958a-5bb78db26af7', true, 'Concurrency', 'Tester', NULL, 'concurrency-1778001818182@local.test', NULL, NULL, 'nacional', '1778001818182', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga311W', '2026-05-05 11:23:38.185089-06', '2026-05-13 11:55:43.726983-06', NULL, 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', '76c96941-2c29-4aa7-96cb-3e931ad36283', 0, NULL);
-INSERT INTO public.users (id, is_active, first_name, last_name_1, last_name_2, email, phone_1, phone_2, id_type, id_number, password_hash, created_at, updated_at, created_by_user_id, updated_by_user_id, client_id, role_id, failed_attempts, locked_until) VALUES ('e7eb16d3-0d33-4c20-90ec-18404aa0130b', true, 'Usuario', 'Demo', NULL, 'demo@wardi.local', NULL, NULL, 'nacional', '123456789', '$2b$12$TXg8H.j9tpQJNr6hVmu0fe7SkylPkn1yWcUz03muSU583c1Usiiyi', '2026-05-05 11:44:48.852164-06', '2026-05-18 09:48:55.335543-06', NULL, NULL, 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', '02a6e105-c800-468a-b64b-64f89e9e103c', 0, NULL);
-INSERT INTO public.users (id, is_active, first_name, last_name_1, last_name_2, email, phone_1, phone_2, id_type, id_number, password_hash, created_at, updated_at, created_by_user_id, updated_by_user_id, client_id, role_id, failed_attempts, locked_until) VALUES ('089c211c-3f84-4bf4-ab24-ae82ae6be122', true, 'Vera', 'Tester', 'Navarro', 'vera2vn@gmail.com', NULL, NULL, 'nacional', '1778001818183', '$2b$12$YJYkUe1SgCZIlK6haEggqu/Lx83GnSXjNp3G1gOl5Zzk.n77LxEdC', '2026-05-13 11:56:04.671563-06', '2026-05-21 08:42:30.148395-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', NULL, '7ee10aa4-9da8-47be-81cf-497d20bba0dc', 0, NULL);
 INSERT INTO public.users (id, is_active, first_name, last_name_1, last_name_2, email, phone_1, phone_2, id_type, id_number, password_hash, created_at, updated_at, created_by_user_id, updated_by_user_id, client_id, role_id, failed_attempts, locked_until) VALUES ('89e2b58e-057c-4f7b-908b-30d1086c076d', true, 'Administrador', 'Principal', 'Sistema', 'admin@wardi.local', '88888888', NULL, 'nacional', '123456780', '$2b$12$8CHw7r903bfTy.slI5cxE.pnzNmz5GFBG/sIvd.czIooKuQ8DCruC', '2026-05-07 09:45:41.160379-06', '2026-05-07 10:34:52.07959-06', NULL, NULL, '80ee1408-ed96-4301-8d6e-f891e5db8889', '02a6e105-c800-468a-b64b-64f89e9e103c', 0, NULL);
+INSERT INTO public.users (id, is_active, first_name, last_name_1, last_name_2, email, phone_1, phone_2, id_type, id_number, password_hash, created_at, updated_at, created_by_user_id, updated_by_user_id, client_id, role_id, failed_attempts, locked_until) VALUES ('e7eb16d3-0d33-4c20-90ec-18404aa0130b', true, 'Usuario', 'Demo', NULL, 'demo@wardi.local', NULL, NULL, 'nacional', '123456789', '$2b$12$TXg8H.j9tpQJNr6hVmu0fe7SkylPkn1yWcUz03muSU583c1Usiiyi', '2026-05-05 11:44:48.852164-06', '2026-05-21 11:49:42.552883-06', NULL, NULL, 'a8f6dc31-bcc0-4d26-8d75-d91716ee74be', '02a6e105-c800-468a-b64b-64f89e9e103c', 0, NULL);
+INSERT INTO public.users (id, is_active, first_name, last_name_1, last_name_2, email, phone_1, phone_2, id_type, id_number, password_hash, created_at, updated_at, created_by_user_id, updated_by_user_id, client_id, role_id, failed_attempts, locked_until) VALUES ('cdd37998-50ad-4bdf-a50d-b0489e0d7a72', true, 'Ricardo', 'Rivera', 'Araya', 'crrivera27@gmail.com', NULL, NULL, 'extranjero', 'ADM-05b36428f2164f8fbdc2f5d3cf540140', '$2b$12$KgeRt6SItdFNjmaNhRMZZeEmbByny6SaOAhh1muxJXx5Da20jFp22', '2026-05-22 09:44:35.877309-06', '2026-05-22 09:46:51.283682-06', '089c211c-3f84-4bf4-ab24-ae82ae6be122', '089c211c-3f84-4bf4-ab24-ae82ae6be122', '24d16b37-51ad-47ce-8f9d-68695ebbc0d8', '02a6e105-c800-468a-b64b-64f89e9e103c', 0, NULL);
+INSERT INTO public.users (id, is_active, first_name, last_name_1, last_name_2, email, phone_1, phone_2, id_type, id_number, password_hash, created_at, updated_at, created_by_user_id, updated_by_user_id, client_id, role_id, failed_attempts, locked_until) VALUES ('089c211c-3f84-4bf4-ab24-ae82ae6be122', true, 'Vera', 'Tester', 'Navarro', 'vera2vn@gmail.com', NULL, NULL, 'nacional', '1778001818183', '$2b$12$YJYkUe1SgCZIlK6haEggqu/Lx83GnSXjNp3G1gOl5Zzk.n77LxEdC', '2026-05-13 11:56:04.671563-06', '2026-05-22 10:41:08.824598-06', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', 'e7eb16d3-0d33-4c20-90ec-18404aa0130b', NULL, '7ee10aa4-9da8-47be-81cf-497d20bba0dc', 0, NULL);
 
 
 --
--- TOC entry 7515 (class 0 OID 57511)
--- Dependencies: 346
+-- TOC entry 7488 (class 0 OID 57511)
+-- Dependencies: 343
 -- Data for Name: workers; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -3428,7 +3428,7 @@ INSERT INTO public.workers (id, worker_type, is_active, first_name, last_name_1,
 
 
 --
--- TOC entry 6387 (class 0 OID 55886)
+-- TOC entry 6381 (class 0 OID 55886)
 -- Dependencies: 233
 -- Data for Name: geocode_settings; Type: TABLE DATA; Schema: tiger; Owner: -
 --
@@ -3436,7 +3436,7 @@ INSERT INTO public.workers (id, worker_type, is_active, first_name, last_name_1,
 
 
 --
--- TOC entry 6388 (class 0 OID 56247)
+-- TOC entry 6382 (class 0 OID 56247)
 -- Dependencies: 278
 -- Data for Name: pagc_gaz; Type: TABLE DATA; Schema: tiger; Owner: -
 --
@@ -3444,7 +3444,7 @@ INSERT INTO public.workers (id, worker_type, is_active, first_name, last_name_1,
 
 
 --
--- TOC entry 6389 (class 0 OID 56259)
+-- TOC entry 6383 (class 0 OID 56259)
 -- Dependencies: 280
 -- Data for Name: pagc_lex; Type: TABLE DATA; Schema: tiger; Owner: -
 --
@@ -3452,7 +3452,7 @@ INSERT INTO public.workers (id, worker_type, is_active, first_name, last_name_1,
 
 
 --
--- TOC entry 6390 (class 0 OID 56271)
+-- TOC entry 6384 (class 0 OID 56271)
 -- Dependencies: 282
 -- Data for Name: pagc_rules; Type: TABLE DATA; Schema: tiger; Owner: -
 --
@@ -3460,7 +3460,7 @@ INSERT INTO public.workers (id, worker_type, is_active, first_name, last_name_1,
 
 
 --
--- TOC entry 6392 (class 0 OID 56315)
+-- TOC entry 6386 (class 0 OID 56315)
 -- Dependencies: 284
 -- Data for Name: topology; Type: TABLE DATA; Schema: topology; Owner: -
 --
@@ -3468,7 +3468,7 @@ INSERT INTO public.workers (id, worker_type, is_active, first_name, last_name_1,
 
 
 --
--- TOC entry 6393 (class 0 OID 56334)
+-- TOC entry 6387 (class 0 OID 56334)
 -- Dependencies: 285
 -- Data for Name: layer; Type: TABLE DATA; Schema: topology; Owner: -
 --
@@ -3476,7 +3476,7 @@ INSERT INTO public.workers (id, worker_type, is_active, first_name, last_name_1,
 
 
 --
--- TOC entry 7535 (class 0 OID 0)
+-- TOC entry 7516 (class 0 OID 0)
 -- Dependencies: 297
 -- Name: cantons_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
@@ -3485,7 +3485,7 @@ SELECT pg_catalog.setval('public.cantons_id_seq', 1, false);
 
 
 --
--- TOC entry 7536 (class 0 OID 0)
+-- TOC entry 7517 (class 0 OID 0)
 -- Dependencies: 300
 -- Name: districts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
@@ -3494,8 +3494,8 @@ SELECT pg_catalog.setval('public.districts_id_seq', 1, false);
 
 
 --
--- TOC entry 7537 (class 0 OID 0)
--- Dependencies: 340
+-- TOC entry 7518 (class 0 OID 0)
+-- Dependencies: 337
 -- Name: provinces_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
@@ -3503,7 +3503,7 @@ SELECT pg_catalog.setval('public.provinces_id_seq', 1, false);
 
 
 --
--- TOC entry 7538 (class 0 OID 0)
+-- TOC entry 7519 (class 0 OID 0)
 -- Dependencies: 283
 -- Name: topology_id_seq; Type: SEQUENCE SET; Schema: topology; Owner: -
 --
@@ -3512,7 +3512,7 @@ SELECT pg_catalog.setval('topology.topology_id_seq', 1, false);
 
 
 --
--- TOC entry 6822 (class 2606 OID 57528)
+-- TOC entry 6808 (class 2606 OID 57528)
 -- Name: aguinaldo_statements aguinaldo_statements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3521,7 +3521,7 @@ ALTER TABLE ONLY public.aguinaldo_statements
 
 
 --
--- TOC entry 6827 (class 2606 OID 57530)
+-- TOC entry 6813 (class 2606 OID 57530)
 -- Name: asset_categories asset_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3530,7 +3530,7 @@ ALTER TABLE ONLY public.asset_categories
 
 
 --
--- TOC entry 6831 (class 2606 OID 57532)
+-- TOC entry 6817 (class 2606 OID 57532)
 -- Name: asset_depreciation asset_depreciation_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3539,7 +3539,7 @@ ALTER TABLE ONLY public.asset_depreciation
 
 
 --
--- TOC entry 6835 (class 2606 OID 57534)
+-- TOC entry 6821 (class 2606 OID 57534)
 -- Name: assets assets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3548,7 +3548,7 @@ ALTER TABLE ONLY public.assets
 
 
 --
--- TOC entry 6842 (class 2606 OID 57536)
+-- TOC entry 6828 (class 2606 OID 57536)
 -- Name: calendar_activities calendar_activities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3557,7 +3557,7 @@ ALTER TABLE ONLY public.calendar_activities
 
 
 --
--- TOC entry 6845 (class 2606 OID 57538)
+-- TOC entry 6831 (class 2606 OID 57538)
 -- Name: calibers calibers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3566,7 +3566,7 @@ ALTER TABLE ONLY public.calibers
 
 
 --
--- TOC entry 6849 (class 2606 OID 57540)
+-- TOC entry 6835 (class 2606 OID 57540)
 -- Name: cantons cantons_official_code_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3575,7 +3575,7 @@ ALTER TABLE ONLY public.cantons
 
 
 --
--- TOC entry 6851 (class 2606 OID 57542)
+-- TOC entry 6837 (class 2606 OID 57542)
 -- Name: cantons cantons_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3584,7 +3584,7 @@ ALTER TABLE ONLY public.cantons
 
 
 --
--- TOC entry 6853 (class 2606 OID 57544)
+-- TOC entry 6839 (class 2606 OID 57544)
 -- Name: cantons cantons_province_id_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3593,7 +3593,7 @@ ALTER TABLE ONLY public.cantons
 
 
 --
--- TOC entry 6855 (class 2606 OID 57546)
+-- TOC entry 6841 (class 2606 OID 57546)
 -- Name: clients clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3602,7 +3602,16 @@ ALTER TABLE ONLY public.clients
 
 
 --
--- TOC entry 6838 (class 2606 OID 57548)
+-- TOC entry 7049 (class 2606 OID 58706)
+-- Name: coffee_lot_production coffee_lot_production_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.coffee_lot_production
+    ADD CONSTRAINT coffee_lot_production_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 6824 (class 2606 OID 57548)
 -- Name: coffee_varieties coffee_varieties_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3611,7 +3620,7 @@ ALTER TABLE ONLY public.coffee_varieties
 
 
 --
--- TOC entry 6840 (class 2606 OID 57550)
+-- TOC entry 6826 (class 2606 OID 57550)
 -- Name: coffee_varieties coffee_varieties_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3620,7 +3629,7 @@ ALTER TABLE ONLY public.coffee_varieties
 
 
 --
--- TOC entry 6857 (class 2606 OID 57552)
+-- TOC entry 6843 (class 2606 OID 57552)
 -- Name: districts districts_canton_id_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3629,7 +3638,7 @@ ALTER TABLE ONLY public.districts
 
 
 --
--- TOC entry 6859 (class 2606 OID 57554)
+-- TOC entry 6845 (class 2606 OID 57554)
 -- Name: districts districts_official_code_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3638,7 +3647,7 @@ ALTER TABLE ONLY public.districts
 
 
 --
--- TOC entry 6861 (class 2606 OID 57556)
+-- TOC entry 6847 (class 2606 OID 57556)
 -- Name: districts districts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3647,7 +3656,7 @@ ALTER TABLE ONLY public.districts
 
 
 --
--- TOC entry 6863 (class 2606 OID 57558)
+-- TOC entry 6849 (class 2606 OID 57558)
 -- Name: expense_categories expense_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3656,7 +3665,7 @@ ALTER TABLE ONLY public.expense_categories
 
 
 --
--- TOC entry 6867 (class 2606 OID 57560)
+-- TOC entry 6853 (class 2606 OID 57560)
 -- Name: expenses expenses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3665,7 +3674,7 @@ ALTER TABLE ONLY public.expenses
 
 
 --
--- TOC entry 6871 (class 2606 OID 57562)
+-- TOC entry 6857 (class 2606 OID 57562)
 -- Name: farm_harvest_estimates farm_harvest_estimates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3674,7 +3683,7 @@ ALTER TABLE ONLY public.farm_harvest_estimates
 
 
 --
--- TOC entry 6875 (class 2606 OID 57564)
+-- TOC entry 6861 (class 2606 OID 57564)
 -- Name: farms farms_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3683,7 +3692,7 @@ ALTER TABLE ONLY public.farms
 
 
 --
--- TOC entry 6884 (class 2606 OID 57566)
+-- TOC entry 6870 (class 2606 OID 57566)
 -- Name: fixed_payroll_allocations fixed_payroll_allocations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3692,7 +3701,7 @@ ALTER TABLE ONLY public.fixed_payroll_allocations
 
 
 --
--- TOC entry 6881 (class 2606 OID 57568)
+-- TOC entry 6867 (class 2606 OID 57568)
 -- Name: fixed_payroll fixed_payroll_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3701,7 +3710,7 @@ ALTER TABLE ONLY public.fixed_payroll
 
 
 --
--- TOC entry 6887 (class 2606 OID 57570)
+-- TOC entry 6873 (class 2606 OID 57570)
 -- Name: general_expense_allocations general_expense_allocations_general_expense_id_lot_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3710,7 +3719,7 @@ ALTER TABLE ONLY public.general_expense_allocations
 
 
 --
--- TOC entry 6889 (class 2606 OID 57572)
+-- TOC entry 6875 (class 2606 OID 57572)
 -- Name: general_expense_allocations general_expense_allocations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3719,7 +3728,7 @@ ALTER TABLE ONLY public.general_expense_allocations
 
 
 --
--- TOC entry 6893 (class 2606 OID 57574)
+-- TOC entry 6879 (class 2606 OID 57574)
 -- Name: general_expenses general_expenses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3728,7 +3737,7 @@ ALTER TABLE ONLY public.general_expenses
 
 
 --
--- TOC entry 6899 (class 2606 OID 57576)
+-- TOC entry 6885 (class 2606 OID 57576)
 -- Name: harvests harvests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3737,7 +3746,7 @@ ALTER TABLE ONLY public.harvests
 
 
 --
--- TOC entry 6902 (class 2606 OID 57578)
+-- TOC entry 6888 (class 2606 OID 57578)
 -- Name: inventory_brands inventory_brands_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3746,7 +3755,7 @@ ALTER TABLE ONLY public.inventory_brands
 
 
 --
--- TOC entry 6908 (class 2606 OID 57580)
+-- TOC entry 6894 (class 2606 OID 57580)
 -- Name: inventory_categories inventory_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3755,7 +3764,7 @@ ALTER TABLE ONLY public.inventory_categories
 
 
 --
--- TOC entry 6911 (class 2606 OID 57582)
+-- TOC entry 6897 (class 2606 OID 57582)
 -- Name: inventory_consumption_layers inventory_consumption_layers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3764,7 +3773,7 @@ ALTER TABLE ONLY public.inventory_consumption_layers
 
 
 --
--- TOC entry 6914 (class 2606 OID 57584)
+-- TOC entry 6900 (class 2606 OID 57584)
 -- Name: inventory_consumptions inventory_consumptions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3773,7 +3782,7 @@ ALTER TABLE ONLY public.inventory_consumptions
 
 
 --
--- TOC entry 6919 (class 2606 OID 57586)
+-- TOC entry 6905 (class 2606 OID 57586)
 -- Name: inventory_item_ingredients inventory_item_ingredients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3782,7 +3791,7 @@ ALTER TABLE ONLY public.inventory_item_ingredients
 
 
 --
--- TOC entry 6925 (class 2606 OID 57588)
+-- TOC entry 6911 (class 2606 OID 57588)
 -- Name: inventory_items inventory_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3791,7 +3800,7 @@ ALTER TABLE ONLY public.inventory_items
 
 
 --
--- TOC entry 6930 (class 2606 OID 57590)
+-- TOC entry 6916 (class 2606 OID 57590)
 -- Name: inventory_layers inventory_layers_movement_in_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3800,7 +3809,7 @@ ALTER TABLE ONLY public.inventory_layers
 
 
 --
--- TOC entry 6932 (class 2606 OID 57592)
+-- TOC entry 6918 (class 2606 OID 57592)
 -- Name: inventory_layers inventory_layers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3809,7 +3818,7 @@ ALTER TABLE ONLY public.inventory_layers
 
 
 --
--- TOC entry 6936 (class 2606 OID 57594)
+-- TOC entry 6922 (class 2606 OID 57594)
 -- Name: inventory_movement_layers inventory_movement_layers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3818,7 +3827,7 @@ ALTER TABLE ONLY public.inventory_movement_layers
 
 
 --
--- TOC entry 6939 (class 2606 OID 57596)
+-- TOC entry 6925 (class 2606 OID 57596)
 -- Name: inventory_movements inventory_movements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3827,7 +3836,7 @@ ALTER TABLE ONLY public.inventory_movements
 
 
 --
--- TOC entry 6945 (class 2606 OID 57598)
+-- TOC entry 6931 (class 2606 OID 57598)
 -- Name: labor_entries labor_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3836,7 +3845,7 @@ ALTER TABLE ONLY public.labor_entries
 
 
 --
--- TOC entry 6952 (class 2606 OID 57600)
+-- TOC entry 6938 (class 2606 OID 57600)
 -- Name: labor_entry_allocations labor_entry_allocations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3845,7 +3854,7 @@ ALTER TABLE ONLY public.labor_entry_allocations
 
 
 --
--- TOC entry 6957 (class 2606 OID 57602)
+-- TOC entry 6943 (class 2606 OID 57602)
 -- Name: labor_rates labor_rates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3854,7 +3863,7 @@ ALTER TABLE ONLY public.labor_rates
 
 
 --
--- TOC entry 6959 (class 2606 OID 57604)
+-- TOC entry 6945 (class 2606 OID 57604)
 -- Name: labor_types labor_types_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3863,7 +3872,7 @@ ALTER TABLE ONLY public.labor_types
 
 
 --
--- TOC entry 6961 (class 2606 OID 57606)
+-- TOC entry 6947 (class 2606 OID 57606)
 -- Name: labor_types labor_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3872,7 +3881,7 @@ ALTER TABLE ONLY public.labor_types
 
 
 --
--- TOC entry 6965 (class 2606 OID 57608)
+-- TOC entry 6951 (class 2606 OID 57608)
 -- Name: lot_coffee_varieties lot_coffee_varieties_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3881,7 +3890,7 @@ ALTER TABLE ONLY public.lot_coffee_varieties
 
 
 --
--- TOC entry 6967 (class 2606 OID 57610)
+-- TOC entry 6953 (class 2606 OID 57610)
 -- Name: lot_harvests lot_harvests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3890,34 +3899,7 @@ ALTER TABLE ONLY public.lot_harvests
 
 
 --
--- TOC entry 6979 (class 2606 OID 57612)
--- Name: lot_production_allocations lot_production_allocations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production_allocations
-    ADD CONSTRAINT lot_production_allocations_pkey PRIMARY KEY (id);
-
-
---
--- TOC entry 6982 (class 2606 OID 57614)
--- Name: lot_production_details lot_production_details_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production_details
-    ADD CONSTRAINT lot_production_details_pkey PRIMARY KEY (id);
-
-
---
--- TOC entry 6974 (class 2606 OID 57616)
--- Name: lot_production lot_production_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production
-    ADD CONSTRAINT lot_production_pkey PRIMARY KEY (id);
-
-
---
--- TOC entry 6987 (class 2606 OID 57618)
+-- TOC entry 6957 (class 2606 OID 57618)
 -- Name: lots lots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3926,7 +3908,7 @@ ALTER TABLE ONLY public.lots
 
 
 --
--- TOC entry 6991 (class 2606 OID 57620)
+-- TOC entry 6961 (class 2606 OID 57620)
 -- Name: mix_application_items mix_application_items_mix_application_id_item_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3935,7 +3917,7 @@ ALTER TABLE ONLY public.mix_application_items
 
 
 --
--- TOC entry 6993 (class 2606 OID 57622)
+-- TOC entry 6963 (class 2606 OID 57622)
 -- Name: mix_application_items mix_application_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3944,7 +3926,7 @@ ALTER TABLE ONLY public.mix_application_items
 
 
 --
--- TOC entry 6997 (class 2606 OID 57624)
+-- TOC entry 6967 (class 2606 OID 57624)
 -- Name: mix_applications mix_applications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3953,7 +3935,7 @@ ALTER TABLE ONLY public.mix_applications
 
 
 --
--- TOC entry 7004 (class 2606 OID 57626)
+-- TOC entry 6974 (class 2606 OID 57626)
 -- Name: password_reset_tokens password_reset_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3962,7 +3944,7 @@ ALTER TABLE ONLY public.password_reset_tokens
 
 
 --
--- TOC entry 7011 (class 2606 OID 57628)
+-- TOC entry 6981 (class 2606 OID 57628)
 -- Name: payroll_employee_rates payroll_employee_rates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3971,7 +3953,7 @@ ALTER TABLE ONLY public.payroll_employee_rates
 
 
 --
--- TOC entry 7015 (class 2606 OID 57630)
+-- TOC entry 6985 (class 2606 OID 57630)
 -- Name: payroll_nomina_contribution_rules payroll_nomina_contribution_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3980,7 +3962,7 @@ ALTER TABLE ONLY public.payroll_nomina_contribution_rules
 
 
 --
--- TOC entry 7017 (class 2606 OID 57632)
+-- TOC entry 6987 (class 2606 OID 57632)
 -- Name: payroll_periods payroll_periods_period_month_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3989,7 +3971,7 @@ ALTER TABLE ONLY public.payroll_periods
 
 
 --
--- TOC entry 7020 (class 2606 OID 57634)
+-- TOC entry 6990 (class 2606 OID 57634)
 -- Name: payroll_periods payroll_periods_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3998,7 +3980,7 @@ ALTER TABLE ONLY public.payroll_periods
 
 
 --
--- TOC entry 7025 (class 2606 OID 57636)
+-- TOC entry 6995 (class 2606 OID 57636)
 -- Name: payroll_settings payroll_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4007,7 +3989,7 @@ ALTER TABLE ONLY public.payroll_settings
 
 
 --
--- TOC entry 7028 (class 2606 OID 57638)
+-- TOC entry 6998 (class 2606 OID 57638)
 -- Name: payroll_slip_lot_allocations payroll_slip_lot_allocations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4016,7 +3998,7 @@ ALTER TABLE ONLY public.payroll_slip_lot_allocations
 
 
 --
--- TOC entry 7034 (class 2606 OID 57640)
+-- TOC entry 7004 (class 2606 OID 57640)
 -- Name: payroll_slips payroll_slips_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4025,7 +4007,7 @@ ALTER TABLE ONLY public.payroll_slips
 
 
 --
--- TOC entry 7036 (class 2606 OID 57642)
+-- TOC entry 7006 (class 2606 OID 57642)
 -- Name: plans plans_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4034,7 +4016,7 @@ ALTER TABLE ONLY public.plans
 
 
 --
--- TOC entry 7038 (class 2606 OID 57644)
+-- TOC entry 7008 (class 2606 OID 57644)
 -- Name: provinces provinces_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4043,7 +4025,7 @@ ALTER TABLE ONLY public.provinces
 
 
 --
--- TOC entry 7040 (class 2606 OID 57646)
+-- TOC entry 7010 (class 2606 OID 57646)
 -- Name: provinces provinces_official_code_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4052,7 +4034,7 @@ ALTER TABLE ONLY public.provinces
 
 
 --
--- TOC entry 7042 (class 2606 OID 57648)
+-- TOC entry 7012 (class 2606 OID 57648)
 -- Name: provinces provinces_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4061,7 +4043,7 @@ ALTER TABLE ONLY public.provinces
 
 
 --
--- TOC entry 7044 (class 2606 OID 57650)
+-- TOC entry 7014 (class 2606 OID 57650)
 -- Name: roles roles_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4070,7 +4052,7 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- TOC entry 7046 (class 2606 OID 57652)
+-- TOC entry 7016 (class 2606 OID 57652)
 -- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4079,7 +4061,7 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- TOC entry 7048 (class 2606 OID 57654)
+-- TOC entry 7018 (class 2606 OID 57654)
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4088,7 +4070,7 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
--- TOC entry 7053 (class 2606 OID 57656)
+-- TOC entry 7023 (class 2606 OID 57656)
 -- Name: security_audit_logs security_audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4097,7 +4079,7 @@ ALTER TABLE ONLY public.security_audit_logs
 
 
 --
--- TOC entry 7064 (class 2606 OID 57658)
+-- TOC entry 7034 (class 2606 OID 57658)
 -- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4106,7 +4088,7 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- TOC entry 7066 (class 2606 OID 57660)
+-- TOC entry 7036 (class 2606 OID 57660)
 -- Name: sessions sessions_session_token_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4115,7 +4097,7 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- TOC entry 6833 (class 2606 OID 57662)
+-- TOC entry 6819 (class 2606 OID 57662)
 -- Name: asset_depreciation uq_asset_depreciation_period; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4124,7 +4106,7 @@ ALTER TABLE ONLY public.asset_depreciation
 
 
 --
--- TOC entry 6905 (class 2606 OID 57664)
+-- TOC entry 6891 (class 2606 OID 57664)
 -- Name: inventory_brands uq_inventory_brands_id_client; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4133,7 +4115,7 @@ ALTER TABLE ONLY public.inventory_brands
 
 
 --
--- TOC entry 6927 (class 2606 OID 57666)
+-- TOC entry 6913 (class 2606 OID 57666)
 -- Name: inventory_items uq_inventory_item_client; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4142,7 +4124,7 @@ ALTER TABLE ONLY public.inventory_items
 
 
 --
--- TOC entry 6955 (class 2606 OID 57668)
+-- TOC entry 6941 (class 2606 OID 57668)
 -- Name: labor_entry_allocations uq_lea_labor_lot; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4151,7 +4133,7 @@ ALTER TABLE ONLY public.labor_entry_allocations
 
 
 --
--- TOC entry 7073 (class 2606 OID 57670)
+-- TOC entry 7043 (class 2606 OID 57670)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4160,7 +4142,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 7077 (class 2606 OID 57672)
+-- TOC entry 7047 (class 2606 OID 57672)
 -- Name: workers workers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4169,7 +4151,7 @@ ALTER TABLE ONLY public.workers
 
 
 --
--- TOC entry 6872 (class 1259 OID 57673)
+-- TOC entry 6858 (class 1259 OID 57673)
 -- Name: farms_canton_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4177,7 +4159,7 @@ CREATE INDEX farms_canton_id_idx ON public.farms USING btree (canton_id);
 
 
 --
--- TOC entry 6873 (class 1259 OID 57674)
+-- TOC entry 6859 (class 1259 OID 57674)
 -- Name: farms_district_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4185,7 +4167,7 @@ CREATE INDEX farms_district_id_idx ON public.farms USING btree (district_id);
 
 
 --
--- TOC entry 6876 (class 1259 OID 57675)
+-- TOC entry 6862 (class 1259 OID 57675)
 -- Name: farms_province_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4193,7 +4175,7 @@ CREATE INDEX farms_province_id_idx ON public.farms USING btree (province_id);
 
 
 --
--- TOC entry 6823 (class 1259 OID 57676)
+-- TOC entry 6809 (class 1259 OID 57676)
 -- Name: idx_aguinaldo_client_period; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4201,7 +4183,7 @@ CREATE INDEX idx_aguinaldo_client_period ON public.aguinaldo_statements USING bt
 
 
 --
--- TOC entry 6824 (class 1259 OID 57677)
+-- TOC entry 6810 (class 1259 OID 57677)
 -- Name: idx_aguinaldo_client_status; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4209,7 +4191,7 @@ CREATE INDEX idx_aguinaldo_client_status ON public.aguinaldo_statements USING bt
 
 
 --
--- TOC entry 6885 (class 1259 OID 57678)
+-- TOC entry 6871 (class 1259 OID 57678)
 -- Name: idx_alloc_lot; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4217,7 +4199,7 @@ CREATE INDEX idx_alloc_lot ON public.fixed_payroll_allocations USING btree (lot_
 
 
 --
--- TOC entry 6828 (class 1259 OID 57679)
+-- TOC entry 6814 (class 1259 OID 57679)
 -- Name: idx_asset_categories_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4225,7 +4207,7 @@ CREATE INDEX idx_asset_categories_client ON public.asset_categories USING btree 
 
 
 --
--- TOC entry 6843 (class 1259 OID 57680)
+-- TOC entry 6829 (class 1259 OID 57680)
 -- Name: idx_calendar_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4233,7 +4215,7 @@ CREATE INDEX idx_calendar_client ON public.calendar_activities USING btree (clie
 
 
 --
--- TOC entry 6846 (class 1259 OID 57681)
+-- TOC entry 6832 (class 1259 OID 57681)
 -- Name: idx_calibers_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4241,7 +4223,31 @@ CREATE INDEX idx_calibers_client ON public.calibers USING btree (client_id);
 
 
 --
--- TOC entry 6909 (class 1259 OID 57682)
+-- TOC entry 7050 (class 1259 OID 58727)
+-- Name: idx_coffee_lot_production_client; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_coffee_lot_production_client ON public.coffee_lot_production USING btree (client_id);
+
+
+--
+-- TOC entry 7051 (class 1259 OID 58728)
+-- Name: idx_coffee_lot_production_lot_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_coffee_lot_production_lot_date ON public.coffee_lot_production USING btree (lot_id, prod_date);
+
+
+--
+-- TOC entry 7052 (class 1259 OID 58729)
+-- Name: idx_coffee_lot_production_prod_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_coffee_lot_production_prod_date ON public.coffee_lot_production USING btree (client_id, prod_date);
+
+
+--
+-- TOC entry 6895 (class 1259 OID 57682)
 -- Name: idx_cons_layers_consumption; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4249,7 +4255,7 @@ CREATE INDEX idx_cons_layers_consumption ON public.inventory_consumption_layers 
 
 
 --
--- TOC entry 6912 (class 1259 OID 57683)
+-- TOC entry 6898 (class 1259 OID 57683)
 -- Name: idx_cons_lot_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4257,7 +4263,7 @@ CREATE INDEX idx_cons_lot_date ON public.inventory_consumptions USING btree (lot
 
 
 --
--- TOC entry 6868 (class 1259 OID 57684)
+-- TOC entry 6854 (class 1259 OID 57684)
 -- Name: idx_exp_lot_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4265,7 +4271,7 @@ CREATE INDEX idx_exp_lot_date ON public.expenses USING btree (lot_id, exp_date);
 
 
 --
--- TOC entry 6864 (class 1259 OID 57685)
+-- TOC entry 6850 (class 1259 OID 57685)
 -- Name: idx_expense_categories_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4273,7 +4279,7 @@ CREATE INDEX idx_expense_categories_client ON public.expense_categories USING bt
 
 
 --
--- TOC entry 6869 (class 1259 OID 57686)
+-- TOC entry 6855 (class 1259 OID 57686)
 -- Name: idx_expenses_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4281,7 +4287,7 @@ CREATE INDEX idx_expenses_client ON public.expenses USING btree (client_id);
 
 
 --
--- TOC entry 6877 (class 1259 OID 57687)
+-- TOC entry 6863 (class 1259 OID 57687)
 -- Name: idx_farms_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4289,7 +4295,7 @@ CREATE INDEX idx_farms_client ON public.farms USING btree (client_id);
 
 
 --
--- TOC entry 6878 (class 1259 OID 57688)
+-- TOC entry 6864 (class 1259 OID 57688)
 -- Name: idx_farms_geom_gist; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4297,7 +4303,7 @@ CREATE INDEX idx_farms_geom_gist ON public.farms USING gist (geom);
 
 
 --
--- TOC entry 6890 (class 1259 OID 57689)
+-- TOC entry 6876 (class 1259 OID 57689)
 -- Name: idx_gea_ge; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4305,7 +4311,7 @@ CREATE INDEX idx_gea_ge ON public.general_expense_allocations USING btree (gener
 
 
 --
--- TOC entry 6891 (class 1259 OID 57690)
+-- TOC entry 6877 (class 1259 OID 57690)
 -- Name: idx_gea_lot; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4313,7 +4319,7 @@ CREATE INDEX idx_gea_lot ON public.general_expense_allocations USING btree (lot_
 
 
 --
--- TOC entry 6894 (class 1259 OID 57691)
+-- TOC entry 6880 (class 1259 OID 57691)
 -- Name: idx_general_expenses_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4321,7 +4327,7 @@ CREATE INDEX idx_general_expenses_client ON public.general_expenses USING btree 
 
 
 --
--- TOC entry 6895 (class 1259 OID 57692)
+-- TOC entry 6881 (class 1259 OID 57692)
 -- Name: idx_general_expenses_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4329,7 +4335,7 @@ CREATE INDEX idx_general_expenses_date ON public.general_expenses USING btree (e
 
 
 --
--- TOC entry 6896 (class 1259 OID 57693)
+-- TOC entry 6882 (class 1259 OID 57693)
 -- Name: idx_general_expenses_farm; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4337,7 +4343,7 @@ CREATE INDEX idx_general_expenses_farm ON public.general_expenses USING btree (f
 
 
 --
--- TOC entry 6897 (class 1259 OID 57694)
+-- TOC entry 6883 (class 1259 OID 57694)
 -- Name: idx_general_expenses_harvest; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4345,7 +4351,7 @@ CREATE INDEX idx_general_expenses_harvest ON public.general_expenses USING btree
 
 
 --
--- TOC entry 6900 (class 1259 OID 57695)
+-- TOC entry 6886 (class 1259 OID 57695)
 -- Name: idx_harvests_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4353,7 +4359,7 @@ CREATE INDEX idx_harvests_client ON public.harvests USING btree (client_id);
 
 
 --
--- TOC entry 6933 (class 1259 OID 57696)
+-- TOC entry 6919 (class 1259 OID 57696)
 -- Name: idx_inv_mov_layers_layer; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4361,7 +4367,7 @@ CREATE INDEX idx_inv_mov_layers_layer ON public.inventory_movement_layers USING 
 
 
 --
--- TOC entry 6934 (class 1259 OID 57697)
+-- TOC entry 6920 (class 1259 OID 57697)
 -- Name: idx_inv_mov_layers_movement; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4369,7 +4375,7 @@ CREATE INDEX idx_inv_mov_layers_movement ON public.inventory_movement_layers USI
 
 
 --
--- TOC entry 6920 (class 1259 OID 57698)
+-- TOC entry 6906 (class 1259 OID 57698)
 -- Name: idx_inventory_items_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4377,7 +4383,7 @@ CREATE INDEX idx_inventory_items_client ON public.inventory_items USING btree (c
 
 
 --
--- TOC entry 6940 (class 1259 OID 57699)
+-- TOC entry 6926 (class 1259 OID 57699)
 -- Name: idx_labor_entries_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4385,7 +4391,7 @@ CREATE INDEX idx_labor_entries_client ON public.labor_entries USING btree (clien
 
 
 --
--- TOC entry 6941 (class 1259 OID 57700)
+-- TOC entry 6927 (class 1259 OID 57700)
 -- Name: idx_labor_entries_farm_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4393,7 +4399,7 @@ CREATE INDEX idx_labor_entries_farm_id ON public.labor_entries USING btree (farm
 
 
 --
--- TOC entry 6942 (class 1259 OID 57701)
+-- TOC entry 6928 (class 1259 OID 57701)
 -- Name: idx_labor_lot_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4401,7 +4407,7 @@ CREATE INDEX idx_labor_lot_date ON public.labor_entries USING btree (lot_id, wor
 
 
 --
--- TOC entry 6943 (class 1259 OID 57702)
+-- TOC entry 6929 (class 1259 OID 57702)
 -- Name: idx_labor_worker_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4409,7 +4415,7 @@ CREATE INDEX idx_labor_worker_date ON public.labor_entries USING btree (worker_i
 
 
 --
--- TOC entry 6962 (class 1259 OID 57703)
+-- TOC entry 6948 (class 1259 OID 57703)
 -- Name: idx_lav_lot; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4417,7 +4423,7 @@ CREATE INDEX idx_lav_lot ON public.lot_coffee_varieties USING btree (lot_id);
 
 
 --
--- TOC entry 6963 (class 1259 OID 57704)
+-- TOC entry 6949 (class 1259 OID 57704)
 -- Name: idx_lav_variety; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4425,7 +4431,7 @@ CREATE INDEX idx_lav_variety ON public.lot_coffee_varieties USING btree (coffee_
 
 
 --
--- TOC entry 6928 (class 1259 OID 57705)
+-- TOC entry 6914 (class 1259 OID 57705)
 -- Name: idx_layers_item_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4433,7 +4439,7 @@ CREATE INDEX idx_layers_item_date ON public.inventory_layers USING btree (item_i
 
 
 --
--- TOC entry 6949 (class 1259 OID 57706)
+-- TOC entry 6935 (class 1259 OID 57706)
 -- Name: idx_lea_labor_entry; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4441,7 +4447,7 @@ CREATE INDEX idx_lea_labor_entry ON public.labor_entry_allocations USING btree (
 
 
 --
--- TOC entry 6950 (class 1259 OID 57707)
+-- TOC entry 6936 (class 1259 OID 57707)
 -- Name: idx_lea_lot; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4449,39 +4455,7 @@ CREATE INDEX idx_lea_lot ON public.labor_entry_allocations USING btree (lot_id);
 
 
 --
--- TOC entry 6968 (class 1259 OID 57708)
--- Name: idx_lot_production_client; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_lot_production_client ON public.lot_production USING btree (client_id);
-
-
---
--- TOC entry 6969 (class 1259 OID 57709)
--- Name: idx_lot_production_farm; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_lot_production_farm ON public.lot_production USING btree (farm_id);
-
-
---
--- TOC entry 6970 (class 1259 OID 57710)
--- Name: idx_lot_production_lot; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_lot_production_lot ON public.lot_production USING btree (lot_id);
-
-
---
--- TOC entry 6971 (class 1259 OID 57711)
--- Name: idx_lot_production_scope_date; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_lot_production_scope_date ON public.lot_production USING btree (cost_scope, prod_date);
-
-
---
--- TOC entry 6984 (class 1259 OID 57712)
+-- TOC entry 6954 (class 1259 OID 57712)
 -- Name: idx_lots_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4489,7 +4463,7 @@ CREATE INDEX idx_lots_client ON public.lots USING btree (client_id);
 
 
 --
--- TOC entry 6985 (class 1259 OID 57713)
+-- TOC entry 6955 (class 1259 OID 57713)
 -- Name: idx_lots_farm; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4497,23 +4471,7 @@ CREATE INDEX idx_lots_farm ON public.lots USING btree (farm_id);
 
 
 --
--- TOC entry 6976 (class 1259 OID 57714)
--- Name: idx_lpa_lot; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_lpa_lot ON public.lot_production_allocations USING btree (lot_id);
-
-
---
--- TOC entry 6977 (class 1259 OID 57715)
--- Name: idx_lpa_production; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_lpa_production ON public.lot_production_allocations USING btree (lot_production_id);
-
-
---
--- TOC entry 6937 (class 1259 OID 57716)
+-- TOC entry 6923 (class 1259 OID 57716)
 -- Name: idx_mov_item_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4521,7 +4479,7 @@ CREATE INDEX idx_mov_item_date ON public.inventory_movements USING btree (item_i
 
 
 --
--- TOC entry 6998 (class 1259 OID 57717)
+-- TOC entry 6968 (class 1259 OID 57717)
 -- Name: idx_password_reset_tokens_active_hash; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4529,7 +4487,7 @@ CREATE INDEX idx_password_reset_tokens_active_hash ON public.password_reset_toke
 
 
 --
--- TOC entry 6999 (class 1259 OID 57718)
+-- TOC entry 6969 (class 1259 OID 57718)
 -- Name: idx_password_reset_tokens_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4537,7 +4495,7 @@ CREATE INDEX idx_password_reset_tokens_user_id ON public.password_reset_tokens U
 
 
 --
--- TOC entry 7007 (class 1259 OID 57719)
+-- TOC entry 6977 (class 1259 OID 57719)
 -- Name: idx_payroll_employee_rates_created_by; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4545,7 +4503,7 @@ CREATE INDEX idx_payroll_employee_rates_created_by ON public.payroll_employee_ra
 
 
 --
--- TOC entry 7008 (class 1259 OID 57720)
+-- TOC entry 6978 (class 1259 OID 57720)
 -- Name: idx_payroll_employee_rates_updated_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4553,7 +4511,7 @@ CREATE INDEX idx_payroll_employee_rates_updated_at ON public.payroll_employee_ra
 
 
 --
--- TOC entry 7009 (class 1259 OID 57721)
+-- TOC entry 6979 (class 1259 OID 57721)
 -- Name: idx_payroll_employee_rates_updated_by; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4561,7 +4519,7 @@ CREATE INDEX idx_payroll_employee_rates_updated_by ON public.payroll_employee_ra
 
 
 --
--- TOC entry 7012 (class 1259 OID 57722)
+-- TOC entry 6982 (class 1259 OID 57722)
 -- Name: idx_payroll_nomina_rules_client_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4569,7 +4527,7 @@ CREATE INDEX idx_payroll_nomina_rules_client_active ON public.payroll_nomina_con
 
 
 --
--- TOC entry 7013 (class 1259 OID 57723)
+-- TOC entry 6983 (class 1259 OID 57723)
 -- Name: idx_payroll_nomina_rules_client_dates; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4577,7 +4535,7 @@ CREATE INDEX idx_payroll_nomina_rules_client_dates ON public.payroll_nomina_cont
 
 
 --
--- TOC entry 7021 (class 1259 OID 57724)
+-- TOC entry 6991 (class 1259 OID 57724)
 -- Name: idx_payroll_settings_created_by; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4585,7 +4543,7 @@ CREATE INDEX idx_payroll_settings_created_by ON public.payroll_settings USING bt
 
 
 --
--- TOC entry 7022 (class 1259 OID 57725)
+-- TOC entry 6992 (class 1259 OID 57725)
 -- Name: idx_payroll_settings_updated_by; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4593,7 +4551,7 @@ CREATE INDEX idx_payroll_settings_updated_by ON public.payroll_settings USING bt
 
 
 --
--- TOC entry 7023 (class 1259 OID 57726)
+-- TOC entry 6993 (class 1259 OID 57726)
 -- Name: idx_payroll_settings_valid; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4601,7 +4559,7 @@ CREATE INDEX idx_payroll_settings_valid ON public.payroll_settings USING btree (
 
 
 --
--- TOC entry 7026 (class 1259 OID 57727)
+-- TOC entry 6996 (class 1259 OID 57727)
 -- Name: idx_payroll_slip_lot_slip; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4609,7 +4567,7 @@ CREATE INDEX idx_payroll_slip_lot_slip ON public.payroll_slip_lot_allocations US
 
 
 --
--- TOC entry 7030 (class 1259 OID 57728)
+-- TOC entry 7000 (class 1259 OID 57728)
 -- Name: idx_payroll_slips_client_status; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4617,7 +4575,7 @@ CREATE INDEX idx_payroll_slips_client_status ON public.payroll_slips USING btree
 
 
 --
--- TOC entry 7031 (class 1259 OID 57729)
+-- TOC entry 7001 (class 1259 OID 57729)
 -- Name: idx_payroll_slips_client_worker; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4625,7 +4583,7 @@ CREATE INDEX idx_payroll_slips_client_worker ON public.payroll_slips USING btree
 
 
 --
--- TOC entry 7032 (class 1259 OID 57730)
+-- TOC entry 7002 (class 1259 OID 57730)
 -- Name: idx_payroll_slips_period; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4633,15 +4591,7 @@ CREATE INDEX idx_payroll_slips_period ON public.payroll_slips USING btree (clien
 
 
 --
--- TOC entry 6972 (class 1259 OID 57731)
--- Name: idx_prod_lot_date; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_prod_lot_date ON public.lot_production USING btree (lot_id, prod_date);
-
-
---
--- TOC entry 7000 (class 1259 OID 57732)
+-- TOC entry 6970 (class 1259 OID 57732)
 -- Name: idx_prt_expires_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4649,7 +4599,7 @@ CREATE INDEX idx_prt_expires_at ON public.password_reset_tokens USING btree (exp
 
 
 --
--- TOC entry 7001 (class 1259 OID 57733)
+-- TOC entry 6971 (class 1259 OID 57733)
 -- Name: idx_prt_used_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4657,7 +4607,7 @@ CREATE INDEX idx_prt_used_at ON public.password_reset_tokens USING btree (used_a
 
 
 --
--- TOC entry 7002 (class 1259 OID 57734)
+-- TOC entry 6972 (class 1259 OID 57734)
 -- Name: idx_prt_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4665,7 +4615,7 @@ CREATE INDEX idx_prt_user_id ON public.password_reset_tokens USING btree (user_i
 
 
 --
--- TOC entry 7049 (class 1259 OID 57735)
+-- TOC entry 7019 (class 1259 OID 57735)
 -- Name: idx_security_audit_logs_created_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4673,7 +4623,7 @@ CREATE INDEX idx_security_audit_logs_created_at ON public.security_audit_logs US
 
 
 --
--- TOC entry 7050 (class 1259 OID 57736)
+-- TOC entry 7020 (class 1259 OID 57736)
 -- Name: idx_security_audit_logs_event_type; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4681,7 +4631,7 @@ CREATE INDEX idx_security_audit_logs_event_type ON public.security_audit_logs US
 
 
 --
--- TOC entry 7051 (class 1259 OID 57737)
+-- TOC entry 7021 (class 1259 OID 57737)
 -- Name: idx_security_audit_logs_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4689,7 +4639,7 @@ CREATE INDEX idx_security_audit_logs_user_id ON public.security_audit_logs USING
 
 
 --
--- TOC entry 7054 (class 1259 OID 57738)
+-- TOC entry 7024 (class 1259 OID 57738)
 -- Name: idx_sessions_acting_client_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4697,7 +4647,7 @@ CREATE INDEX idx_sessions_acting_client_id ON public.sessions USING btree (actin
 
 
 --
--- TOC entry 7055 (class 1259 OID 57739)
+-- TOC entry 7025 (class 1259 OID 57739)
 -- Name: idx_sessions_active_previous_token; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4705,7 +4655,7 @@ CREATE INDEX idx_sessions_active_previous_token ON public.sessions USING btree (
 
 
 --
--- TOC entry 7056 (class 1259 OID 57740)
+-- TOC entry 7026 (class 1259 OID 57740)
 -- Name: idx_sessions_active_token; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4713,7 +4663,7 @@ CREATE INDEX idx_sessions_active_token ON public.sessions USING btree (session_t
 
 
 --
--- TOC entry 7057 (class 1259 OID 57741)
+-- TOC entry 7027 (class 1259 OID 57741)
 -- Name: idx_sessions_expires; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4721,7 +4671,7 @@ CREATE INDEX idx_sessions_expires ON public.sessions USING btree (expires_at);
 
 
 --
--- TOC entry 7058 (class 1259 OID 57742)
+-- TOC entry 7028 (class 1259 OID 57742)
 -- Name: idx_sessions_previous_token_expires_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4729,7 +4679,7 @@ CREATE INDEX idx_sessions_previous_token_expires_at ON public.sessions USING btr
 
 
 --
--- TOC entry 7059 (class 1259 OID 57743)
+-- TOC entry 7029 (class 1259 OID 57743)
 -- Name: idx_sessions_previous_token_hash; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4737,7 +4687,7 @@ CREATE INDEX idx_sessions_previous_token_hash ON public.sessions USING btree (pr
 
 
 --
--- TOC entry 7060 (class 1259 OID 57744)
+-- TOC entry 7030 (class 1259 OID 57744)
 -- Name: idx_sessions_revoked_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4745,7 +4695,7 @@ CREATE INDEX idx_sessions_revoked_at ON public.sessions USING btree (revoked_at)
 
 
 --
--- TOC entry 7061 (class 1259 OID 57745)
+-- TOC entry 7031 (class 1259 OID 57745)
 -- Name: idx_sessions_token_hash; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4753,7 +4703,7 @@ CREATE INDEX idx_sessions_token_hash ON public.sessions USING btree (session_tok
 
 
 --
--- TOC entry 7062 (class 1259 OID 57746)
+-- TOC entry 7032 (class 1259 OID 57746)
 -- Name: idx_sessions_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4761,7 +4711,7 @@ CREATE INDEX idx_sessions_user_id ON public.sessions USING btree (user_id);
 
 
 --
--- TOC entry 7067 (class 1259 OID 57747)
+-- TOC entry 7037 (class 1259 OID 57747)
 -- Name: idx_users_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4769,7 +4719,7 @@ CREATE INDEX idx_users_active ON public.users USING btree (is_active);
 
 
 --
--- TOC entry 7068 (class 1259 OID 57748)
+-- TOC entry 7038 (class 1259 OID 57748)
 -- Name: idx_users_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4777,7 +4727,7 @@ CREATE INDEX idx_users_client ON public.users USING btree (client_id);
 
 
 --
--- TOC entry 7069 (class 1259 OID 57749)
+-- TOC entry 7039 (class 1259 OID 57749)
 -- Name: idx_users_email; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4785,7 +4735,7 @@ CREATE INDEX idx_users_email ON public.users USING btree (email);
 
 
 --
--- TOC entry 7074 (class 1259 OID 57750)
+-- TOC entry 7044 (class 1259 OID 57750)
 -- Name: idx_workers_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4793,7 +4743,7 @@ CREATE INDEX idx_workers_client ON public.workers USING btree (client_id);
 
 
 --
--- TOC entry 6906 (class 1259 OID 57751)
+-- TOC entry 6892 (class 1259 OID 57751)
 -- Name: inventory_categories_name_unique_ci; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4801,7 +4751,7 @@ CREATE UNIQUE INDEX inventory_categories_name_unique_ci ON public.inventory_cate
 
 
 --
--- TOC entry 6917 (class 1259 OID 57752)
+-- TOC entry 6903 (class 1259 OID 57752)
 -- Name: inventory_item_ingredients_item_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4809,7 +4759,7 @@ CREATE INDEX inventory_item_ingredients_item_id_idx ON public.inventory_item_ing
 
 
 --
--- TOC entry 6921 (class 1259 OID 57753)
+-- TOC entry 6907 (class 1259 OID 57753)
 -- Name: inventory_items_brand_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4817,7 +4767,7 @@ CREATE INDEX inventory_items_brand_id_idx ON public.inventory_items USING btree 
 
 
 --
--- TOC entry 6922 (class 1259 OID 57754)
+-- TOC entry 6908 (class 1259 OID 57754)
 -- Name: inventory_items_category_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4825,7 +4775,7 @@ CREATE INDEX inventory_items_category_id_idx ON public.inventory_items USING btr
 
 
 --
--- TOC entry 6923 (class 1259 OID 57755)
+-- TOC entry 6909 (class 1259 OID 57755)
 -- Name: inventory_items_name_unit_brand_unique_ci; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4833,7 +4783,7 @@ CREATE UNIQUE INDEX inventory_items_name_unit_brand_unique_ci ON public.inventor
 
 
 --
--- TOC entry 6915 (class 1259 OID 57756)
+-- TOC entry 6901 (class 1259 OID 57756)
 -- Name: ix_inv_cons_app_group; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4841,7 +4791,7 @@ CREATE INDEX ix_inv_cons_app_group ON public.inventory_consumptions USING btree 
 
 
 --
--- TOC entry 6916 (class 1259 OID 57757)
+-- TOC entry 6902 (class 1259 OID 57757)
 -- Name: ix_inv_cons_mix_app; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4849,7 +4799,7 @@ CREATE INDEX ix_inv_cons_mix_app ON public.inventory_consumptions USING btree (m
 
 
 --
--- TOC entry 6994 (class 1259 OID 57758)
+-- TOC entry 6964 (class 1259 OID 57758)
 -- Name: ix_mix_app_farm_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4857,7 +4807,7 @@ CREATE INDEX ix_mix_app_farm_date ON public.mix_applications USING btree (farm_i
 
 
 --
--- TOC entry 6989 (class 1259 OID 57759)
+-- TOC entry 6959 (class 1259 OID 57759)
 -- Name: ix_mix_app_items_app; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4865,7 +4815,7 @@ CREATE INDEX ix_mix_app_items_app ON public.mix_application_items USING btree (m
 
 
 --
--- TOC entry 6995 (class 1259 OID 57760)
+-- TOC entry 6965 (class 1259 OID 57760)
 -- Name: ix_mix_app_lot_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4873,7 +4823,7 @@ CREATE INDEX ix_mix_app_lot_date ON public.mix_applications USING btree (lot_id,
 
 
 --
--- TOC entry 7018 (class 1259 OID 57761)
+-- TOC entry 6988 (class 1259 OID 57761)
 -- Name: payroll_periods_period_month_uidx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4881,7 +4831,7 @@ CREATE UNIQUE INDEX payroll_periods_period_month_uidx ON public.payroll_periods 
 
 
 --
--- TOC entry 6879 (class 1259 OID 57762)
+-- TOC entry 6865 (class 1259 OID 57762)
 -- Name: unique_farm_name_per_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4889,7 +4839,7 @@ CREATE UNIQUE INDEX unique_farm_name_per_client ON public.farms USING btree (cli
 
 
 --
--- TOC entry 6988 (class 1259 OID 57763)
+-- TOC entry 6958 (class 1259 OID 57763)
 -- Name: unique_lot_name_per_farm_client_ci; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4897,7 +4847,7 @@ CREATE UNIQUE INDEX unique_lot_name_per_farm_client_ci ON public.lots USING btre
 
 
 --
--- TOC entry 6829 (class 1259 OID 57764)
+-- TOC entry 6815 (class 1259 OID 57764)
 -- Name: uq_asset_categories_client_name; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4905,7 +4855,7 @@ CREATE UNIQUE INDEX uq_asset_categories_client_name ON public.asset_categories U
 
 
 --
--- TOC entry 6836 (class 1259 OID 57765)
+-- TOC entry 6822 (class 1259 OID 57765)
 -- Name: uq_assets_client_plate; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4913,7 +4863,7 @@ CREATE UNIQUE INDEX uq_assets_client_plate ON public.assets USING btree (client_
 
 
 --
--- TOC entry 6847 (class 1259 OID 57766)
+-- TOC entry 6833 (class 1259 OID 57766)
 -- Name: uq_calibers_client_name; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4921,7 +4871,15 @@ CREATE UNIQUE INDEX uq_calibers_client_name ON public.calibers USING btree (clie
 
 
 --
--- TOC entry 6865 (class 1259 OID 57767)
+-- TOC entry 7053 (class 1259 OID 58730)
+-- Name: uq_coffee_lot_production_active_lot_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uq_coffee_lot_production_active_lot_date ON public.coffee_lot_production USING btree (client_id, lot_id, prod_date) WHERE (is_active = true);
+
+
+--
+-- TOC entry 6851 (class 1259 OID 57767)
 -- Name: uq_expense_categories_client_name_norm; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4929,7 +4887,7 @@ CREATE UNIQUE INDEX uq_expense_categories_client_name_norm ON public.expense_cat
 
 
 --
--- TOC entry 6903 (class 1259 OID 57768)
+-- TOC entry 6889 (class 1259 OID 57768)
 -- Name: uq_inventory_brands_client_name_ci; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4937,7 +4895,7 @@ CREATE UNIQUE INDEX uq_inventory_brands_client_name_ci ON public.inventory_brand
 
 
 --
--- TOC entry 6946 (class 1259 OID 57769)
+-- TOC entry 6932 (class 1259 OID 57769)
 -- Name: uq_labor_entries_active_farm_key; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4945,7 +4903,7 @@ CREATE UNIQUE INDEX uq_labor_entries_active_farm_key ON public.labor_entries USI
 
 
 --
--- TOC entry 6947 (class 1259 OID 57770)
+-- TOC entry 6933 (class 1259 OID 57770)
 -- Name: uq_labor_entries_active_lot_key; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4953,7 +4911,7 @@ CREATE UNIQUE INDEX uq_labor_entries_active_lot_key ON public.labor_entries USIN
 
 
 --
--- TOC entry 6948 (class 1259 OID 57771)
+-- TOC entry 6934 (class 1259 OID 57771)
 -- Name: uq_labor_entries_one_jornal_per_day_global; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4961,7 +4919,7 @@ CREATE UNIQUE INDEX uq_labor_entries_one_jornal_per_day_global ON public.labor_e
 
 
 --
--- TOC entry 6953 (class 1259 OID 57772)
+-- TOC entry 6939 (class 1259 OID 57772)
 -- Name: uq_labor_entry_allocations_entry_lot; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4969,15 +4927,7 @@ CREATE UNIQUE INDEX uq_labor_entry_allocations_entry_lot ON public.labor_entry_a
 
 
 --
--- TOC entry 6980 (class 1259 OID 57773)
--- Name: uq_lpa_entry_lot; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX uq_lpa_entry_lot ON public.lot_production_allocations USING btree (lot_production_id, lot_id);
-
-
---
--- TOC entry 7005 (class 1259 OID 57774)
+-- TOC entry 6975 (class 1259 OID 57774)
 -- Name: uq_prt_one_active_per_user; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4985,7 +4935,7 @@ CREATE UNIQUE INDEX uq_prt_one_active_per_user ON public.password_reset_tokens U
 
 
 --
--- TOC entry 7006 (class 1259 OID 57775)
+-- TOC entry 6976 (class 1259 OID 57775)
 -- Name: uq_prt_token_hash; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4993,7 +4943,7 @@ CREATE UNIQUE INDEX uq_prt_token_hash ON public.password_reset_tokens USING btre
 
 
 --
--- TOC entry 7070 (class 1259 OID 57776)
+-- TOC entry 7040 (class 1259 OID 57776)
 -- Name: uq_users_email_lower_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5001,7 +4951,7 @@ CREATE UNIQUE INDEX uq_users_email_lower_active ON public.users USING btree (low
 
 
 --
--- TOC entry 7071 (class 1259 OID 57777)
+-- TOC entry 7041 (class 1259 OID 57777)
 -- Name: uq_users_id_doc_per_client; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5009,7 +4959,7 @@ CREATE UNIQUE INDEX uq_users_id_doc_per_client ON public.users USING btree (clie
 
 
 --
--- TOC entry 7075 (class 1259 OID 57778)
+-- TOC entry 7045 (class 1259 OID 57778)
 -- Name: uq_worker_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5017,7 +4967,7 @@ CREATE UNIQUE INDEX uq_worker_id ON public.workers USING btree (id_type, id_numb
 
 
 --
--- TOC entry 6825 (class 1259 OID 57779)
+-- TOC entry 6811 (class 1259 OID 57779)
 -- Name: ux_aguinaldo_worker_legal_period; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5025,7 +4975,7 @@ CREATE UNIQUE INDEX ux_aguinaldo_worker_legal_period ON public.aguinaldo_stateme
 
 
 --
--- TOC entry 6882 (class 1259 OID 57780)
+-- TOC entry 6868 (class 1259 OID 57780)
 -- Name: ux_fixed_payroll_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5033,15 +4983,7 @@ CREATE UNIQUE INDEX ux_fixed_payroll_active ON public.fixed_payroll USING btree 
 
 
 --
--- TOC entry 6975 (class 1259 OID 57781)
--- Name: ux_lotprod_lot_harv_date; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX ux_lotprod_lot_harv_date ON public.lot_production USING btree (lot_id, harvest_id, prod_date) WHERE (harvest_id IS NOT NULL);
-
-
---
--- TOC entry 7029 (class 1259 OID 57782)
+-- TOC entry 6999 (class 1259 OID 57782)
 -- Name: ux_payroll_slip_lot; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5049,15 +4991,7 @@ CREATE UNIQUE INDEX ux_payroll_slip_lot ON public.payroll_slip_lot_allocations U
 
 
 --
--- TOC entry 6983 (class 1259 OID 57783)
--- Name: ux_prod_caliber; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX ux_prod_caliber ON public.lot_production_details USING btree (lot_production_id, caliber_id);
-
-
---
--- TOC entry 7256 (class 2620 OID 57784)
+-- TOC entry 7226 (class 2620 OID 57784)
 -- Name: general_expenses tr_general_expenses_recalc; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5065,7 +4999,7 @@ CREATE TRIGGER tr_general_expenses_recalc AFTER INSERT OR UPDATE ON public.gener
 
 
 --
--- TOC entry 7249 (class 2620 OID 57785)
+-- TOC entry 7219 (class 2620 OID 57785)
 -- Name: asset_categories trg_asset_categories_set_name_norm; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5073,7 +5007,7 @@ CREATE TRIGGER trg_asset_categories_set_name_norm BEFORE INSERT OR UPDATE OF nam
 
 
 --
--- TOC entry 7250 (class 2620 OID 57786)
+-- TOC entry 7220 (class 2620 OID 57786)
 -- Name: asset_categories trg_asset_categories_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5081,7 +5015,7 @@ CREATE TRIGGER trg_asset_categories_updated_at BEFORE UPDATE ON public.asset_cat
 
 
 --
--- TOC entry 7251 (class 2620 OID 57787)
+-- TOC entry 7221 (class 2620 OID 57787)
 -- Name: asset_depreciation trg_asset_depreciation_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5089,7 +5023,7 @@ CREATE TRIGGER trg_asset_depreciation_updated_at BEFORE UPDATE ON public.asset_d
 
 
 --
--- TOC entry 7252 (class 2620 OID 57788)
+-- TOC entry 7222 (class 2620 OID 57788)
 -- Name: assets trg_assets_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5097,7 +5031,7 @@ CREATE TRIGGER trg_assets_updated_at BEFORE UPDATE ON public.assets FOR EACH ROW
 
 
 --
--- TOC entry 7254 (class 2620 OID 57789)
+-- TOC entry 7224 (class 2620 OID 57789)
 -- Name: calendar_activities trg_calendar_activities_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5105,7 +5039,7 @@ CREATE TRIGGER trg_calendar_activities_updated_at BEFORE UPDATE ON public.calend
 
 
 --
--- TOC entry 7255 (class 2620 OID 57790)
+-- TOC entry 7225 (class 2620 OID 57790)
 -- Name: expense_categories trg_expense_categories_set_name_norm; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5113,7 +5047,7 @@ CREATE TRIGGER trg_expense_categories_set_name_norm BEFORE INSERT OR UPDATE OF n
 
 
 --
--- TOC entry 7253 (class 2620 OID 57791)
+-- TOC entry 7223 (class 2620 OID 57791)
 -- Name: assets trg_set_asset_plate; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5121,7 +5055,7 @@ CREATE TRIGGER trg_set_asset_plate BEFORE INSERT ON public.assets FOR EACH ROW E
 
 
 --
--- TOC entry 7257 (class 2620 OID 57792)
+-- TOC entry 7227 (class 2620 OID 57792)
 -- Name: users trg_users_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -5129,7 +5063,7 @@ CREATE TRIGGER trg_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW E
 
 
 --
--- TOC entry 7078 (class 2606 OID 57793)
+-- TOC entry 7054 (class 2606 OID 57793)
 -- Name: aguinaldo_statements aguinaldo_statements_client_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5138,7 +5072,7 @@ ALTER TABLE ONLY public.aguinaldo_statements
 
 
 --
--- TOC entry 7079 (class 2606 OID 57798)
+-- TOC entry 7055 (class 2606 OID 57798)
 -- Name: aguinaldo_statements aguinaldo_statements_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5147,7 +5081,7 @@ ALTER TABLE ONLY public.aguinaldo_statements
 
 
 --
--- TOC entry 7080 (class 2606 OID 57803)
+-- TOC entry 7056 (class 2606 OID 57803)
 -- Name: aguinaldo_statements aguinaldo_statements_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5156,7 +5090,7 @@ ALTER TABLE ONLY public.aguinaldo_statements
 
 
 --
--- TOC entry 7081 (class 2606 OID 57808)
+-- TOC entry 7057 (class 2606 OID 57808)
 -- Name: aguinaldo_statements aguinaldo_statements_worker_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5165,7 +5099,7 @@ ALTER TABLE ONLY public.aguinaldo_statements
 
 
 --
--- TOC entry 7102 (class 2606 OID 57813)
+-- TOC entry 7078 (class 2606 OID 57813)
 -- Name: cantons cantons_province_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5174,7 +5108,43 @@ ALTER TABLE ONLY public.cantons
 
 
 --
--- TOC entry 7093 (class 2606 OID 57818)
+-- TOC entry 7215 (class 2606 OID 58707)
+-- Name: coffee_lot_production coffee_lot_production_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.coffee_lot_production
+    ADD CONSTRAINT coffee_lot_production_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(id);
+
+
+--
+-- TOC entry 7216 (class 2606 OID 58717)
+-- Name: coffee_lot_production coffee_lot_production_created_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.coffee_lot_production
+    ADD CONSTRAINT coffee_lot_production_created_by_user_id_fkey FOREIGN KEY (created_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 7217 (class 2606 OID 58712)
+-- Name: coffee_lot_production coffee_lot_production_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.coffee_lot_production
+    ADD CONSTRAINT coffee_lot_production_lot_id_fkey FOREIGN KEY (lot_id) REFERENCES public.lots(id);
+
+
+--
+-- TOC entry 7218 (class 2606 OID 58722)
+-- Name: coffee_lot_production coffee_lot_production_updated_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.coffee_lot_production
+    ADD CONSTRAINT coffee_lot_production_updated_by_user_id_fkey FOREIGN KEY (updated_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 7069 (class 2606 OID 57818)
 -- Name: coffee_varieties coffee_varieties_created_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5183,7 +5153,7 @@ ALTER TABLE ONLY public.coffee_varieties
 
 
 --
--- TOC entry 7094 (class 2606 OID 57823)
+-- TOC entry 7070 (class 2606 OID 57823)
 -- Name: coffee_varieties coffee_varieties_updated_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5192,7 +5162,7 @@ ALTER TABLE ONLY public.coffee_varieties
 
 
 --
--- TOC entry 7104 (class 2606 OID 57828)
+-- TOC entry 7080 (class 2606 OID 57828)
 -- Name: districts districts_canton_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5201,7 +5171,7 @@ ALTER TABLE ONLY public.districts
 
 
 --
--- TOC entry 7106 (class 2606 OID 57833)
+-- TOC entry 7082 (class 2606 OID 57833)
 -- Name: expenses expenses_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5210,7 +5180,7 @@ ALTER TABLE ONLY public.expenses
 
 
 --
--- TOC entry 7107 (class 2606 OID 57838)
+-- TOC entry 7083 (class 2606 OID 57838)
 -- Name: expenses expenses_harvest_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5219,7 +5189,7 @@ ALTER TABLE ONLY public.expenses
 
 
 --
--- TOC entry 7108 (class 2606 OID 57843)
+-- TOC entry 7084 (class 2606 OID 57843)
 -- Name: expenses expenses_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5228,7 +5198,7 @@ ALTER TABLE ONLY public.expenses
 
 
 --
--- TOC entry 7109 (class 2606 OID 57848)
+-- TOC entry 7085 (class 2606 OID 57848)
 -- Name: expenses expenses_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5237,7 +5207,7 @@ ALTER TABLE ONLY public.expenses
 
 
 --
--- TOC entry 7112 (class 2606 OID 57853)
+-- TOC entry 7088 (class 2606 OID 57853)
 -- Name: farm_harvest_estimates farm_harvest_estimates_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5246,7 +5216,7 @@ ALTER TABLE ONLY public.farm_harvest_estimates
 
 
 --
--- TOC entry 7113 (class 2606 OID 57858)
+-- TOC entry 7089 (class 2606 OID 57858)
 -- Name: farm_harvest_estimates farm_harvest_estimates_farm_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5255,7 +5225,7 @@ ALTER TABLE ONLY public.farm_harvest_estimates
 
 
 --
--- TOC entry 7114 (class 2606 OID 57863)
+-- TOC entry 7090 (class 2606 OID 57863)
 -- Name: farm_harvest_estimates farm_harvest_estimates_harvest_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5264,7 +5234,7 @@ ALTER TABLE ONLY public.farm_harvest_estimates
 
 
 --
--- TOC entry 7115 (class 2606 OID 57868)
+-- TOC entry 7091 (class 2606 OID 57868)
 -- Name: farm_harvest_estimates farm_harvest_estimates_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5273,7 +5243,7 @@ ALTER TABLE ONLY public.farm_harvest_estimates
 
 
 --
--- TOC entry 7117 (class 2606 OID 57873)
+-- TOC entry 7093 (class 2606 OID 57873)
 -- Name: farms farms_canton_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5282,7 +5252,7 @@ ALTER TABLE ONLY public.farms
 
 
 --
--- TOC entry 7118 (class 2606 OID 57878)
+-- TOC entry 7094 (class 2606 OID 57878)
 -- Name: farms farms_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5291,7 +5261,7 @@ ALTER TABLE ONLY public.farms
 
 
 --
--- TOC entry 7119 (class 2606 OID 57883)
+-- TOC entry 7095 (class 2606 OID 57883)
 -- Name: farms farms_district_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5300,7 +5270,7 @@ ALTER TABLE ONLY public.farms
 
 
 --
--- TOC entry 7120 (class 2606 OID 57888)
+-- TOC entry 7096 (class 2606 OID 57888)
 -- Name: farms farms_province_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5309,7 +5279,7 @@ ALTER TABLE ONLY public.farms
 
 
 --
--- TOC entry 7121 (class 2606 OID 57893)
+-- TOC entry 7097 (class 2606 OID 57893)
 -- Name: farms farms_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5318,7 +5288,7 @@ ALTER TABLE ONLY public.farms
 
 
 --
--- TOC entry 7127 (class 2606 OID 57898)
+-- TOC entry 7103 (class 2606 OID 57898)
 -- Name: fixed_payroll_allocations fixed_payroll_allocations_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5327,7 +5297,7 @@ ALTER TABLE ONLY public.fixed_payroll_allocations
 
 
 --
--- TOC entry 7128 (class 2606 OID 57903)
+-- TOC entry 7104 (class 2606 OID 57903)
 -- Name: fixed_payroll_allocations fixed_payroll_allocations_fixed_payroll_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5336,7 +5306,7 @@ ALTER TABLE ONLY public.fixed_payroll_allocations
 
 
 --
--- TOC entry 7129 (class 2606 OID 57908)
+-- TOC entry 7105 (class 2606 OID 57908)
 -- Name: fixed_payroll_allocations fixed_payroll_allocations_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5345,7 +5315,7 @@ ALTER TABLE ONLY public.fixed_payroll_allocations
 
 
 --
--- TOC entry 7130 (class 2606 OID 57913)
+-- TOC entry 7106 (class 2606 OID 57913)
 -- Name: fixed_payroll_allocations fixed_payroll_allocations_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5354,7 +5324,7 @@ ALTER TABLE ONLY public.fixed_payroll_allocations
 
 
 --
--- TOC entry 7123 (class 2606 OID 57918)
+-- TOC entry 7099 (class 2606 OID 57918)
 -- Name: fixed_payroll fixed_payroll_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5363,7 +5333,7 @@ ALTER TABLE ONLY public.fixed_payroll
 
 
 --
--- TOC entry 7124 (class 2606 OID 57923)
+-- TOC entry 7100 (class 2606 OID 57923)
 -- Name: fixed_payroll fixed_payroll_period_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5372,7 +5342,7 @@ ALTER TABLE ONLY public.fixed_payroll
 
 
 --
--- TOC entry 7125 (class 2606 OID 57928)
+-- TOC entry 7101 (class 2606 OID 57928)
 -- Name: fixed_payroll fixed_payroll_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5381,7 +5351,7 @@ ALTER TABLE ONLY public.fixed_payroll
 
 
 --
--- TOC entry 7126 (class 2606 OID 57933)
+-- TOC entry 7102 (class 2606 OID 57933)
 -- Name: fixed_payroll fixed_payroll_worker_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5390,7 +5360,7 @@ ALTER TABLE ONLY public.fixed_payroll
 
 
 --
--- TOC entry 7082 (class 2606 OID 57938)
+-- TOC entry 7058 (class 2606 OID 57938)
 -- Name: asset_categories fk_asset_categories_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5399,7 +5369,7 @@ ALTER TABLE ONLY public.asset_categories
 
 
 --
--- TOC entry 7083 (class 2606 OID 57943)
+-- TOC entry 7059 (class 2606 OID 57943)
 -- Name: asset_categories fk_asset_categories_created_by; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5408,7 +5378,7 @@ ALTER TABLE ONLY public.asset_categories
 
 
 --
--- TOC entry 7084 (class 2606 OID 57948)
+-- TOC entry 7060 (class 2606 OID 57948)
 -- Name: asset_categories fk_asset_categories_updated_by; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5417,7 +5387,7 @@ ALTER TABLE ONLY public.asset_categories
 
 
 --
--- TOC entry 7085 (class 2606 OID 57953)
+-- TOC entry 7061 (class 2606 OID 57953)
 -- Name: asset_depreciation fk_asset_dep_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5426,7 +5396,7 @@ ALTER TABLE ONLY public.asset_depreciation
 
 
 --
--- TOC entry 7086 (class 2606 OID 57958)
+-- TOC entry 7062 (class 2606 OID 57958)
 -- Name: asset_depreciation fk_asset_depreciation_asset; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5435,7 +5405,7 @@ ALTER TABLE ONLY public.asset_depreciation
 
 
 --
--- TOC entry 7087 (class 2606 OID 57963)
+-- TOC entry 7063 (class 2606 OID 57963)
 -- Name: asset_depreciation fk_asset_depreciation_created_by; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5444,7 +5414,7 @@ ALTER TABLE ONLY public.asset_depreciation
 
 
 --
--- TOC entry 7088 (class 2606 OID 57968)
+-- TOC entry 7064 (class 2606 OID 57968)
 -- Name: asset_depreciation fk_asset_depreciation_updated_by; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5453,7 +5423,7 @@ ALTER TABLE ONLY public.asset_depreciation
 
 
 --
--- TOC entry 7089 (class 2606 OID 57973)
+-- TOC entry 7065 (class 2606 OID 57973)
 -- Name: assets fk_assets_category; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5462,7 +5432,7 @@ ALTER TABLE ONLY public.assets
 
 
 --
--- TOC entry 7090 (class 2606 OID 57978)
+-- TOC entry 7066 (class 2606 OID 57978)
 -- Name: assets fk_assets_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5471,7 +5441,7 @@ ALTER TABLE ONLY public.assets
 
 
 --
--- TOC entry 7091 (class 2606 OID 57983)
+-- TOC entry 7067 (class 2606 OID 57983)
 -- Name: assets fk_assets_created_by; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5480,7 +5450,7 @@ ALTER TABLE ONLY public.assets
 
 
 --
--- TOC entry 7092 (class 2606 OID 57988)
+-- TOC entry 7068 (class 2606 OID 57988)
 -- Name: assets fk_assets_updated_by; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5489,7 +5459,7 @@ ALTER TABLE ONLY public.assets
 
 
 --
--- TOC entry 7095 (class 2606 OID 57993)
+-- TOC entry 7071 (class 2606 OID 57993)
 -- Name: calendar_activities fk_calendar_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5498,7 +5468,7 @@ ALTER TABLE ONLY public.calendar_activities
 
 
 --
--- TOC entry 7096 (class 2606 OID 57998)
+-- TOC entry 7072 (class 2606 OID 57998)
 -- Name: calendar_activities fk_calendar_created_by; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5507,7 +5477,7 @@ ALTER TABLE ONLY public.calendar_activities
 
 
 --
--- TOC entry 7097 (class 2606 OID 58003)
+-- TOC entry 7073 (class 2606 OID 58003)
 -- Name: calendar_activities fk_calendar_farm; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5516,7 +5486,7 @@ ALTER TABLE ONLY public.calendar_activities
 
 
 --
--- TOC entry 7098 (class 2606 OID 58008)
+-- TOC entry 7074 (class 2606 OID 58008)
 -- Name: calendar_activities fk_calendar_labor_type; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5525,7 +5495,7 @@ ALTER TABLE ONLY public.calendar_activities
 
 
 --
--- TOC entry 7099 (class 2606 OID 58013)
+-- TOC entry 7075 (class 2606 OID 58013)
 -- Name: calendar_activities fk_calendar_lot; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5534,7 +5504,7 @@ ALTER TABLE ONLY public.calendar_activities
 
 
 --
--- TOC entry 7100 (class 2606 OID 58018)
+-- TOC entry 7076 (class 2606 OID 58018)
 -- Name: calendar_activities fk_calendar_updated_by; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5543,16 +5513,7 @@ ALTER TABLE ONLY public.calendar_activities
 
 
 --
--- TOC entry 7207 (class 2606 OID 58023)
--- Name: lot_production_details fk_caliber; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production_details
-    ADD CONSTRAINT fk_caliber FOREIGN KEY (caliber_id) REFERENCES public.calibers(id);
-
-
---
--- TOC entry 7101 (class 2606 OID 58028)
+-- TOC entry 7077 (class 2606 OID 58028)
 -- Name: calibers fk_calibers_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5561,7 +5522,7 @@ ALTER TABLE ONLY public.calibers
 
 
 --
--- TOC entry 7103 (class 2606 OID 58033)
+-- TOC entry 7079 (class 2606 OID 58033)
 -- Name: clients fk_clients_plan; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5570,7 +5531,7 @@ ALTER TABLE ONLY public.clients
 
 
 --
--- TOC entry 7116 (class 2606 OID 58038)
+-- TOC entry 7092 (class 2606 OID 58038)
 -- Name: farm_harvest_estimates fk_estimates_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5579,7 +5540,7 @@ ALTER TABLE ONLY public.farm_harvest_estimates
 
 
 --
--- TOC entry 7105 (class 2606 OID 58043)
+-- TOC entry 7081 (class 2606 OID 58043)
 -- Name: expense_categories fk_expense_categories_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5588,7 +5549,7 @@ ALTER TABLE ONLY public.expense_categories
 
 
 --
--- TOC entry 7110 (class 2606 OID 58048)
+-- TOC entry 7086 (class 2606 OID 58048)
 -- Name: expenses fk_expenses_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5597,7 +5558,7 @@ ALTER TABLE ONLY public.expenses
 
 
 --
--- TOC entry 7111 (class 2606 OID 58053)
+-- TOC entry 7087 (class 2606 OID 58053)
 -- Name: expenses fk_expenses_expense_category; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5606,7 +5567,7 @@ ALTER TABLE ONLY public.expenses
 
 
 --
--- TOC entry 7122 (class 2606 OID 58058)
+-- TOC entry 7098 (class 2606 OID 58058)
 -- Name: farms fk_farms_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5615,7 +5576,7 @@ ALTER TABLE ONLY public.farms
 
 
 --
--- TOC entry 7133 (class 2606 OID 58063)
+-- TOC entry 7109 (class 2606 OID 58063)
 -- Name: general_expenses fk_general_expenses_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5624,7 +5585,7 @@ ALTER TABLE ONLY public.general_expenses
 
 
 --
--- TOC entry 7134 (class 2606 OID 58068)
+-- TOC entry 7110 (class 2606 OID 58068)
 -- Name: general_expenses fk_general_expenses_expense_category; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5633,7 +5594,7 @@ ALTER TABLE ONLY public.general_expenses
 
 
 --
--- TOC entry 7139 (class 2606 OID 58073)
+-- TOC entry 7115 (class 2606 OID 58073)
 -- Name: harvests fk_harvests_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5642,7 +5603,7 @@ ALTER TABLE ONLY public.harvests
 
 
 --
--- TOC entry 7149 (class 2606 OID 58078)
+-- TOC entry 7125 (class 2606 OID 58078)
 -- Name: inventory_consumptions fk_inv_cons_mix_app; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5651,7 +5612,7 @@ ALTER TABLE ONLY public.inventory_consumptions
 
 
 --
--- TOC entry 7170 (class 2606 OID 58083)
+-- TOC entry 7146 (class 2606 OID 58083)
 -- Name: inventory_movements fk_inv_mov_adjust_layer; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5660,7 +5621,7 @@ ALTER TABLE ONLY public.inventory_movements
 
 
 --
--- TOC entry 7171 (class 2606 OID 58088)
+-- TOC entry 7147 (class 2606 OID 58088)
 -- Name: inventory_movements fk_inv_mov_out_source_layer; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5669,7 +5630,7 @@ ALTER TABLE ONLY public.inventory_movements
 
 
 --
--- TOC entry 7142 (class 2606 OID 58093)
+-- TOC entry 7118 (class 2606 OID 58093)
 -- Name: inventory_brands fk_inventory_brands_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5678,7 +5639,7 @@ ALTER TABLE ONLY public.inventory_brands
 
 
 --
--- TOC entry 7160 (class 2606 OID 58098)
+-- TOC entry 7136 (class 2606 OID 58098)
 -- Name: inventory_items fk_inventory_items_brand_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5687,7 +5648,7 @@ ALTER TABLE ONLY public.inventory_items
 
 
 --
--- TOC entry 7161 (class 2606 OID 58103)
+-- TOC entry 7137 (class 2606 OID 58103)
 -- Name: inventory_items fk_inventory_items_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5696,7 +5657,7 @@ ALTER TABLE ONLY public.inventory_items
 
 
 --
--- TOC entry 7165 (class 2606 OID 58108)
+-- TOC entry 7141 (class 2606 OID 58108)
 -- Name: inventory_layers fk_inventory_layers_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5705,7 +5666,7 @@ ALTER TABLE ONLY public.inventory_layers
 
 
 --
--- TOC entry 7172 (class 2606 OID 58113)
+-- TOC entry 7148 (class 2606 OID 58113)
 -- Name: inventory_movements fk_item_client_match; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5714,7 +5675,7 @@ ALTER TABLE ONLY public.inventory_movements
 
 
 --
--- TOC entry 7176 (class 2606 OID 58118)
+-- TOC entry 7152 (class 2606 OID 58118)
 -- Name: labor_entries fk_labor_entries_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5723,7 +5684,7 @@ ALTER TABLE ONLY public.labor_entries
 
 
 --
--- TOC entry 7183 (class 2606 OID 58123)
+-- TOC entry 7159 (class 2606 OID 58123)
 -- Name: labor_entry_allocations fk_lea_labor_entry; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5732,7 +5693,7 @@ ALTER TABLE ONLY public.labor_entry_allocations
 
 
 --
--- TOC entry 7184 (class 2606 OID 58128)
+-- TOC entry 7160 (class 2606 OID 58128)
 -- Name: labor_entry_allocations fk_lea_lot; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5741,34 +5702,7 @@ ALTER TABLE ONLY public.labor_entry_allocations
 
 
 --
--- TOC entry 7208 (class 2606 OID 58133)
--- Name: lot_production_details fk_lot_production; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production_details
-    ADD CONSTRAINT fk_lot_production FOREIGN KEY (lot_production_id) REFERENCES public.lot_production(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 7199 (class 2606 OID 58138)
--- Name: lot_production fk_lot_production_client; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production
-    ADD CONSTRAINT fk_lot_production_client FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 7200 (class 2606 OID 58143)
--- Name: lot_production fk_lot_production_farm; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production
-    ADD CONSTRAINT fk_lot_production_farm FOREIGN KEY (farm_id) REFERENCES public.farms(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 7209 (class 2606 OID 58148)
+-- TOC entry 7175 (class 2606 OID 58148)
 -- Name: lots fk_lots_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5777,25 +5711,7 @@ ALTER TABLE ONLY public.lots
 
 
 --
--- TOC entry 7205 (class 2606 OID 58153)
--- Name: lot_production_allocations fk_lpa_lot; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production_allocations
-    ADD CONSTRAINT fk_lpa_lot FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 7206 (class 2606 OID 58158)
--- Name: lot_production_allocations fk_lpa_lot_production; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production_allocations
-    ADD CONSTRAINT fk_lpa_lot_production FOREIGN KEY (lot_production_id) REFERENCES public.lot_production(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 7215 (class 2606 OID 58163)
+-- TOC entry 7181 (class 2606 OID 58163)
 -- Name: mix_applications fk_mix_app_expense; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5804,7 +5720,7 @@ ALTER TABLE ONLY public.mix_applications
 
 
 --
--- TOC entry 7216 (class 2606 OID 58168)
+-- TOC entry 7182 (class 2606 OID 58168)
 -- Name: mix_applications fk_mix_app_harvest; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5813,7 +5729,7 @@ ALTER TABLE ONLY public.mix_applications
 
 
 --
--- TOC entry 7213 (class 2606 OID 58173)
+-- TOC entry 7179 (class 2606 OID 58173)
 -- Name: mix_application_items fk_mix_app_items_app; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5822,7 +5738,7 @@ ALTER TABLE ONLY public.mix_application_items
 
 
 --
--- TOC entry 7214 (class 2606 OID 58178)
+-- TOC entry 7180 (class 2606 OID 58178)
 -- Name: mix_application_items fk_mix_app_items_item; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5831,7 +5747,7 @@ ALTER TABLE ONLY public.mix_application_items
 
 
 --
--- TOC entry 7217 (class 2606 OID 58183)
+-- TOC entry 7183 (class 2606 OID 58183)
 -- Name: mix_applications fk_mix_app_lot; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5840,7 +5756,7 @@ ALTER TABLE ONLY public.mix_applications
 
 
 --
--- TOC entry 7218 (class 2606 OID 58188)
+-- TOC entry 7184 (class 2606 OID 58188)
 -- Name: mix_applications fk_mix_applications_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5849,7 +5765,7 @@ ALTER TABLE ONLY public.mix_applications
 
 
 --
--- TOC entry 7242 (class 2606 OID 58193)
+-- TOC entry 7208 (class 2606 OID 58193)
 -- Name: users fk_users_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5858,7 +5774,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 7243 (class 2606 OID 58198)
+-- TOC entry 7209 (class 2606 OID 58198)
 -- Name: users fk_users_role; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5867,7 +5783,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 7246 (class 2606 OID 58203)
+-- TOC entry 7212 (class 2606 OID 58203)
 -- Name: workers fk_workers_client; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5876,7 +5792,7 @@ ALTER TABLE ONLY public.workers
 
 
 --
--- TOC entry 7131 (class 2606 OID 58208)
+-- TOC entry 7107 (class 2606 OID 58208)
 -- Name: general_expense_allocations general_expense_allocations_general_expense_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5885,7 +5801,7 @@ ALTER TABLE ONLY public.general_expense_allocations
 
 
 --
--- TOC entry 7132 (class 2606 OID 58213)
+-- TOC entry 7108 (class 2606 OID 58213)
 -- Name: general_expense_allocations general_expense_allocations_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5894,7 +5810,7 @@ ALTER TABLE ONLY public.general_expense_allocations
 
 
 --
--- TOC entry 7135 (class 2606 OID 58218)
+-- TOC entry 7111 (class 2606 OID 58218)
 -- Name: general_expenses general_expenses_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5903,7 +5819,7 @@ ALTER TABLE ONLY public.general_expenses
 
 
 --
--- TOC entry 7136 (class 2606 OID 58223)
+-- TOC entry 7112 (class 2606 OID 58223)
 -- Name: general_expenses general_expenses_farm_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5912,7 +5828,7 @@ ALTER TABLE ONLY public.general_expenses
 
 
 --
--- TOC entry 7137 (class 2606 OID 58228)
+-- TOC entry 7113 (class 2606 OID 58228)
 -- Name: general_expenses general_expenses_harvest_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5921,7 +5837,7 @@ ALTER TABLE ONLY public.general_expenses
 
 
 --
--- TOC entry 7138 (class 2606 OID 58233)
+-- TOC entry 7114 (class 2606 OID 58233)
 -- Name: general_expenses general_expenses_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5930,7 +5846,7 @@ ALTER TABLE ONLY public.general_expenses
 
 
 --
--- TOC entry 7140 (class 2606 OID 58238)
+-- TOC entry 7116 (class 2606 OID 58238)
 -- Name: harvests harvests_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5939,7 +5855,7 @@ ALTER TABLE ONLY public.harvests
 
 
 --
--- TOC entry 7141 (class 2606 OID 58243)
+-- TOC entry 7117 (class 2606 OID 58243)
 -- Name: harvests harvests_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5948,7 +5864,7 @@ ALTER TABLE ONLY public.harvests
 
 
 --
--- TOC entry 7143 (class 2606 OID 58248)
+-- TOC entry 7119 (class 2606 OID 58248)
 -- Name: inventory_brands inventory_brands_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5957,7 +5873,7 @@ ALTER TABLE ONLY public.inventory_brands
 
 
 --
--- TOC entry 7144 (class 2606 OID 58253)
+-- TOC entry 7120 (class 2606 OID 58253)
 -- Name: inventory_brands inventory_brands_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5966,7 +5882,7 @@ ALTER TABLE ONLY public.inventory_brands
 
 
 --
--- TOC entry 7145 (class 2606 OID 58258)
+-- TOC entry 7121 (class 2606 OID 58258)
 -- Name: inventory_categories inventory_categories_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5975,7 +5891,7 @@ ALTER TABLE ONLY public.inventory_categories
 
 
 --
--- TOC entry 7146 (class 2606 OID 58263)
+-- TOC entry 7122 (class 2606 OID 58263)
 -- Name: inventory_categories inventory_categories_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5984,7 +5900,7 @@ ALTER TABLE ONLY public.inventory_categories
 
 
 --
--- TOC entry 7147 (class 2606 OID 58268)
+-- TOC entry 7123 (class 2606 OID 58268)
 -- Name: inventory_consumption_layers inventory_consumption_layers_consumption_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5993,7 +5909,7 @@ ALTER TABLE ONLY public.inventory_consumption_layers
 
 
 --
--- TOC entry 7148 (class 2606 OID 58273)
+-- TOC entry 7124 (class 2606 OID 58273)
 -- Name: inventory_consumption_layers inventory_consumption_layers_layer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6002,7 +5918,7 @@ ALTER TABLE ONLY public.inventory_consumption_layers
 
 
 --
--- TOC entry 7150 (class 2606 OID 58278)
+-- TOC entry 7126 (class 2606 OID 58278)
 -- Name: inventory_consumptions inventory_consumptions_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6011,7 +5927,7 @@ ALTER TABLE ONLY public.inventory_consumptions
 
 
 --
--- TOC entry 7151 (class 2606 OID 58283)
+-- TOC entry 7127 (class 2606 OID 58283)
 -- Name: inventory_consumptions inventory_consumptions_expense_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6020,7 +5936,7 @@ ALTER TABLE ONLY public.inventory_consumptions
 
 
 --
--- TOC entry 7152 (class 2606 OID 58288)
+-- TOC entry 7128 (class 2606 OID 58288)
 -- Name: inventory_consumptions inventory_consumptions_farm_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6029,7 +5945,7 @@ ALTER TABLE ONLY public.inventory_consumptions
 
 
 --
--- TOC entry 7153 (class 2606 OID 58293)
+-- TOC entry 7129 (class 2606 OID 58293)
 -- Name: inventory_consumptions inventory_consumptions_harvest_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6038,7 +5954,7 @@ ALTER TABLE ONLY public.inventory_consumptions
 
 
 --
--- TOC entry 7154 (class 2606 OID 58298)
+-- TOC entry 7130 (class 2606 OID 58298)
 -- Name: inventory_consumptions inventory_consumptions_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6047,7 +5963,7 @@ ALTER TABLE ONLY public.inventory_consumptions
 
 
 --
--- TOC entry 7155 (class 2606 OID 58303)
+-- TOC entry 7131 (class 2606 OID 58303)
 -- Name: inventory_consumptions inventory_consumptions_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6056,7 +5972,7 @@ ALTER TABLE ONLY public.inventory_consumptions
 
 
 --
--- TOC entry 7156 (class 2606 OID 58308)
+-- TOC entry 7132 (class 2606 OID 58308)
 -- Name: inventory_consumptions inventory_consumptions_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6065,7 +5981,7 @@ ALTER TABLE ONLY public.inventory_consumptions
 
 
 --
--- TOC entry 7157 (class 2606 OID 58313)
+-- TOC entry 7133 (class 2606 OID 58313)
 -- Name: inventory_item_ingredients inventory_item_ingredients_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6074,7 +5990,7 @@ ALTER TABLE ONLY public.inventory_item_ingredients
 
 
 --
--- TOC entry 7158 (class 2606 OID 58318)
+-- TOC entry 7134 (class 2606 OID 58318)
 -- Name: inventory_item_ingredients inventory_item_ingredients_item_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6083,7 +5999,7 @@ ALTER TABLE ONLY public.inventory_item_ingredients
 
 
 --
--- TOC entry 7159 (class 2606 OID 58323)
+-- TOC entry 7135 (class 2606 OID 58323)
 -- Name: inventory_item_ingredients inventory_item_ingredients_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6092,7 +6008,7 @@ ALTER TABLE ONLY public.inventory_item_ingredients
 
 
 --
--- TOC entry 7162 (class 2606 OID 58328)
+-- TOC entry 7138 (class 2606 OID 58328)
 -- Name: inventory_items inventory_items_category_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6101,7 +6017,7 @@ ALTER TABLE ONLY public.inventory_items
 
 
 --
--- TOC entry 7163 (class 2606 OID 58333)
+-- TOC entry 7139 (class 2606 OID 58333)
 -- Name: inventory_items inventory_items_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6110,7 +6026,7 @@ ALTER TABLE ONLY public.inventory_items
 
 
 --
--- TOC entry 7164 (class 2606 OID 58338)
+-- TOC entry 7140 (class 2606 OID 58338)
 -- Name: inventory_items inventory_items_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6119,7 +6035,7 @@ ALTER TABLE ONLY public.inventory_items
 
 
 --
--- TOC entry 7166 (class 2606 OID 58343)
+-- TOC entry 7142 (class 2606 OID 58343)
 -- Name: inventory_layers inventory_layers_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6128,7 +6044,7 @@ ALTER TABLE ONLY public.inventory_layers
 
 
 --
--- TOC entry 7167 (class 2606 OID 58348)
+-- TOC entry 7143 (class 2606 OID 58348)
 -- Name: inventory_layers inventory_layers_movement_in_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6137,7 +6053,7 @@ ALTER TABLE ONLY public.inventory_layers
 
 
 --
--- TOC entry 7168 (class 2606 OID 58353)
+-- TOC entry 7144 (class 2606 OID 58353)
 -- Name: inventory_movement_layers inventory_movement_layers_layer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6146,7 +6062,7 @@ ALTER TABLE ONLY public.inventory_movement_layers
 
 
 --
--- TOC entry 7169 (class 2606 OID 58358)
+-- TOC entry 7145 (class 2606 OID 58358)
 -- Name: inventory_movement_layers inventory_movement_layers_movement_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6155,7 +6071,7 @@ ALTER TABLE ONLY public.inventory_movement_layers
 
 
 --
--- TOC entry 7173 (class 2606 OID 58363)
+-- TOC entry 7149 (class 2606 OID 58363)
 -- Name: inventory_movements inventory_movements_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6164,7 +6080,7 @@ ALTER TABLE ONLY public.inventory_movements
 
 
 --
--- TOC entry 7174 (class 2606 OID 58368)
+-- TOC entry 7150 (class 2606 OID 58368)
 -- Name: inventory_movements inventory_movements_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6173,7 +6089,7 @@ ALTER TABLE ONLY public.inventory_movements
 
 
 --
--- TOC entry 7175 (class 2606 OID 58373)
+-- TOC entry 7151 (class 2606 OID 58373)
 -- Name: inventory_movements inventory_movements_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6182,7 +6098,7 @@ ALTER TABLE ONLY public.inventory_movements
 
 
 --
--- TOC entry 7177 (class 2606 OID 58378)
+-- TOC entry 7153 (class 2606 OID 58378)
 -- Name: labor_entries labor_entries_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6191,7 +6107,7 @@ ALTER TABLE ONLY public.labor_entries
 
 
 --
--- TOC entry 7178 (class 2606 OID 58383)
+-- TOC entry 7154 (class 2606 OID 58383)
 -- Name: labor_entries labor_entries_farm_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6200,7 +6116,7 @@ ALTER TABLE ONLY public.labor_entries
 
 
 --
--- TOC entry 7179 (class 2606 OID 58388)
+-- TOC entry 7155 (class 2606 OID 58388)
 -- Name: labor_entries labor_entries_labor_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6209,7 +6125,7 @@ ALTER TABLE ONLY public.labor_entries
 
 
 --
--- TOC entry 7180 (class 2606 OID 58393)
+-- TOC entry 7156 (class 2606 OID 58393)
 -- Name: labor_entries labor_entries_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6218,7 +6134,7 @@ ALTER TABLE ONLY public.labor_entries
 
 
 --
--- TOC entry 7181 (class 2606 OID 58398)
+-- TOC entry 7157 (class 2606 OID 58398)
 -- Name: labor_entries labor_entries_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6227,7 +6143,7 @@ ALTER TABLE ONLY public.labor_entries
 
 
 --
--- TOC entry 7182 (class 2606 OID 58403)
+-- TOC entry 7158 (class 2606 OID 58403)
 -- Name: labor_entries labor_entries_worker_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6236,7 +6152,7 @@ ALTER TABLE ONLY public.labor_entries
 
 
 --
--- TOC entry 7185 (class 2606 OID 58408)
+-- TOC entry 7161 (class 2606 OID 58408)
 -- Name: labor_rates labor_rates_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6245,7 +6161,7 @@ ALTER TABLE ONLY public.labor_rates
 
 
 --
--- TOC entry 7186 (class 2606 OID 58413)
+-- TOC entry 7162 (class 2606 OID 58413)
 -- Name: labor_rates labor_rates_harvest_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6254,7 +6170,7 @@ ALTER TABLE ONLY public.labor_rates
 
 
 --
--- TOC entry 7187 (class 2606 OID 58418)
+-- TOC entry 7163 (class 2606 OID 58418)
 -- Name: labor_rates labor_rates_labor_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6263,7 +6179,7 @@ ALTER TABLE ONLY public.labor_rates
 
 
 --
--- TOC entry 7188 (class 2606 OID 58423)
+-- TOC entry 7164 (class 2606 OID 58423)
 -- Name: labor_rates labor_rates_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6272,7 +6188,7 @@ ALTER TABLE ONLY public.labor_rates
 
 
 --
--- TOC entry 7189 (class 2606 OID 58428)
+-- TOC entry 7165 (class 2606 OID 58428)
 -- Name: labor_types labor_types_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6281,7 +6197,7 @@ ALTER TABLE ONLY public.labor_types
 
 
 --
--- TOC entry 7190 (class 2606 OID 58433)
+-- TOC entry 7166 (class 2606 OID 58433)
 -- Name: labor_types labor_types_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6290,7 +6206,7 @@ ALTER TABLE ONLY public.labor_types
 
 
 --
--- TOC entry 7191 (class 2606 OID 58438)
+-- TOC entry 7167 (class 2606 OID 58733)
 -- Name: lot_coffee_varieties lot_coffee_varieties_coffee_variety_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6299,8 +6215,8 @@ ALTER TABLE ONLY public.lot_coffee_varieties
 
 
 --
--- TOC entry 7192 (class 2606 OID 58443)
--- Name: lot_avocado_varieties lot_coffee_varieties_created_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 7168 (class 2606 OID 58443)
+-- Name: lot_coffee_varieties lot_coffee_varieties_created_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.lot_coffee_varieties
@@ -6308,8 +6224,8 @@ ALTER TABLE ONLY public.lot_coffee_varieties
 
 
 --
--- TOC entry 7193 (class 2606 OID 58448)
--- Name: lot_avocado_varieties lot_coffee_varieties_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 7169 (class 2606 OID 58448)
+-- Name: lot_coffee_varieties lot_coffee_varieties_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.lot_coffee_varieties
@@ -6317,8 +6233,8 @@ ALTER TABLE ONLY public.lot_coffee_varieties
 
 
 --
--- TOC entry 7194 (class 2606 OID 58453)
--- Name: lot_avocado_varieties lot_coffee_varieties_updated_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 7170 (class 2606 OID 58453)
+-- Name: lot_coffee_varieties lot_coffee_varieties_updated_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.lot_coffee_varieties
@@ -6326,7 +6242,7 @@ ALTER TABLE ONLY public.lot_coffee_varieties
 
 
 --
--- TOC entry 7195 (class 2606 OID 58458)
+-- TOC entry 7171 (class 2606 OID 58458)
 -- Name: lot_harvests lot_harvests_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6335,7 +6251,7 @@ ALTER TABLE ONLY public.lot_harvests
 
 
 --
--- TOC entry 7196 (class 2606 OID 58463)
+-- TOC entry 7172 (class 2606 OID 58463)
 -- Name: lot_harvests lot_harvests_harvest_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6344,7 +6260,7 @@ ALTER TABLE ONLY public.lot_harvests
 
 
 --
--- TOC entry 7197 (class 2606 OID 58468)
+-- TOC entry 7173 (class 2606 OID 58468)
 -- Name: lot_harvests lot_harvests_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6353,7 +6269,7 @@ ALTER TABLE ONLY public.lot_harvests
 
 
 --
--- TOC entry 7198 (class 2606 OID 58473)
+-- TOC entry 7174 (class 2606 OID 58473)
 -- Name: lot_harvests lot_harvests_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6362,43 +6278,7 @@ ALTER TABLE ONLY public.lot_harvests
 
 
 --
--- TOC entry 7201 (class 2606 OID 58478)
--- Name: lot_production lot_production_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production
-    ADD CONSTRAINT lot_production_created_by_fk FOREIGN KEY (created_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
-
-
---
--- TOC entry 7202 (class 2606 OID 58483)
--- Name: lot_production lot_production_harvest_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production
-    ADD CONSTRAINT lot_production_harvest_id_fkey FOREIGN KEY (harvest_id) REFERENCES public.harvests(id) ON DELETE SET NULL;
-
-
---
--- TOC entry 7203 (class 2606 OID 58488)
--- Name: lot_production lot_production_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production
-    ADD CONSTRAINT lot_production_lot_id_fkey FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 7204 (class 2606 OID 58493)
--- Name: lot_production lot_production_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lot_production
-    ADD CONSTRAINT lot_production_updated_by_fk FOREIGN KEY (updated_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
-
-
---
--- TOC entry 7210 (class 2606 OID 58498)
+-- TOC entry 7176 (class 2606 OID 58498)
 -- Name: lots lots_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6407,7 +6287,7 @@ ALTER TABLE ONLY public.lots
 
 
 --
--- TOC entry 7211 (class 2606 OID 58503)
+-- TOC entry 7177 (class 2606 OID 58503)
 -- Name: lots lots_farm_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6416,7 +6296,7 @@ ALTER TABLE ONLY public.lots
 
 
 --
--- TOC entry 7212 (class 2606 OID 58508)
+-- TOC entry 7178 (class 2606 OID 58508)
 -- Name: lots lots_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6425,7 +6305,7 @@ ALTER TABLE ONLY public.lots
 
 
 --
--- TOC entry 7219 (class 2606 OID 58513)
+-- TOC entry 7185 (class 2606 OID 58513)
 -- Name: mix_applications mix_applications_farm_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6434,7 +6314,7 @@ ALTER TABLE ONLY public.mix_applications
 
 
 --
--- TOC entry 7220 (class 2606 OID 58518)
+-- TOC entry 7186 (class 2606 OID 58518)
 -- Name: password_reset_tokens password_reset_tokens_created_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6443,7 +6323,7 @@ ALTER TABLE ONLY public.password_reset_tokens
 
 
 --
--- TOC entry 7221 (class 2606 OID 58523)
+-- TOC entry 7187 (class 2606 OID 58523)
 -- Name: password_reset_tokens password_reset_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6452,7 +6332,7 @@ ALTER TABLE ONLY public.password_reset_tokens
 
 
 --
--- TOC entry 7222 (class 2606 OID 58528)
+-- TOC entry 7188 (class 2606 OID 58528)
 -- Name: payroll_employee_rates payroll_employee_rates_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6461,7 +6341,7 @@ ALTER TABLE ONLY public.payroll_employee_rates
 
 
 --
--- TOC entry 7223 (class 2606 OID 58533)
+-- TOC entry 7189 (class 2606 OID 58533)
 -- Name: payroll_employee_rates payroll_employee_rates_updated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6470,7 +6350,7 @@ ALTER TABLE ONLY public.payroll_employee_rates
 
 
 --
--- TOC entry 7224 (class 2606 OID 58538)
+-- TOC entry 7190 (class 2606 OID 58538)
 -- Name: payroll_nomina_contribution_rules payroll_nomina_contribution_rules_client_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6479,7 +6359,7 @@ ALTER TABLE ONLY public.payroll_nomina_contribution_rules
 
 
 --
--- TOC entry 7225 (class 2606 OID 58543)
+-- TOC entry 7191 (class 2606 OID 58543)
 -- Name: payroll_nomina_contribution_rules payroll_nomina_contribution_rules_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6488,7 +6368,7 @@ ALTER TABLE ONLY public.payroll_nomina_contribution_rules
 
 
 --
--- TOC entry 7226 (class 2606 OID 58548)
+-- TOC entry 7192 (class 2606 OID 58548)
 -- Name: payroll_nomina_contribution_rules payroll_nomina_contribution_rules_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6497,7 +6377,7 @@ ALTER TABLE ONLY public.payroll_nomina_contribution_rules
 
 
 --
--- TOC entry 7227 (class 2606 OID 58553)
+-- TOC entry 7193 (class 2606 OID 58553)
 -- Name: payroll_periods payroll_periods_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6506,7 +6386,7 @@ ALTER TABLE ONLY public.payroll_periods
 
 
 --
--- TOC entry 7228 (class 2606 OID 58558)
+-- TOC entry 7194 (class 2606 OID 58558)
 -- Name: payroll_periods payroll_periods_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6515,7 +6395,7 @@ ALTER TABLE ONLY public.payroll_periods
 
 
 --
--- TOC entry 7229 (class 2606 OID 58563)
+-- TOC entry 7195 (class 2606 OID 58563)
 -- Name: payroll_settings payroll_settings_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6524,7 +6404,7 @@ ALTER TABLE ONLY public.payroll_settings
 
 
 --
--- TOC entry 7230 (class 2606 OID 58568)
+-- TOC entry 7196 (class 2606 OID 58568)
 -- Name: payroll_settings payroll_settings_updated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6533,7 +6413,7 @@ ALTER TABLE ONLY public.payroll_settings
 
 
 --
--- TOC entry 7231 (class 2606 OID 58573)
+-- TOC entry 7197 (class 2606 OID 58573)
 -- Name: payroll_slip_lot_allocations payroll_slip_lot_allocations_lot_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6542,7 +6422,7 @@ ALTER TABLE ONLY public.payroll_slip_lot_allocations
 
 
 --
--- TOC entry 7232 (class 2606 OID 58578)
+-- TOC entry 7198 (class 2606 OID 58578)
 -- Name: payroll_slip_lot_allocations payroll_slip_lot_allocations_slip_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6551,7 +6431,7 @@ ALTER TABLE ONLY public.payroll_slip_lot_allocations
 
 
 --
--- TOC entry 7233 (class 2606 OID 58583)
+-- TOC entry 7199 (class 2606 OID 58583)
 -- Name: payroll_slips payroll_slips_client_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6560,7 +6440,7 @@ ALTER TABLE ONLY public.payroll_slips
 
 
 --
--- TOC entry 7234 (class 2606 OID 58588)
+-- TOC entry 7200 (class 2606 OID 58588)
 -- Name: payroll_slips payroll_slips_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6569,7 +6449,7 @@ ALTER TABLE ONLY public.payroll_slips
 
 
 --
--- TOC entry 7235 (class 2606 OID 58593)
+-- TOC entry 7201 (class 2606 OID 58593)
 -- Name: payroll_slips payroll_slips_nomina_rule_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6578,7 +6458,7 @@ ALTER TABLE ONLY public.payroll_slips
 
 
 --
--- TOC entry 7236 (class 2606 OID 58598)
+-- TOC entry 7202 (class 2606 OID 58598)
 -- Name: payroll_slips payroll_slips_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6587,7 +6467,7 @@ ALTER TABLE ONLY public.payroll_slips
 
 
 --
--- TOC entry 7237 (class 2606 OID 58603)
+-- TOC entry 7203 (class 2606 OID 58603)
 -- Name: payroll_slips payroll_slips_worker_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6596,7 +6476,7 @@ ALTER TABLE ONLY public.payroll_slips
 
 
 --
--- TOC entry 7238 (class 2606 OID 58608)
+-- TOC entry 7204 (class 2606 OID 58608)
 -- Name: sessions sessions_acting_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6605,7 +6485,7 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- TOC entry 7239 (class 2606 OID 58613)
+-- TOC entry 7205 (class 2606 OID 58613)
 -- Name: sessions sessions_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6614,7 +6494,7 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- TOC entry 7240 (class 2606 OID 58618)
+-- TOC entry 7206 (class 2606 OID 58618)
 -- Name: sessions sessions_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6623,7 +6503,7 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- TOC entry 7241 (class 2606 OID 58623)
+-- TOC entry 7207 (class 2606 OID 58623)
 -- Name: sessions sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6632,7 +6512,7 @@ ALTER TABLE ONLY public.sessions
 
 
 --
--- TOC entry 7244 (class 2606 OID 58628)
+-- TOC entry 7210 (class 2606 OID 58628)
 -- Name: users users_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6641,7 +6521,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 7245 (class 2606 OID 58633)
+-- TOC entry 7211 (class 2606 OID 58633)
 -- Name: users users_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6650,7 +6530,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 7247 (class 2606 OID 58638)
+-- TOC entry 7213 (class 2606 OID 58638)
 -- Name: workers workers_created_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6659,7 +6539,7 @@ ALTER TABLE ONLY public.workers
 
 
 --
--- TOC entry 7248 (class 2606 OID 58643)
+-- TOC entry 7214 (class 2606 OID 58643)
 -- Name: workers workers_updated_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6668,7 +6548,7 @@ ALTER TABLE ONLY public.workers
 
 
 --
--- TOC entry 7410 (class 0 OID 56577)
+-- TOC entry 7380 (class 0 OID 56577)
 -- Dependencies: 289
 -- Name: aguinaldo_statements; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6676,7 +6556,7 @@ ALTER TABLE ONLY public.workers
 ALTER TABLE public.aguinaldo_statements ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7411 (class 0 OID 56605)
+-- TOC entry 7381 (class 0 OID 56605)
 -- Dependencies: 290
 -- Name: asset_categories; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6684,7 +6564,7 @@ ALTER TABLE public.aguinaldo_statements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.asset_categories ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7412 (class 0 OID 56622)
+-- TOC entry 7382 (class 0 OID 56622)
 -- Dependencies: 291
 -- Name: asset_depreciation; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6692,7 +6572,7 @@ ALTER TABLE public.asset_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.asset_depreciation ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7413 (class 0 OID 56646)
+-- TOC entry 7383 (class 0 OID 56646)
 -- Dependencies: 292
 -- Name: assets; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6700,7 +6580,7 @@ ALTER TABLE public.asset_depreciation ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.assets ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7414 (class 0 OID 56689)
+-- TOC entry 7384 (class 0 OID 56689)
 -- Dependencies: 294
 -- Name: calendar_activities; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6708,7 +6588,7 @@ ALTER TABLE public.assets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.calendar_activities ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7415 (class 0 OID 56706)
+-- TOC entry 7385 (class 0 OID 56706)
 -- Dependencies: 295
 -- Name: calibers; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6716,7 +6596,15 @@ ALTER TABLE public.calendar_activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.calibers ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7416 (class 0 OID 56739)
+-- TOC entry 7406 (class 0 OID 58686)
+-- Dependencies: 344
+-- Name: coffee_lot_production; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.coffee_lot_production ENABLE ROW LEVEL SECURITY;
+
+--
+-- TOC entry 7386 (class 0 OID 56739)
 -- Dependencies: 301
 -- Name: expense_categories; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6724,7 +6612,7 @@ ALTER TABLE public.calibers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expense_categories ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7417 (class 0 OID 56756)
+-- TOC entry 7387 (class 0 OID 56756)
 -- Dependencies: 302
 -- Name: expenses; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6732,7 +6620,7 @@ ALTER TABLE public.expense_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7418 (class 0 OID 56780)
+-- TOC entry 7388 (class 0 OID 56780)
 -- Dependencies: 303
 -- Name: farm_harvest_estimates; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6740,7 +6628,7 @@ ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.farm_harvest_estimates ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7419 (class 0 OID 56792)
+-- TOC entry 7389 (class 0 OID 56792)
 -- Dependencies: 304
 -- Name: farms; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6748,7 +6636,23 @@ ALTER TABLE public.farm_harvest_estimates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.farms ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7420 (class 0 OID 56892)
+-- TOC entry 7390 (class 0 OID 56812)
+-- Dependencies: 305
+-- Name: fixed_payroll; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.fixed_payroll ENABLE ROW LEVEL SECURITY;
+
+--
+-- TOC entry 7391 (class 0 OID 56859)
+-- Dependencies: 306
+-- Name: fixed_payroll_allocations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.fixed_payroll_allocations ENABLE ROW LEVEL SECURITY;
+
+--
+-- TOC entry 7392 (class 0 OID 56892)
 -- Dependencies: 308
 -- Name: general_expenses; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6756,7 +6660,7 @@ ALTER TABLE public.farms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.general_expenses ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7421 (class 0 OID 56917)
+-- TOC entry 7393 (class 0 OID 56917)
 -- Dependencies: 309
 -- Name: harvests; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6764,7 +6668,7 @@ ALTER TABLE public.general_expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.harvests ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7422 (class 0 OID 56936)
+-- TOC entry 7394 (class 0 OID 56936)
 -- Dependencies: 310
 -- Name: inventory_brands; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6772,7 +6676,7 @@ ALTER TABLE public.harvests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inventory_brands ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7423 (class 0 OID 57019)
+-- TOC entry 7395 (class 0 OID 57019)
 -- Dependencies: 315
 -- Name: inventory_items; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6780,7 +6684,7 @@ ALTER TABLE public.inventory_brands ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inventory_items ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7424 (class 0 OID 57037)
+-- TOC entry 7396 (class 0 OID 57037)
 -- Dependencies: 316
 -- Name: inventory_layers; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6788,7 +6692,7 @@ ALTER TABLE public.inventory_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inventory_layers ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7425 (class 0 OID 57072)
+-- TOC entry 7397 (class 0 OID 57072)
 -- Dependencies: 318
 -- Name: inventory_movements; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6796,7 +6700,7 @@ ALTER TABLE public.inventory_layers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inventory_movements ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7426 (class 0 OID 57103)
+-- TOC entry 7398 (class 0 OID 57103)
 -- Dependencies: 319
 -- Name: labor_entries; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -6804,55 +6708,73 @@ ALTER TABLE public.inventory_movements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.labor_entries ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7427 (class 0 OID 57194)
+-- TOC entry 7399 (class 0 OID 57240)
 -- Dependencies: 325
--- Name: lot_production; Type: ROW SECURITY; Schema: public; Owner: -
---
-
-ALTER TABLE public.lot_production ENABLE ROW LEVEL SECURITY;
-
---
--- TOC entry 7428 (class 0 OID 57240)
--- Dependencies: 328
 -- Name: lots; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.lots ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7429 (class 0 OID 57278)
--- Dependencies: 330
+-- TOC entry 7400 (class 0 OID 57278)
+-- Dependencies: 327
 -- Name: mix_applications; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.mix_applications ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7430 (class 0 OID 57326)
--- Dependencies: 333
+-- TOC entry 7401 (class 0 OID 57326)
+-- Dependencies: 330
 -- Name: payroll_nomina_contribution_rules; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.payroll_nomina_contribution_rules ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7431 (class 0 OID 57391)
--- Dependencies: 337
+-- TOC entry 7402 (class 0 OID 57380)
+-- Dependencies: 333
+-- Name: payroll_slip_lot_allocations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.payroll_slip_lot_allocations ENABLE ROW LEVEL SECURITY;
+
+--
+-- TOC entry 7403 (class 0 OID 57391)
+-- Dependencies: 334
 -- Name: payroll_slips; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.payroll_slips ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7432 (class 0 OID 57463)
--- Dependencies: 343
+-- TOC entry 7404 (class 0 OID 57463)
+-- Dependencies: 340
 -- Name: security_audit_logs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.security_audit_logs ENABLE ROW LEVEL SECURITY;
 
 --
--- TOC entry 7434 (class 3256 OID 58648)
+-- TOC entry 7432 (class 3256 OID 58746)
+-- Name: fixed_payroll_allocations wardi_tenant_fixed_payroll_alloc; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY wardi_tenant_fixed_payroll_alloc ON public.fixed_payroll_allocations USING (((public.app_current_tenant_id() IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM (public.fixed_payroll fp
+     JOIN public.workers w ON ((w.id = fp.worker_id)))
+  WHERE ((fp.id = fixed_payroll_allocations.fixed_payroll_id) AND (w.client_id = public.app_current_tenant_id())))) AND (EXISTS ( SELECT 1
+   FROM public.lots l
+  WHERE ((l.id = fixed_payroll_allocations.lot_id) AND (l.client_id = public.app_current_tenant_id())))))) WITH CHECK (((public.app_current_tenant_id() IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM (public.fixed_payroll fp
+     JOIN public.workers w ON ((w.id = fp.worker_id)))
+  WHERE ((fp.id = fixed_payroll_allocations.fixed_payroll_id) AND (w.client_id = public.app_current_tenant_id())))) AND (EXISTS ( SELECT 1
+   FROM public.lots l
+  WHERE ((l.id = fixed_payroll_allocations.lot_id) AND (l.client_id = public.app_current_tenant_id()))))));
+
+
+--
+-- TOC entry 7407 (class 3256 OID 58648)
 -- Name: aguinaldo_statements wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6860,7 +6782,7 @@ CREATE POLICY wardi_tenant_isolation ON public.aguinaldo_statements USING (((cli
 
 
 --
--- TOC entry 7435 (class 3256 OID 58649)
+-- TOC entry 7408 (class 3256 OID 58649)
 -- Name: asset_categories wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6868,7 +6790,7 @@ CREATE POLICY wardi_tenant_isolation ON public.asset_categories USING (((client_
 
 
 --
--- TOC entry 7436 (class 3256 OID 58650)
+-- TOC entry 7409 (class 3256 OID 58650)
 -- Name: asset_depreciation wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6876,7 +6798,7 @@ CREATE POLICY wardi_tenant_isolation ON public.asset_depreciation USING (((clien
 
 
 --
--- TOC entry 7437 (class 3256 OID 58651)
+-- TOC entry 7410 (class 3256 OID 58651)
 -- Name: assets wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6884,7 +6806,7 @@ CREATE POLICY wardi_tenant_isolation ON public.assets USING (((client_id IS NOT 
 
 
 --
--- TOC entry 7438 (class 3256 OID 58652)
+-- TOC entry 7411 (class 3256 OID 58652)
 -- Name: calendar_activities wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6892,7 +6814,7 @@ CREATE POLICY wardi_tenant_isolation ON public.calendar_activities USING (((clie
 
 
 --
--- TOC entry 7439 (class 3256 OID 58653)
+-- TOC entry 7412 (class 3256 OID 58653)
 -- Name: calibers wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6900,7 +6822,15 @@ CREATE POLICY wardi_tenant_isolation ON public.calibers USING (((client_id IS NO
 
 
 --
--- TOC entry 7440 (class 3256 OID 58654)
+-- TOC entry 7430 (class 3256 OID 58743)
+-- Name: coffee_lot_production wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY wardi_tenant_isolation ON public.coffee_lot_production USING (((client_id IS NOT NULL) AND (public.app_current_tenant_id() IS NOT NULL) AND (client_id = public.app_current_tenant_id()))) WITH CHECK (((client_id IS NOT NULL) AND (public.app_current_tenant_id() IS NOT NULL) AND (client_id = public.app_current_tenant_id())));
+
+
+--
+-- TOC entry 7413 (class 3256 OID 58654)
 -- Name: expense_categories wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6908,7 +6838,7 @@ CREATE POLICY wardi_tenant_isolation ON public.expense_categories USING (((clien
 
 
 --
--- TOC entry 7441 (class 3256 OID 58655)
+-- TOC entry 7414 (class 3256 OID 58655)
 -- Name: expenses wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6916,7 +6846,7 @@ CREATE POLICY wardi_tenant_isolation ON public.expenses USING (((client_id IS NO
 
 
 --
--- TOC entry 7442 (class 3256 OID 58656)
+-- TOC entry 7415 (class 3256 OID 58656)
 -- Name: farm_harvest_estimates wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6924,7 +6854,7 @@ CREATE POLICY wardi_tenant_isolation ON public.farm_harvest_estimates USING (((c
 
 
 --
--- TOC entry 7443 (class 3256 OID 58657)
+-- TOC entry 7416 (class 3256 OID 58657)
 -- Name: farms wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6932,7 +6862,7 @@ CREATE POLICY wardi_tenant_isolation ON public.farms USING (((client_id IS NOT N
 
 
 --
--- TOC entry 7444 (class 3256 OID 58658)
+-- TOC entry 7417 (class 3256 OID 58658)
 -- Name: general_expenses wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6940,7 +6870,7 @@ CREATE POLICY wardi_tenant_isolation ON public.general_expenses USING (((client_
 
 
 --
--- TOC entry 7445 (class 3256 OID 58659)
+-- TOC entry 7418 (class 3256 OID 58659)
 -- Name: harvests wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6948,7 +6878,7 @@ CREATE POLICY wardi_tenant_isolation ON public.harvests USING (((client_id IS NO
 
 
 --
--- TOC entry 7446 (class 3256 OID 58660)
+-- TOC entry 7419 (class 3256 OID 58660)
 -- Name: inventory_brands wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6956,7 +6886,7 @@ CREATE POLICY wardi_tenant_isolation ON public.inventory_brands USING (((client_
 
 
 --
--- TOC entry 7447 (class 3256 OID 58661)
+-- TOC entry 7420 (class 3256 OID 58661)
 -- Name: inventory_items wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6964,7 +6894,7 @@ CREATE POLICY wardi_tenant_isolation ON public.inventory_items USING (((client_i
 
 
 --
--- TOC entry 7448 (class 3256 OID 58662)
+-- TOC entry 7421 (class 3256 OID 58662)
 -- Name: inventory_layers wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6972,7 +6902,7 @@ CREATE POLICY wardi_tenant_isolation ON public.inventory_layers USING (((client_
 
 
 --
--- TOC entry 7449 (class 3256 OID 58663)
+-- TOC entry 7422 (class 3256 OID 58663)
 -- Name: inventory_movements wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6980,7 +6910,7 @@ CREATE POLICY wardi_tenant_isolation ON public.inventory_movements USING (((clie
 
 
 --
--- TOC entry 7450 (class 3256 OID 58664)
+-- TOC entry 7423 (class 3256 OID 58664)
 -- Name: labor_entries wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6988,15 +6918,7 @@ CREATE POLICY wardi_tenant_isolation ON public.labor_entries USING (((client_id 
 
 
 --
--- TOC entry 7451 (class 3256 OID 58665)
--- Name: lot_production wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY wardi_tenant_isolation ON public.lot_production USING (((client_id IS NOT NULL) AND (public.app_current_tenant_id() IS NOT NULL) AND (client_id = public.app_current_tenant_id()))) WITH CHECK (((client_id IS NOT NULL) AND (public.app_current_tenant_id() IS NOT NULL) AND (client_id = public.app_current_tenant_id())));
-
-
---
--- TOC entry 7452 (class 3256 OID 58666)
+-- TOC entry 7424 (class 3256 OID 58666)
 -- Name: lots wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -7004,7 +6926,7 @@ CREATE POLICY wardi_tenant_isolation ON public.lots USING (((client_id IS NOT NU
 
 
 --
--- TOC entry 7453 (class 3256 OID 58667)
+-- TOC entry 7425 (class 3256 OID 58667)
 -- Name: mix_applications wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -7012,7 +6934,7 @@ CREATE POLICY wardi_tenant_isolation ON public.mix_applications USING (((client_
 
 
 --
--- TOC entry 7454 (class 3256 OID 58668)
+-- TOC entry 7426 (class 3256 OID 58668)
 -- Name: payroll_nomina_contribution_rules wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -7020,7 +6942,7 @@ CREATE POLICY wardi_tenant_isolation ON public.payroll_nomina_contribution_rules
 
 
 --
--- TOC entry 7455 (class 3256 OID 58669)
+-- TOC entry 7427 (class 3256 OID 58669)
 -- Name: payroll_slips wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -7028,7 +6950,7 @@ CREATE POLICY wardi_tenant_isolation ON public.payroll_slips USING (((client_id 
 
 
 --
--- TOC entry 7456 (class 3256 OID 58670)
+-- TOC entry 7428 (class 3256 OID 58670)
 -- Name: security_audit_logs wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -7036,7 +6958,7 @@ CREATE POLICY wardi_tenant_isolation ON public.security_audit_logs USING (((clie
 
 
 --
--- TOC entry 7457 (class 3256 OID 58671)
+-- TOC entry 7429 (class 3256 OID 58671)
 -- Name: workers wardi_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -7044,18 +6966,46 @@ CREATE POLICY wardi_tenant_isolation ON public.workers USING (((client_id IS NOT
 
 
 --
--- TOC entry 7433 (class 0 OID 57511)
--- Dependencies: 346
+-- TOC entry 7433 (class 3256 OID 58749)
+-- Name: payroll_slip_lot_allocations wardi_tenant_payroll_slip_lot_alloc; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY wardi_tenant_payroll_slip_lot_alloc ON public.payroll_slip_lot_allocations USING (((public.app_current_tenant_id() IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM public.payroll_slips ps
+  WHERE ((ps.id = payroll_slip_lot_allocations.payroll_slip_id) AND (ps.client_id = public.app_current_tenant_id())))) AND (EXISTS ( SELECT 1
+   FROM public.lots l
+  WHERE ((l.id = payroll_slip_lot_allocations.lot_id) AND (l.client_id = public.app_current_tenant_id())))))) WITH CHECK (((public.app_current_tenant_id() IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM public.payroll_slips ps
+  WHERE ((ps.id = payroll_slip_lot_allocations.payroll_slip_id) AND (ps.client_id = public.app_current_tenant_id())))) AND (EXISTS ( SELECT 1
+   FROM public.lots l
+  WHERE ((l.id = payroll_slip_lot_allocations.lot_id) AND (l.client_id = public.app_current_tenant_id()))))));
+
+
+--
+-- TOC entry 7431 (class 3256 OID 58744)
+-- Name: fixed_payroll wardi_tenant_via_worker; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY wardi_tenant_via_worker ON public.fixed_payroll USING (((public.app_current_tenant_id() IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM public.workers w
+  WHERE ((w.id = fixed_payroll.worker_id) AND (w.client_id = public.app_current_tenant_id())))))) WITH CHECK (((public.app_current_tenant_id() IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM public.workers w
+  WHERE ((w.id = fixed_payroll.worker_id) AND (w.client_id = public.app_current_tenant_id()))))));
+
+
+--
+-- TOC entry 7405 (class 0 OID 57511)
+-- Dependencies: 343
 -- Name: workers; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.workers ENABLE ROW LEVEL SECURITY;
 
--- Completed on 2026-05-21 09:26:32
+-- Completed on 2026-05-25 17:13:18
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2aV7YPbL8qkKDyvlNnvCqyhO33VuN6QT1WRqCcBB7TxxUmahsioVcJaRrzfUx3q
+\unrestrict bzoBXGZnOiGQlAWbzXYXyaddSl5XZKyWd7O9eFOC0xxT66fXjYjyl0co5P9F74K
 
