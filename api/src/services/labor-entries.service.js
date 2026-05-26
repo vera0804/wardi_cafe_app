@@ -829,6 +829,37 @@ async function setLaborEntryActive({ id, clientId, userId, isActive }) {
          AND client_id = $4`,
       [id, !!isActive, userId, clientId]
     );
+
+    // Si se inactiva la labor, eliminar del cronograma la actividad "completed"
+    // sincronizada desde esa labor.
+    if (!isActive) {
+      await calendarActivitiesService.deleteCalendarCompletedActivitiesFromLabor({
+        db,
+        clientId,
+        entry: {
+          cost_scope: current.cost_scope,
+          lot_id: current.cost_scope === 'lot' ? current.lot_id : null,
+          farm_id: current.cost_scope === 'farm' ? current.farm_id : null,
+          labor_type_id: current.labor_type_id,
+          work_date: toIsoDate(current.work_date),
+        },
+      });
+    } else {
+      // Si se re-activó, volver a alinear el cronograma con la labor.
+      await calendarActivitiesService.syncCalendarActivityFromLabor({
+        db,
+        clientId,
+        userId,
+        entry: {
+          cost_scope: current.cost_scope,
+          lot_id: current.cost_scope === 'lot' ? current.lot_id : null,
+          farm_id: current.cost_scope === 'farm' ? current.farm_id : null,
+          labor_type_id: current.labor_type_id,
+          work_date: toIsoDate(current.work_date),
+        },
+      });
+    }
+
     const finalRes = await db.query(
       `SELECT le.id, le.cost_scope, le.lot_id, le.farm_id, le.worker_id, le.labor_type_id,
               le.work_date, le.unit, le.qty, le.rate_applied, le.amount,

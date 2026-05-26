@@ -394,6 +394,43 @@ async function syncCalendarActivityFromLabor({ db, clientId, userId, entry }) {
   );
 }
 
+/**
+ * Cuando una labor se inactiva, se elimina del cronograma la actividad "completed"
+ * que fue sincronizada desde esa labor (misma finca/lote/tipo de labor y misma fecha).
+ *
+ * Nota: calendar_activities no guarda una FK a labor_entries; usamos la misma "llave"
+ * derivada por syncCalendarActivityFromLabor (farm_id, lot_id, labor_type_id, fecha UTC).
+ */
+async function deleteCalendarCompletedActivitiesFromLabor({ db, clientId, entry }) {
+  const laborTypeId = normalizeText(entry.labor_type_id);
+  const workDate = normalizeDate(entry.work_date, { required: true, field: 'work_date' });
+  const scope = String(entry.cost_scope || '').trim().toLowerCase();
+  let farmId = normalizeText(entry.farm_id);
+  let lotId = normalizeText(entry.lot_id);
+
+  if (!laborTypeId) return { deleted: 0 };
+  if (!farmId && scope === 'lot' && lotId) {
+    const lr = await db.query(`SELECT farm_id FROM lots WHERE id = $1 AND client_id = $2`, [lotId, clientId]);
+    if (lr.rows[0]) farmId = lr.rows[0].farm_id;
+  }
+  if (scope === 'farm') {
+    lotId = null;
+  }
+  if (!farmId) return { deleted: 0 };
+
+  const res = await db.query(
+    `DELETE FROM calendar_activities
+     WHERE client_id = $1
+       AND farm_id = $2
+       AND labor_type_id = $3
+       AND lot_id IS NOT DISTINCT FROM $4::uuid
+       AND status = 'completed'::activity_status
+       AND (activity_date AT TIME ZONE 'UTC')::date = $5::date`,
+    [clientId, farmId, laborTypeId, lotId, workDate]
+  );
+  return { deleted: res.rowCount };
+}
+
 module.exports = {
   loadActivityStatusLabels,
   listCalendarActivities,
@@ -401,4 +438,5 @@ module.exports = {
   createCalendarActivity,
   updateCalendarActivity,
   syncCalendarActivityFromLabor,
+  deleteCalendarCompletedActivitiesFromLabor,
 };
