@@ -64,15 +64,32 @@ function normalizeRate(value, { required = false } = {}) {
   return n;
 }
 
+/** Normaliza fechas de entrada o columnas `date` de PostgreSQL (objeto Date). */
+function toIsoDate(value) {
+  if (value == null || value === '') return null;
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    return value.toISOString().slice(0, 10);
+  }
+  const s = String(value).trim();
+  const m = /^(\d{4}-\d{2}-\d{2})/.exec(s);
+  if (m) return m[1];
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+
 function normalizeDate(value, { required = false, field = 'work_date' } = {}) {
   if (value === undefined && !required) return undefined;
-  const v = String(value || '').trim();
-  if (!v) {
-    const err = new Error(`${field} es obligatorio.`);
+  const iso = toIsoDate(value);
+  if (!iso) {
+    const err = new Error(
+      required ? `${field} es obligatorio.` : `${field} no es una fecha válida.`
+    );
     err.status = 400;
     throw err;
   }
-  return v;
+  return iso;
 }
 
 function assertScopeReferences({ scope, lotId, farmId }) {
@@ -346,7 +363,12 @@ async function getLaborEntryById({ id, clientId }) {
 }
 
 async function assertWorkerWorkDateNotUnderPaidPayrollSlip({ db, clientId, workerId, workDate }) {
-  const d = String(workDate).slice(0, 10);
+  const d = toIsoDate(workDate);
+  if (!d) {
+    const err = new Error('Fecha de trabajo inválida.');
+    err.status = 400;
+    throw err;
+  }
   const res = await db.query(
     `SELECT ps.period_from, ps.period_to
      FROM payroll_slips ps
@@ -361,7 +383,7 @@ async function assertWorkerWorkDateNotUnderPaidPayrollSlip({ db, clientId, worke
   if (res.rows[0]) {
     const p = res.rows[0];
     const err = new Error(
-      `No se puede modificar esta labor: hay una planilla pagada que cubre la fecha (${String(p.period_from).slice(0, 10)} a ${String(p.period_to).slice(0, 10)}).`
+      `No se puede modificar esta labor: hay una planilla pagada que cubre la fecha (${toIsoDate(p.period_from)} a ${toIsoDate(p.period_to)}).`
     );
     err.status = 409;
     throw err;
@@ -603,7 +625,7 @@ async function updateLaborEntry({ id, clientId, userId, payload }) {
     const workDate =
       payload.work_date !== undefined
         ? normalizeDate(payload.work_date, { required: true })
-        : String(current.work_date).slice(0, 10);
+        : toIsoDate(current.work_date);
     const unit =
       payload.unit !== undefined ? normalizeUnit(payload.unit, { required: true }) : current.unit;
     const qty =
@@ -620,7 +642,7 @@ async function updateLaborEntry({ id, clientId, userId, payload }) {
       throw err;
     }
 
-    const curDate = String(current.work_date).slice(0, 10);
+    const curDate = toIsoDate(current.work_date);
     const curWorker = current.worker_id;
     await assertWorkerWorkDateNotUnderPaidPayrollSlip({
       db,
@@ -771,7 +793,7 @@ async function setLaborEntryActive({ id, clientId, userId, isActive }) {
       db,
       clientId,
       workerId: current.worker_id,
-      workDate: String(current.work_date).slice(0, 10),
+      workDate: toIsoDate(current.work_date),
     });
 
     if (isActive && current.unit === JOURNAL_UNIT) {
@@ -779,7 +801,7 @@ async function setLaborEntryActive({ id, clientId, userId, isActive }) {
         db,
         clientId,
         workerId: current.worker_id,
-        workDate: String(current.work_date).slice(0, 10),
+        workDate: toIsoDate(current.work_date),
         excludeId: id,
       });
     }
@@ -793,7 +815,7 @@ async function setLaborEntryActive({ id, clientId, userId, isActive }) {
         farmId: current.farm_id,
         laborTypeId: current.labor_type_id,
         unit: current.unit,
-        workDate: String(current.work_date).slice(0, 10),
+        workDate: toIsoDate(current.work_date),
         excludeId: id,
       });
     }
