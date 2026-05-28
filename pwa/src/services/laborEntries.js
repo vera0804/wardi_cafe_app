@@ -35,6 +35,13 @@ export function createLaborEntriesBulk(payload) {
   });
 }
 
+export function createLaborEntriesMulti(payload) {
+  return apiRequest('/api/labor-entries/multi', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export function updateLaborEntry(id, payload) {
   return apiRequest(`/api/labor-entries/${id}`, {
     method: 'PATCH',

@@ -594,6 +594,96 @@ async function createLaborEntriesBulk({ clientId, userId, payload }) {
   }
 }
 
+function resolveBulkDatesAndDailyItems(payload) {
+  if (payload.from_date && payload.to_date) {
+    const fromDate = normalizeDate(payload.from_date, { required: true, field: 'from_date' });
+    const toDate = normalizeDate(payload.to_date, { required: true, field: 'to_date' });
+    const dates = buildDateRange(fromDate, toDate);
+    const dailyItems = Array.isArray(payload.daily_items) ? payload.daily_items : null;
+    let itemsByDate = null;
+    if (dailyItems && dailyItems.length > 0) {
+      itemsByDate = new Map();
+      for (const item of dailyItems) {
+        const d = normalizeDate(item?.work_date, { required: true, field: 'daily_items.work_date' });
+        const q = normalizeQty(item?.qty, { required: true });
+        itemsByDate.set(d, { qty: q });
+      }
+    }
+    return { dates, itemsByDate };
+  }
+  if (payload.work_date) {
+    const d = normalizeDate(payload.work_date, { required: true, field: 'work_date' });
+    return { dates: [d], itemsByDate: null };
+  }
+  const err = new Error('Indica work_date o from_date/to_date.');
+  err.status = 400;
+  throw err;
+}
+
+async function createLaborEntriesMultiWorkers({ clientId, userId, payload }) {
+  const workersRaw = Array.isArray(payload.workers) ? payload.workers : [];
+  if (!workersRaw.length) {
+    const err = new Error('Debe indicar al menos un trabajador.');
+    err.status = 400;
+    throw err;
+  }
+
+  const workers = workersRaw.map((w, idx) => {
+    const workerId = normalizeText(w?.worker_id);
+    if (!workerId) {
+      const err = new Error(`workers[${idx}].worker_id es obligatorio.`);
+      err.status = 400;
+      throw err;
+    }
+    const rateApplied =
+      w?.rate_applied !== undefined && w?.rate_applied !== null
+        ? normalizeRate(w.rate_applied, { required: true })
+        : undefined;
+    return { worker_id: workerId, rate_applied: rateApplied };
+  });
+
+  const { dates, itemsByDate } = resolveBulkDatesAndDailyItems(payload);
+  const basePayload = { ...payload };
+  delete basePayload.workers;
+  delete basePayload.work_date;
+  delete basePayload.from_date;
+  delete basePayload.to_date;
+  delete basePayload.daily_items;
+  delete basePayload.worker_id;
+  delete basePayload.rate_applied;
+
+  const db = await pool.connect();
+  try {
+    await db.query('BEGIN');
+    const created = [];
+    for (const worker of workers) {
+      for (const date of dates) {
+        const item = itemsByDate?.get(date);
+        const row = await createLaborEntryTx({
+          db,
+          clientId,
+          userId,
+          payload: {
+            ...basePayload,
+            worker_id: worker.worker_id,
+            work_date: date,
+            qty: item ? item.qty : payload.qty,
+            rate_applied: worker.rate_applied ?? 0,
+          },
+        });
+        created.push(row);
+      }
+    }
+    await db.query('COMMIT');
+    return created;
+  } catch (e) {
+    await db.query('ROLLBACK');
+    throw e;
+  } finally {
+    db.release();
+  }
+}
+
 async function updateLaborEntry({ id, clientId, userId, payload }) {
   const db = await pool.connect();
   try {
@@ -1016,6 +1106,7 @@ module.exports = {
   getLaborEntryById,
   createLaborEntry,
   createLaborEntriesBulk,
+  createLaborEntriesMultiWorkers,
   updateLaborEntry,
   setLaborEntryActive,
   getSummaryByLot,

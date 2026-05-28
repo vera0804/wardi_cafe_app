@@ -135,6 +135,24 @@ router.post('/bulk', requireCsrf, requireWritePermission, async (req, res) => {
   }
 });
 
+router.post('/multi', requireCsrf, requireWritePermission, async (req, res) => {
+  try {
+    const rows = await laborEntriesService.createLaborEntriesMultiWorkers({
+      clientId: req.user.clientId,
+      userId: req.user.id,
+      payload: req.body || {},
+    });
+    return res.status(201).json(rows);
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ message: e.message });
+    if (e.code === '23505') {
+      return res.status(409).json({ message: 'Conflicto de unicidad en registro múltiple.' });
+    }
+    console.error('POST /labor-entries/multi', e);
+    return res.status(500).json({ message: 'No se pudo crear el registro múltiple de labores.' });
+  }
+});
+
 router.patch('/:id', requireCsrf, requireWritePermission, async (req, res) => {
   try {
     const row = await laborEntriesService.updateLaborEntry({

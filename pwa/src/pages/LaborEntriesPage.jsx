@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   createLaborEntriesBulk,
+  createLaborEntriesMulti,
   createLaborEntry,
   getLaborEntriesMeta,
   getLaborSummaryByLot,
@@ -87,6 +88,9 @@ export default function LaborEntriesPage({ user }) {
   const [showSummary, setShowSummary] = useState(false);
   const [laborTypeSearch, setLaborTypeSearch] = useState('');
   const [dailyQtyByDate, setDailyQtyByDate] = useState({});
+  const [multiWorkerMode, setMultiWorkerMode] = useState(false);
+  const [workerLines, setWorkerLines] = useState([]);
+  const [workerPickId, setWorkerPickId] = useState('');
 
   const readOnly = false;
 
@@ -166,6 +170,9 @@ export default function LaborEntriesPage({ user }) {
     setEditingId(null);
     setDailyQtyByDate({});
     setLaborTypeSearch('');
+    setMultiWorkerMode(false);
+    setWorkerLines([]);
+    setWorkerPickId('');
   }
 
   function openCreate() {
@@ -271,16 +278,66 @@ export default function LaborEntriesPage({ user }) {
     }));
   }
 
+  function addWorkerLine() {
+    if (!workerPickId) {
+      setModalError('Selecciona un trabajador para agregar.');
+      return;
+    }
+    if (workerLines.some((l) => l.worker_id === workerPickId)) {
+      setModalError('Este trabajador ya está en la lista.');
+      return;
+    }
+    setWorkerLines((prev) => [...prev, { worker_id: workerPickId, rate_applied: '' }]);
+    setWorkerPickId('');
+    setModalError('');
+  }
+
+  function removeWorkerLine(workerId) {
+    setWorkerLines((prev) => prev.filter((l) => l.worker_id !== workerId));
+  }
+
+  function updateWorkerLineRate(workerId, value) {
+    setWorkerLines((prev) =>
+      prev.map((l) => (l.worker_id === workerId ? { ...l, rate_applied: value } : l))
+    );
+  }
+
+  const availableWorkersForPick = useMemo(
+    () => meta.workers.filter((w) => !workerLines.some((l) => l.worker_id === w.id)),
+    [meta.workers, workerLines]
+  );
+
   function validateForm() {
-    if (!form.worker_id || !form.labor_type_id) {
+    if (!form.labor_type_id) {
+      return 'El tipo de labor es obligatorio.';
+    }
+    if (multiWorkerMode && !editingId) {
+      if (workerLines.length === 0) {
+        return 'Agrega al menos un trabajador.';
+      }
+      for (const line of workerLines) {
+        const w = meta.workers.find((x) => x.id === line.worker_id);
+        if (w?.worker_type !== 'fijo') {
+          if (
+            line.rate_applied === '' ||
+            line.rate_applied === undefined ||
+            Number(line.rate_applied) < 0
+          ) {
+            return `Indica la tarifa para ${w ? workerLabel(w) : 'cada trabajador ocasional'}.`;
+          }
+        }
+      }
+    } else if (!form.worker_id) {
       return 'Trabajador y tipo de labor son obligatorios.';
     }
     if (!form.unit) return 'La unidad es obligatoria.';
-    const selWorker = meta.workers.find((w) => w.id === form.worker_id);
-    const fixed = selWorker?.worker_type === 'fijo';
-    if (!fixed) {
-      if (form.rate_applied === '' || form.rate_applied === undefined || Number(form.rate_applied) < 0) {
-        return 'La tarifa aplicada debe ser mayor o igual a 0.';
+    if (!multiWorkerMode || editingId) {
+      const selWorker = meta.workers.find((w) => w.id === form.worker_id);
+      const fixed = selWorker?.worker_type === 'fijo';
+      if (!fixed) {
+        if (form.rate_applied === '' || form.rate_applied === undefined || Number(form.rate_applied) < 0) {
+          return 'La tarifa aplicada debe ser mayor o igual a 0.';
+        }
       }
     }
     const isBulkCreate = form.is_bulk && !editingId;
@@ -323,16 +380,14 @@ export default function LaborEntriesPage({ user }) {
     return null;
   }
 
-  function toPayload() {
+  function commonPayloadFields() {
     const payload = {
       cost_scope: form.cost_scope,
       lot_id: form.cost_scope === 'lot' ? form.lot_id : null,
       farm_id: form.cost_scope === 'farm' ? form.farm_id : null,
-      worker_id: form.worker_id,
       labor_type_id: form.labor_type_id,
       unit: form.unit,
       qty: Number(form.qty),
-      rate_applied: isFixedWorker ? 0 : Number(form.rate_applied),
       notes: form.notes.trim() || null,
     };
 
@@ -359,6 +414,27 @@ export default function LaborEntriesPage({ user }) {
     return payload;
   }
 
+  function toPayload() {
+    return {
+      ...commonPayloadFields(),
+      worker_id: form.worker_id,
+      rate_applied: isFixedWorker ? 0 : Number(form.rate_applied),
+    };
+  }
+
+  function toMultiPayload() {
+    return {
+      ...commonPayloadFields(),
+      workers: workerLines.map((line) => {
+        const w = meta.workers.find((x) => x.id === line.worker_id);
+        return {
+          worker_id: line.worker_id,
+          rate_applied: w?.worker_type === 'fijo' ? 0 : Number(line.rate_applied),
+        };
+      }),
+    };
+  }
+
   async function submit(e) {
     e.preventDefault();
     if (readOnly) return;
@@ -369,16 +445,17 @@ export default function LaborEntriesPage({ user }) {
       return;
     }
 
-    const payload = toPayload();
     setSaving(true);
     setModalError('');
     try {
       if (editingId) {
-        await updateLaborEntry(editingId, payload);
+        await updateLaborEntry(editingId, toPayload());
+      } else if (multiWorkerMode) {
+        await createLaborEntriesMulti(toMultiPayload());
       } else if (form.is_bulk) {
-        await createLaborEntriesBulk(payload);
+        await createLaborEntriesBulk(toPayload());
       } else {
-        await createLaborEntry(payload);
+        await createLaborEntry(toPayload());
       }
       closeModal();
       await refresh();
@@ -449,6 +526,12 @@ export default function LaborEntriesPage({ user }) {
     }
     return Number(specific || 0);
   }
+
+  const multiCreateCount = useMemo(() => {
+    if (!multiWorkerMode || editingId) return 0;
+    const dates = form.is_bulk ? bulkDates.length : form.work_date ? 1 : 0;
+    return workerLines.length * dates;
+  }, [multiWorkerMode, editingId, form.is_bulk, form.work_date, bulkDates, workerLines.length]);
 
   return (
     <section className="space-y-4 rounded-2xl border border-white/50 bg-white/90 p-5 text-slate-800 shadow">
@@ -622,13 +705,118 @@ export default function LaborEntriesPage({ user }) {
                 </>
               )}
 
-              <label className="text-sm">
-                <span className="mb-1 block font-medium">Trabajador *</span>
-                <select value={form.worker_id} onChange={(e) => onChange('worker_id', e.target.value)} disabled={saving} className="w-full rounded border border-slate-300 px-3 py-2">
-                  <option value="">Selecciona trabajador</option>
-                  {meta.workers.map((w) => <option key={w.id} value={w.id}>{w.display_name || workerLabel(w)}</option>)}
-                </select>
-              </label>
+              {!editingId ? (
+                <label className="inline-flex items-center gap-2 text-sm lg:col-span-3">
+                  <input
+                    type="checkbox"
+                    checked={multiWorkerMode}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      setMultiWorkerMode(on);
+                      if (on) {
+                        setForm((prev) => ({ ...prev, worker_id: '', rate_applied: '' }));
+                      } else {
+                        setWorkerLines([]);
+                        setWorkerPickId('');
+                      }
+                      setModalError('');
+                    }}
+                    disabled={saving}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  Varios trabajadores (misma actividad y fecha)
+                </label>
+              ) : null}
+
+              {multiWorkerMode && !editingId ? (
+                <div className="lg:col-span-3 rounded border border-slate-200 bg-slate-50 p-3">
+                  <div className="mb-2 flex flex-wrap items-end gap-2">
+                    <label className="min-w-[12rem] flex-1 text-sm">
+                      <span className="mb-1 block font-medium">Agregar trabajador</span>
+                      <select
+                        value={workerPickId}
+                        onChange={(e) => setWorkerPickId(e.target.value)}
+                        disabled={saving || availableWorkersForPick.length === 0}
+                        className="w-full rounded border border-slate-300 px-3 py-2"
+                      >
+                        <option value="">
+                          {availableWorkersForPick.length === 0
+                            ? 'No hay más trabajadores'
+                            : 'Selecciona trabajador'}
+                        </option>
+                        {availableWorkersForPick.map((w) => (
+                          <option key={w.id} value={w.id}>
+                            {w.display_name || workerLabel(w)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addWorkerLine}
+                      disabled={saving || !workerPickId}
+                      className="rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                  {workerLines.length === 0 ? (
+                    <p className="text-sm text-slate-500">Agrega uno o más trabajadores con su tarifa.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {workerLines.map((line) => {
+                        const w = meta.workers.find((x) => x.id === line.worker_id);
+                        const fixed = w?.worker_type === 'fijo';
+                        return (
+                          <div
+                            key={line.worker_id}
+                            className="flex flex-wrap items-center gap-2 rounded border border-slate-200 bg-white px-3 py-2 text-sm"
+                          >
+                            <span className="min-w-[10rem] flex-1 font-medium">
+                              {w?.display_name || workerLabel(w || {})}
+                              {fixed ? (
+                                <span className="ml-2 text-xs font-normal text-slate-500">(fijo)</span>
+                              ) : null}
+                            </span>
+                            {!fixed ? (
+                              <label className="flex items-center gap-2">
+                                <span className="text-slate-600">Tarifa</span>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={line.rate_applied}
+                                  onChange={(e) => updateWorkerLineRate(line.worker_id, e.target.value)}
+                                  disabled={saving}
+                                  className="w-28 rounded border border-slate-300 px-2 py-1"
+                                />
+                              </label>
+                            ) : (
+                              <span className="text-xs text-slate-500">Sin tarifa (empleado fijo)</span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removeWorkerLine(line.worker_id)}
+                              disabled={saving}
+                              className="rounded border border-rose-200 bg-rose-50 px-2 py-1 text-xs text-rose-800"
+                            >
+                              Quitar
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium">Trabajador *</span>
+                  <select value={form.worker_id} onChange={(e) => onChange('worker_id', e.target.value)} disabled={saving} className="w-full rounded border border-slate-300 px-3 py-2">
+                    <option value="">Selecciona trabajador</option>
+                    {meta.workers.map((w) => <option key={w.id} value={w.id}>{w.display_name || workerLabel(w)}</option>)}
+                  </select>
+                </label>
+              )}
 
               <label className="text-sm">
                 <span className="mb-1 block font-medium">Tipo de labor *</span>
@@ -675,7 +863,7 @@ export default function LaborEntriesPage({ user }) {
                 </label>
               ) : null}
 
-              {!isFixedWorker ? (
+              {!multiWorkerMode && !isFixedWorker ? (
                 <label className="text-sm">
                   <span className="mb-1 block font-medium">Tarifa aplicada *</span>
                   <input
@@ -792,7 +980,15 @@ export default function LaborEntriesPage({ user }) {
 
               <div className="lg:col-span-3 flex flex-wrap items-center gap-2">
                 <button type="submit" disabled={saving} className="rounded bg-lime-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
-                  {editingId ? 'Guardar cambios' : form.is_bulk ? 'Crear en bloque' : 'Crear registro'}
+                  {editingId
+                    ? 'Guardar cambios'
+                    : multiWorkerMode
+                      ? multiCreateCount > 0
+                        ? `Crear ${multiCreateCount} registros`
+                        : 'Crear registros'
+                      : form.is_bulk
+                        ? 'Crear en bloque'
+                        : 'Crear registro'}
                 </button>
                 <button type="button" onClick={closeModal} disabled={saving} className="rounded border border-slate-300 bg-white px-4 py-2 text-sm">Cancelar</button>
               </div>
