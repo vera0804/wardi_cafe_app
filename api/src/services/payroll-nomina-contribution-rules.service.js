@@ -18,8 +18,9 @@ function normalizeDate(value, { required = false, field = 'fecha' } = {}) {
   return s;
 }
 
-function normalizePct(value, { field }) {
+function normalizePct(value, { field, required = true } = {}) {
   if (value == null || value === '') {
+    if (!required) return 0;
     const err = new Error(`El campo ${field} es obligatorio.`);
     err.status = 400;
     throw err;
@@ -88,7 +89,7 @@ async function listNominaContributionRules({ clientId, active }) {
 
   const res = await pool.query(
     `SELECT id, client_id, valid_from, valid_to,
-            employer_pct_of_gross, employee_pct_of_gross,
+            employer_pct_of_gross, employer_other_pct_of_gross, employee_pct_of_gross,
             notes, is_active, deactivated_at,
             created_at, updated_at, created_by_user_id, updated_by_user_id
      FROM payroll_nomina_contribution_rules
@@ -105,6 +106,7 @@ async function createNominaContributionRule({
   validFrom,
   validTo,
   employerPctOfGross,
+  employerOtherPctOfGross,
   employeePctOfGross,
   notes,
 }) {
@@ -116,6 +118,10 @@ async function createNominaContributionRule({
     throw err;
   }
   const emp = normalizePct(employerPctOfGross, { field: 'employer_pct_of_gross' });
+  const empOther = normalizePct(employerOtherPctOfGross, {
+    field: 'employer_other_pct_of_gross',
+    required: false,
+  });
   const epl = normalizePct(employeePctOfGross, { field: 'employee_pct_of_gross' });
   const n = normalizeNotes(notes);
 
@@ -124,15 +130,15 @@ async function createNominaContributionRule({
   const ins = await pool.query(
     `INSERT INTO payroll_nomina_contribution_rules (
        client_id, valid_from, valid_to,
-       employer_pct_of_gross, employee_pct_of_gross,
+       employer_pct_of_gross, employer_other_pct_of_gross, employee_pct_of_gross,
        notes, is_active, created_by_user_id, updated_by_user_id
      )
-     VALUES ($1, $2, $3, $4, $5, $6, true, $7, $7)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8, $8)
      RETURNING id, client_id, valid_from, valid_to,
-               employer_pct_of_gross, employee_pct_of_gross,
+               employer_pct_of_gross, employer_other_pct_of_gross, employee_pct_of_gross,
                notes, is_active, deactivated_at,
                created_at, updated_at, created_by_user_id, updated_by_user_id`,
-    [clientId, vf, vt, emp, epl, n, userId]
+    [clientId, vf, vt, emp, empOther, epl, n, userId]
   );
   return ins.rows[0];
 }
@@ -148,7 +154,7 @@ async function deactivateNominaContributionRule({ id, clientId, userId }) {
        AND client_id = $2
        AND is_active = true
      RETURNING id, client_id, valid_from, valid_to,
-               employer_pct_of_gross, employee_pct_of_gross,
+               employer_pct_of_gross, employer_other_pct_of_gross, employee_pct_of_gross,
                notes, is_active, deactivated_at,
                created_at, updated_at, created_by_user_id, updated_by_user_id`,
     [id, clientId, userId]

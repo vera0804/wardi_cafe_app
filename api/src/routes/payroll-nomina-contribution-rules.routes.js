@@ -34,6 +34,7 @@ router.post('/', requireCsrf, requireWritePermission, async (req, res, next) => 
       validFrom: req.body?.valid_from,
       validTo: req.body?.valid_to,
       employerPctOfGross: req.body?.employer_pct_of_gross,
+      employerOtherPctOfGross: req.body?.employer_other_pct_of_gross,
       employeePctOfGross: req.body?.employee_pct_of_gross,
       notes: req.body?.notes,
     });

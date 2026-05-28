@@ -9,6 +9,7 @@ const DEFAULT_FORM = {
   valid_from: '',
   valid_to: '',
   employer_pct_of_gross: '',
+  employer_other_pct_of_gross: '',
   employee_pct_of_gross: '',
   notes: '',
 };
@@ -79,9 +80,15 @@ export default function PayrollNominaPaymentDetailsPage({ user }) {
       return 'La fecha de inicio no puede ser posterior a la fecha de finalización.';
     }
     const emp = Number(form.employer_pct_of_gross);
+    const empOtherRaw = form.employer_other_pct_of_gross;
+    const empOther =
+      empOtherRaw === '' || empOtherRaw === undefined ? 0 : Number(empOtherRaw);
     const epl = Number(form.employee_pct_of_gross);
     if (!Number.isFinite(emp) || emp < 0 || emp > 100) {
-      return 'El aporte del patrono debe ser un porcentaje entre 0 y 100.';
+      return 'Patrono CCSS debe ser un porcentaje entre 0 y 100.';
+    }
+    if (!Number.isFinite(empOther) || empOther < 0 || empOther > 100) {
+      return 'Patrono otros pagos debe ser un porcentaje entre 0 y 100.';
     }
     if (!Number.isFinite(epl) || epl < 0 || epl > 100) {
       return 'El aporte del trabajador debe ser un porcentaje entre 0 y 100.';
@@ -104,6 +111,11 @@ export default function PayrollNominaPaymentDetailsPage({ user }) {
         valid_from: form.valid_from,
         valid_to: form.valid_to?.trim() ? form.valid_to : null,
         employer_pct_of_gross: Number(form.employer_pct_of_gross),
+        employer_other_pct_of_gross:
+          form.employer_other_pct_of_gross === '' ||
+          form.employer_other_pct_of_gross === undefined
+            ? 0
+            : Number(form.employer_other_pct_of_gross),
         employee_pct_of_gross: Number(form.employee_pct_of_gross),
         notes: form.notes.trim() || null,
       });
@@ -137,8 +149,9 @@ export default function PayrollNominaPaymentDetailsPage({ user }) {
         <div>
           <h3 className="text-base font-semibold text-lime-800">Detalles de pagos de nómina</h3>
           <p className="mt-1 max-w-3xl text-sm text-slate-600">
-            Reglas por <strong>periodo</strong> (fechas inclusive): porcentaje del patrono y del trabajador sobre el{' '}
-            <strong>salario bruto</strong>. Las reglas no se editan para no alterar el historial; puede crear una nueva
+            Reglas por <strong>periodo</strong> (fechas inclusive): porcentajes de CCSS patrono, otros aportes patrono
+            (INS, etc.) y trabajador sobre el <strong>salario bruto</strong>. Las reglas no se editan para no alterar el
+            historial; puede crear una nueva
             o <strong>inactivar</strong> la anterior. No puede haber periodos activos traslapados: inactive la regla
             vigente si necesita otra que empiece antes. La <strong>fecha de fin</strong> puede dejarse vacía para que la
             regla siga vigente hasta que la inactive.
@@ -177,7 +190,8 @@ export default function PayrollNominaPaymentDetailsPage({ user }) {
             <tr>
               <th className="px-3 py-2">Inicio</th>
               <th className="px-3 py-2">Fin</th>
-              <th className="px-3 py-2">Patrono (% bruto)</th>
+              <th className="px-3 py-2">Patrono CCSS</th>
+              <th className="px-3 py-2">Patrono otros</th>
               <th className="px-3 py-2">Trabajador (% bruto)</th>
               <th className="px-3 py-2">Notas</th>
               <th className="px-3 py-2">Estado</th>
@@ -187,13 +201,13 @@ export default function PayrollNominaPaymentDetailsPage({ user }) {
           <tbody className="divide-y divide-slate-100 bg-white">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={8} className="px-3 py-6 text-center text-slate-500">
                   Cargando…
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={8} className="px-3 py-6 text-center text-slate-500">
                   No hay reglas. Cree la primera para los periodos de planilla.
                 </td>
               </tr>
@@ -203,6 +217,7 @@ export default function PayrollNominaPaymentDetailsPage({ user }) {
                   <td className="px-3 py-2 font-medium text-slate-800">{fmtDate(r.valid_from)}</td>
                   <td className="px-3 py-2 text-slate-700">{fmtEndDate(r.valid_to)}</td>
                   <td className="px-3 py-2">{fmtPct(r.employer_pct_of_gross)}</td>
+                  <td className="px-3 py-2">{fmtPct(r.employer_other_pct_of_gross)}</td>
                   <td className="px-3 py-2">{fmtPct(r.employee_pct_of_gross)}</td>
                   <td className="max-w-xs truncate px-3 py-2 text-slate-600" title={r.notes || ''}>
                     {r.notes || '—'}
@@ -281,7 +296,7 @@ export default function PayrollNominaPaymentDetailsPage({ user }) {
                 </span>
               </label>
               <label className="text-sm">
-                <span className="mb-1 block font-medium">Aporte patrono (% del bruto) *</span>
+                <span className="mb-1 block font-medium">Patrono CCSS (% del bruto) *</span>
                 <input
                   type="number"
                   step="0.0001"
@@ -293,6 +308,23 @@ export default function PayrollNominaPaymentDetailsPage({ user }) {
                   placeholder="ej. 26.83"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2"
                 />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium">Patrono otros pagos (% del bruto)</span>
+                <input
+                  type="number"
+                  step="0.0001"
+                  min="0"
+                  max="100"
+                  value={form.employer_other_pct_of_gross}
+                  onChange={(e) => onChange('employer_other_pct_of_gross', e.target.value)}
+                  disabled={saving}
+                  placeholder="ej. 2.5 (INS, etc.)"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                />
+                <span className="mt-1 block text-xs text-slate-500">
+                  Opcional. Si no aplica, deje en blanco o en 0.
+                </span>
               </label>
               <label className="text-sm">
                 <span className="mb-1 block font-medium">Aporte trabajador (% del bruto) *</span>
