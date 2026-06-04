@@ -542,32 +542,64 @@ function buildDateRange(fromDate, toDate) {
   return out;
 }
 
+function parseDailyItemsForRange({ dailyItems, fromDate, toDate, allowGlobalQtyFallback = false }) {
+  const rangeSet = new Set(buildDateRange(fromDate, toDate));
+  if (!Array.isArray(dailyItems) || dailyItems.length === 0) {
+    if (allowGlobalQtyFallback) {
+      return {
+        dates: buildDateRange(fromDate, toDate),
+        itemsByDate: null,
+      };
+    }
+    const err = new Error('Debe indicar al menos un día en daily_items.');
+    err.status = 400;
+    throw err;
+  }
+
+  const itemsByDate = new Map();
+  const seen = new Set();
+  for (const item of dailyItems) {
+    const d = normalizeDate(item?.work_date, { required: true, field: 'daily_items.work_date' });
+    if (!rangeSet.has(d)) {
+      const err = new Error(`La fecha ${d} está fuera del rango indicado (${fromDate} a ${toDate}).`);
+      err.status = 400;
+      throw err;
+    }
+    if (seen.has(d)) {
+      const err = new Error(`Fecha duplicada en daily_items: ${d}.`);
+      err.status = 400;
+      throw err;
+    }
+    seen.add(d);
+    const q = normalizeQty(item?.qty, { required: true });
+    const r =
+      item?.rate_applied !== undefined
+        ? normalizeRate(item?.rate_applied, { required: true })
+        : undefined;
+    itemsByDate.set(d, { qty: q, rate_applied: r });
+  }
+
+  const dates = [...itemsByDate.keys()].sort();
+  return { dates, itemsByDate };
+}
+
 async function createLaborEntriesBulk({ clientId, userId, payload }) {
   const fromDate = normalizeDate(payload.from_date, { required: true, field: 'from_date' });
   const toDate = normalizeDate(payload.to_date, { required: true, field: 'to_date' });
-  const dates = buildDateRange(fromDate, toDate);
   const dailyItems = Array.isArray(payload.daily_items) ? payload.daily_items : null;
-
-  let itemsByDate = null;
-  if (dailyItems && dailyItems.length > 0) {
-    itemsByDate = new Map();
-    for (const item of dailyItems) {
-      const d = normalizeDate(item?.work_date, { required: true, field: 'daily_items.work_date' });
-      const q = normalizeQty(item?.qty, { required: true });
-      const r =
-        item?.rate_applied !== undefined
-          ? normalizeRate(item?.rate_applied, { required: true })
-          : undefined;
-      itemsByDate.set(d, { qty: q, rate_applied: r });
-    }
-  }
+  const { dates, itemsByDate } = parseDailyItemsForRange({
+    dailyItems,
+    fromDate,
+    toDate,
+    allowGlobalQtyFallback: false,
+  });
 
   const db = await pool.connect();
   try {
     await db.query('BEGIN');
     const created = [];
     for (const date of dates) {
-      const item = itemsByDate?.get(date);
+      const item = itemsByDate.get(date);
       const row = await createLaborEntryTx({
         db,
         clientId,
@@ -575,11 +607,9 @@ async function createLaborEntriesBulk({ clientId, userId, payload }) {
         payload: {
           ...payload,
           work_date: date,
-          qty: item ? item.qty : payload.qty,
+          qty: item.qty,
           rate_applied:
-            item && item.rate_applied !== undefined
-              ? item.rate_applied
-              : payload.rate_applied,
+            item.rate_applied !== undefined ? item.rate_applied : payload.rate_applied,
         },
       });
       created.push(row);
@@ -598,18 +628,13 @@ function resolveBulkDatesAndDailyItems(payload) {
   if (payload.from_date && payload.to_date) {
     const fromDate = normalizeDate(payload.from_date, { required: true, field: 'from_date' });
     const toDate = normalizeDate(payload.to_date, { required: true, field: 'to_date' });
-    const dates = buildDateRange(fromDate, toDate);
     const dailyItems = Array.isArray(payload.daily_items) ? payload.daily_items : null;
-    let itemsByDate = null;
-    if (dailyItems && dailyItems.length > 0) {
-      itemsByDate = new Map();
-      for (const item of dailyItems) {
-        const d = normalizeDate(item?.work_date, { required: true, field: 'daily_items.work_date' });
-        const q = normalizeQty(item?.qty, { required: true });
-        itemsByDate.set(d, { qty: q });
-      }
-    }
-    return { dates, itemsByDate };
+    return parseDailyItemsForRange({
+      dailyItems,
+      fromDate,
+      toDate,
+      allowGlobalQtyFallback: !dailyItems || dailyItems.length === 0,
+    });
   }
   if (payload.work_date) {
     const d = normalizeDate(payload.work_date, { required: true, field: 'work_date' });

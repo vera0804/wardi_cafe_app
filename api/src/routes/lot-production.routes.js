@@ -75,6 +75,21 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.post('/bulk', requireCsrf, requireProductionWrite, async (req, res) => {
+  try {
+    const rows = await productionService.createProductionBulk({
+      clientId: req.user.clientId,
+      userId: req.user.id,
+      payload: req.body || {},
+    });
+    return res.status(201).json(rows);
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ message: e.message });
+    console.error('POST /lot-production/bulk', e);
+    return res.status(500).json({ message: 'No se pudo crear la carga masiva de producción.' });
+  }
+});
+
 router.post('/', requireCsrf, requireProductionWrite, async (req, res) => {
   try {
     const row = await productionService.createProduction({

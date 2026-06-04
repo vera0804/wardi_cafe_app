@@ -190,6 +190,100 @@ async function getProductionById({ id, clientId }) {
   return getByIdTx({ db: pool, id, clientId });
 }
 
+function buildDateRange(fromDate, toDate) {
+  const start = new Date(`${fromDate}T00:00:00.000Z`);
+  const end = new Date(`${toDate}T00:00:00.000Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+    const err = new Error('Rango de fechas inválido.');
+    err.status = 400;
+    throw err;
+  }
+  const out = [];
+  const cur = new Date(start);
+  while (cur <= end) {
+    out.push(cur.toISOString().slice(0, 10));
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return out;
+}
+
+function parseDailyProductionItems({ dailyItems, fromDate, toDate }) {
+  const rangeSet = new Set(buildDateRange(fromDate, toDate));
+  if (!Array.isArray(dailyItems) || dailyItems.length === 0) {
+    const err = new Error('Debe indicar al menos un día en daily_items.');
+    err.status = 400;
+    throw err;
+  }
+
+  const itemsByDate = new Map();
+  const seen = new Set();
+  for (const item of dailyItems) {
+    const d = normalizeDate(item?.prod_date, { required: true, field: 'daily_items.prod_date' });
+    if (!rangeSet.has(d)) {
+      const err = new Error(`La fecha ${d} está fuera del rango indicado (${fromDate} a ${toDate}).`);
+      err.status = 400;
+      throw err;
+    }
+    if (seen.has(d)) {
+      const err = new Error(`Fecha duplicada en daily_items: ${d}.`);
+      err.status = 400;
+      throw err;
+    }
+    seen.add(d);
+    const cajuelas = normalizeCajuelas(item?.cajuelas);
+    itemsByDate.set(d, { cajuelas });
+  }
+
+  return { dates: [...itemsByDate.keys()].sort(), itemsByDate };
+}
+
+async function createProductionBulk({ clientId, userId, payload }) {
+  const fromDate = normalizeDate(payload.from_date, { required: true, field: 'from_date' });
+  const toDate = normalizeDate(payload.to_date, { required: true, field: 'to_date' });
+  if (fromDate > toDate) {
+    const err = new Error('from_date no puede ser posterior a to_date.');
+    err.status = 400;
+    throw err;
+  }
+
+  const lotId = normalizeLotId(payload.lot_id, { required: true });
+  const notes = normalizeText(payload.notes);
+  const { dates, itemsByDate } = parseDailyProductionItems({
+    dailyItems: payload.daily_items,
+    fromDate,
+    toDate,
+  });
+
+  const db = await pool.connect();
+  try {
+    await db.query('BEGIN');
+    await getActiveLot({ db, lotId, clientId });
+    const created = [];
+    for (const prodDate of dates) {
+      const item = itemsByDate.get(prodDate);
+      await assertNoDuplicateActive({ db, clientId, lotId, prodDate });
+      const insertRes = await db.query(
+        `INSERT INTO coffee_lot_production (
+           client_id, lot_id, prod_date, cajuelas, notes,
+           created_by_user_id, updated_by_user_id
+         )
+         VALUES ($1, $2, $3::date, $4, $5, $6, $6)
+         RETURNING id`,
+        [clientId, lotId, prodDate, item.cajuelas, notes, userId]
+      );
+      const row = await getByIdTx({ db, id: insertRes.rows[0].id, clientId });
+      created.push(row);
+    }
+    await db.query('COMMIT');
+    return created;
+  } catch (e) {
+    await db.query('ROLLBACK');
+    mapDuplicateError(e);
+  } finally {
+    db.release();
+  }
+}
+
 async function createProduction({ clientId, userId, payload }) {
   const lotId = normalizeLotId(payload.lot_id, { required: true });
   const prodDate = normalizeDate(payload.prod_date, { required: true });
@@ -332,6 +426,7 @@ module.exports = {
   listProductions,
   getProductionById,
   createProduction,
+  createProductionBulk,
   updateProduction,
   setProductionActive,
 };

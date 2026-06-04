@@ -54,6 +54,28 @@ function sumAllocations(items) {
   return items.reduce((acc, a) => acc + Number(a.allocation_pct || 0), 0);
 }
 
+const BULK_DAY_ABBREV = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+function formatBulkDayLabel(isoDate) {
+  const d = new Date(`${isoDate}T12:00:00`);
+  return `${BULK_DAY_ABBREV[d.getDay()]} ${isoDate}`;
+}
+
+function buildBulkDateRange(fromDate, toDate) {
+  if (!fromDate || !toDate || fromDate > toDate) return [];
+  const out = [];
+  let current = new Date(`${fromDate}T12:00:00`);
+  const end = new Date(`${toDate}T12:00:00`);
+  while (current <= end) {
+    const y = current.getFullYear();
+    const m = String(current.getMonth() + 1).padStart(2, '0');
+    const day = String(current.getDate()).padStart(2, '0');
+    out.push(`${y}-${m}-${day}`);
+    current.setDate(current.getDate() + 1);
+  }
+  return out;
+}
+
 export default function LaborEntriesPage({ user }) {
   const [meta, setMeta] = useState({
     farms: [],
@@ -88,6 +110,7 @@ export default function LaborEntriesPage({ user }) {
   const [showSummary, setShowSummary] = useState(false);
   const [laborTypeSearch, setLaborTypeSearch] = useState('');
   const [dailyQtyByDate, setDailyQtyByDate] = useState({});
+  const [excludedBulkDates, setExcludedBulkDates] = useState(() => new Set());
   const [multiWorkerMode, setMultiWorkerMode] = useState(false);
   const [workerLines, setWorkerLines] = useState([]);
   const [workerPickId, setWorkerPickId] = useState('');
@@ -169,6 +192,7 @@ export default function LaborEntriesPage({ user }) {
     });
     setEditingId(null);
     setDailyQtyByDate({});
+    setExcludedBulkDates(new Set());
     setLaborTypeSearch('');
     setMultiWorkerMode(false);
     setWorkerLines([]);
@@ -246,7 +270,44 @@ export default function LaborEntriesPage({ user }) {
       field === 'is_bulk'
     ) {
       setDailyQtyByDate({});
+      if (field === 'from_date' || field === 'to_date' || field === 'is_bulk') {
+        setExcludedBulkDates(new Set());
+      }
     }
+  }
+
+  function setBulkDayIncluded(date, included) {
+    setExcludedBulkDates((prev) => {
+      const next = new Set(prev);
+      if (included) next.delete(date);
+      else next.add(date);
+      return next;
+    });
+  }
+
+  function includeAllBulkDays() {
+    setExcludedBulkDates(new Set());
+  }
+
+  function excludeSundaysInBulk() {
+    setExcludedBulkDates((prev) => {
+      const next = new Set(prev);
+      for (const d of bulkDates) {
+        if (new Date(`${d}T12:00:00`).getDay() === 0) next.add(d);
+      }
+      return next;
+    });
+  }
+
+  function excludeWeekendsInBulk() {
+    setExcludedBulkDates((prev) => {
+      const next = new Set(prev);
+      for (const d of bulkDates) {
+        const dow = new Date(`${d}T12:00:00`).getDay();
+        if (dow === 0 || dow === 6) next.add(d);
+      }
+      return next;
+    });
   }
 
   function onLaborTypeSearchChange(value) {
@@ -370,9 +431,16 @@ export default function LaborEntriesPage({ user }) {
     if (form.is_bulk) {
       if (!form.from_date || !form.to_date) return 'Debes indicar rango de fechas.';
       if (form.from_date > form.to_date) return 'Rango de fechas inválido.';
+      if (bulkDatesIncluded.length === 0) {
+        return 'Debes incluir al menos un día del rango para registrar.';
+      }
       if (form.unit !== 'jornal') {
-        const hasInvalid = bulkDates.some((d) => qtyForDate(d) <= 0 || !Number.isFinite(qtyForDate(d)));
-        if (hasInvalid) return 'En carga por rango, cada día debe tener cantidad mayor que 0.';
+        const hasInvalid = bulkDatesIncluded.some(
+          (d) => qtyForDate(d) <= 0 || !Number.isFinite(qtyForDate(d))
+        );
+        if (hasInvalid) {
+          return 'En carga por rango, cada día incluido debe tener cantidad mayor que 0.';
+        }
       }
     } else if (!form.work_date) {
       return 'La fecha de trabajo es obligatoria.';
@@ -394,7 +462,7 @@ export default function LaborEntriesPage({ user }) {
     if (form.is_bulk) {
       payload.from_date = form.from_date;
       payload.to_date = form.to_date;
-      payload.daily_items = bulkDates.map((d) => ({
+      payload.daily_items = bulkDatesIncluded.map((d) => ({
         work_date: d,
         qty: qtyForDate(d),
       }));
@@ -505,18 +573,29 @@ export default function LaborEntriesPage({ user }) {
   }, [meta.laborTypes, laborTypeSearch]);
 
   const bulkDates = useMemo(() => {
-    if (!form.is_bulk || !form.from_date || !form.to_date || form.from_date > form.to_date) {
-      return [];
-    }
-    const out = [];
-    let current = new Date(`${form.from_date}T00:00:00`);
-    const end = new Date(`${form.to_date}T00:00:00`);
-    while (current <= end) {
-      out.push(current.toISOString().slice(0, 10));
-      current.setDate(current.getDate() + 1);
-    }
-    return out;
+    if (!form.is_bulk) return [];
+    return buildBulkDateRange(form.from_date, form.to_date);
   }, [form.is_bulk, form.from_date, form.to_date]);
+
+  const bulkDatesIncluded = useMemo(
+    () => bulkDates.filter((d) => !excludedBulkDates.has(d)),
+    [bulkDates, excludedBulkDates]
+  );
+
+  useEffect(() => {
+    if (!form.is_bulk || bulkDates.length === 0) return;
+    setExcludedBulkDates((prev) => {
+      const range = new Set(bulkDates);
+      let changed = false;
+      const next = new Set();
+      for (const d of prev) {
+        if (range.has(d)) next.add(d);
+        else changed = true;
+      }
+      if (!changed && next.size === prev.size) return prev;
+      return next;
+    });
+  }, [form.is_bulk, bulkDates]);
 
   function qtyForDate(date) {
     if (form.unit === 'jornal') return 1;
@@ -527,11 +606,23 @@ export default function LaborEntriesPage({ user }) {
     return Number(specific || 0);
   }
 
+  const bulkCreateCount = useMemo(() => {
+    if (!form.is_bulk || editingId) return 0;
+    return bulkDatesIncluded.length;
+  }, [form.is_bulk, editingId, bulkDatesIncluded.length]);
+
   const multiCreateCount = useMemo(() => {
     if (!multiWorkerMode || editingId) return 0;
-    const dates = form.is_bulk ? bulkDates.length : form.work_date ? 1 : 0;
+    const dates = form.is_bulk ? bulkDatesIncluded.length : form.work_date ? 1 : 0;
     return workerLines.length * dates;
-  }, [multiWorkerMode, editingId, form.is_bulk, form.work_date, bulkDates, workerLines.length]);
+  }, [
+    multiWorkerMode,
+    editingId,
+    form.is_bulk,
+    form.work_date,
+    bulkDatesIncluded.length,
+    workerLines.length,
+  ]);
 
   return (
     <section className="space-y-4 rounded-2xl border border-white/50 bg-white/90 p-5 text-slate-800 shadow">
@@ -905,32 +996,90 @@ export default function LaborEntriesPage({ user }) {
 
               {isBulkCreate ? (
                 <div className="lg:col-span-3 rounded border border-slate-200 bg-slate-50 p-3">
-                  <h5 className="mb-2 text-sm font-semibold text-slate-700">
-                    Cantidad por día {form.unit === 'jornal' ? '(jornal fijo: 1 por día)' : ''}
-                  </h5>
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <h5 className="text-sm font-semibold text-slate-700">
+                      Días del rango
+                      {form.unit === 'jornal' ? ' (jornal: 1 por día incluido)' : ''}
+                    </h5>
+                    {bulkDates.length > 0 ? (
+                      <span className="text-xs font-medium text-slate-600">
+                        Se registrarán {bulkDatesIncluded.length} de {bulkDates.length} día(s)
+                      </span>
+                    ) : null}
+                  </div>
+                  {bulkDates.length > 0 ? (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={includeAllBulkDays}
+                        disabled={saving || excludedBulkDates.size === 0}
+                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs disabled:opacity-50"
+                      >
+                        Incluir todos
+                      </button>
+                      <button
+                        type="button"
+                        onClick={excludeSundaysInBulk}
+                        disabled={saving}
+                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+                      >
+                        Excluir domingos
+                      </button>
+                      <button
+                        type="button"
+                        onClick={excludeWeekendsInBulk}
+                        disabled={saving}
+                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+                      >
+                        Excluir sábados y domingos
+                      </button>
+                    </div>
+                  ) : null}
                   {bulkDates.length === 0 ? (
                     <p className="text-sm text-slate-500">Selecciona un rango válido.</p>
                   ) : (
                     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                      {bulkDates.map((d) => (
-                        <label key={d} className="flex items-center justify-between rounded border border-slate-200 bg-white px-2 py-1 text-sm">
-                          <span>{d}</span>
-                          {form.unit === 'jornal' ? (
-                            <span className="font-medium">1</span>
-                          ) : (
+                      {bulkDates.map((d) => {
+                        const included = !excludedBulkDates.has(d);
+                        return (
+                          <div
+                            key={d}
+                            className={`flex items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5 text-sm ${
+                              included ? '' : 'opacity-45'
+                            }`}
+                          >
                             <input
-                              type="number"
-                              step="0.001"
-                              min="0.001"
-                              value={dailyQtyByDate[d] ?? String(form.qty || '')}
-                              onChange={(e) =>
-                                setDailyQtyByDate((prev) => ({ ...prev, [d]: e.target.value }))
-                              }
-                              className="w-24 rounded border border-slate-300 px-2 py-1 text-right"
+                              type="checkbox"
+                              checked={included}
+                              onChange={(e) => setBulkDayIncluded(d, e.target.checked)}
+                              disabled={saving}
+                              className="h-4 w-4 shrink-0 rounded border-slate-300"
+                              title="Registrar"
+                              aria-label={`Registrar ${formatBulkDayLabel(d)}`}
                             />
-                          )}
-                        </label>
-                      ))}
+                            <span className={`min-w-0 flex-1 ${included ? 'text-slate-800' : 'text-slate-500'}`}>
+                              {formatBulkDayLabel(d)}
+                            </span>
+                            {included ? (
+                              form.unit === 'jornal' ? (
+                                <span className="w-16 text-right font-medium tabular-nums">1</span>
+                              ) : (
+                                <input
+                                  type="number"
+                                  step="0.001"
+                                  min="0.001"
+                                  value={dailyQtyByDate[d] ?? String(form.qty || '')}
+                                  onChange={(e) =>
+                                    setDailyQtyByDate((prev) => ({ ...prev, [d]: e.target.value }))
+                                  }
+                                  disabled={saving}
+                                  className="w-16 rounded border border-slate-300 px-2 py-1 text-right tabular-nums"
+                                />
+                              )
+                            ) : null}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -987,7 +1136,9 @@ export default function LaborEntriesPage({ user }) {
                         ? `Crear ${multiCreateCount} registros`
                         : 'Crear registros'
                       : form.is_bulk
-                        ? 'Crear en bloque'
+                        ? bulkCreateCount > 0
+                          ? `Crear en bloque (${bulkCreateCount} día${bulkCreateCount === 1 ? '' : 's'})`
+                          : 'Crear en bloque'
                         : 'Crear registro'}
                 </button>
                 <button type="button" onClick={closeModal} disabled={saving} className="rounded border border-slate-300 bg-white px-4 py-2 text-sm">Cancelar</button>

@@ -28,6 +28,13 @@ export function createLotProduction(payload) {
   });
 }
 
+export function createLotProductionBulk(payload) {
+  return apiRequest('/api/lot-production/bulk', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export function updateLotProduction(id, payload) {
   return apiRequest(`/api/lot-production/${id}`, {
     method: 'PATCH',
