@@ -77,7 +77,8 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-app.use('/api', globalApiLimiter);
+//app.use('/api', globalApiLimiter);
+app.use(globalApiLimiter);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/superadmin', superadminRoutes);
@@ -114,21 +115,32 @@ app.use('/api', (req, res) => {
   res.status(404).json({ message: 'Not found.' });
 });
 
+//const publicDir = path.join(__dirname, '..', 'public');
+//if (fs.existsSync(publicDir)) {
+//  app.use(
+//    express.static(publicDir, {
+//      index: false,
+//      maxAge: config.isProd ? '1d' : 0,
+//    })
+//  );
+ // app.get(/^(?!\/api(?:\/|$)).*/, (req, res, next) => {
+//    if (req.method !== 'GET' && req.method !== 'HEAD') {
+//      return next();
+//    }
+//    res.sendFile(path.join(publicDir, 'index.html'), (err) => {
+//      if (err) next(err);
+//    });
+//  });
+//}
+
 const publicDir = path.join(__dirname, '..', 'public');
 if (fs.existsSync(publicDir)) {
-  app.use(
-    express.static(publicDir, {
-      index: false,
-      maxAge: config.isProd ? '1d' : 0,
-    })
-  );
-  app.get(/^(?!\/api(?:\/|$)).*/, (req, res, next) => {
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-      return next();
-    }
-    res.sendFile(path.join(publicDir, 'index.html'), (err) => {
-      if (err) next(err);
-    });
+  // Se simplifica la carga de estáticos como en Aguacate
+  app.use(express.static(publicDir));
+  
+  // Se cambia el Regex complejo por el de Aguacate para evitar fallos con el Proxy
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(path.join(publicDir, 'index.html'));
   });
 }
 
