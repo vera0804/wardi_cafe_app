@@ -10,6 +10,7 @@ import {
   updateLaborEntry,
   listLaborEntries,
 } from '../services/laborEntries.js';
+import { matchesRecordTypeFilter, operationalLocationLabel } from '../utils/operationalScopeLabels.js';
 
 const DEFAULT_FORM = {
   cost_scope: 'lot',
@@ -50,10 +51,6 @@ function unitLabel(unit) {
   return UNIT_LABELS[v] || (v ? v.charAt(0).toUpperCase() + v.slice(1) : '');
 }
 
-function sumAllocations(items) {
-  return items.reduce((acc, a) => acc + Number(a.allocation_pct || 0), 0);
-}
-
 const BULK_DAY_ABBREV = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 function formatBulkDayLabel(isoDate) {
@@ -90,9 +87,9 @@ export default function LaborEntriesPage({ user }) {
   const [filters, setFilters] = useState({
     from_date: '',
     to_date: '',
-    cost_scope: '',
+    record_type: '',
     active: 'true',
-    farm_id: '',
+    lot_id: '',
     worker_id: '',
   });
   const [showModal, setShowModal] = useState(false);
@@ -117,10 +114,7 @@ export default function LaborEntriesPage({ user }) {
 
   const readOnly = false;
 
-  const farmLots = useMemo(
-    () => meta.lots.filter((l) => l.farm_id === form.farm_id),
-    [meta.lots, form.farm_id]
-  );
+  const activeLots = useMemo(() => meta.lots || [], [meta.lots]);
 
   const selectedWorker = useMemo(
     () => meta.workers.find((w) => w.id === form.worker_id),
@@ -160,12 +154,20 @@ export default function LaborEntriesPage({ user }) {
     setLoading(true);
     setListError('');
     try {
+      const query = {
+        from_date: filters.from_date,
+        to_date: filters.to_date,
+        active: filters.active,
+        lot_id: filters.lot_id,
+        worker_id: filters.worker_id,
+      };
       const [entries, lotS, workerS] = await Promise.all([
-        listLaborEntries(filters),
-        getLaborSummaryByLot(filters),
-        getLaborSummaryByWorker(filters),
+        listLaborEntries(query),
+        getLaborSummaryByLot(query),
+        getLaborSummaryByWorker(query),
       ]);
-      setRows(entries || []);
+      const list = (entries || []).filter((r) => matchesRecordTypeFilter(r, filters.record_type));
+      setRows(list);
       setSummaryLot(lotS || []);
       setSummaryWorker(workerS || []);
     } catch (e) {
@@ -177,7 +179,7 @@ export default function LaborEntriesPage({ user }) {
 
   useEffect(() => {
     refresh();
-  }, [filters.from_date, filters.to_date, filters.cost_scope, filters.active, filters.farm_id, filters.worker_id]);
+  }, [filters.from_date, filters.to_date, filters.record_type, filters.active, filters.lot_id, filters.worker_id]);
 
   function setFilter(field, value) {
     setFilters((prev) => ({ ...prev, [field]: value }));
@@ -318,27 +320,6 @@ export default function LaborEntriesPage({ user }) {
     onChange('labor_type_id', exact ? exact.id : '');
   }
 
-  function ensureManualAllocationsSeed() {
-    if (!form.farm_id) return;
-    if (form.allocations.length) return;
-    setForm((prev) => ({
-      ...prev,
-      allocations: farmLots.map((l) => ({
-        lot_id: l.id,
-        allocation_pct: '0',
-      })),
-    }));
-  }
-
-  function updateAllocation(lotId, value) {
-    setForm((prev) => ({
-      ...prev,
-      allocations: prev.allocations.map((a) =>
-        a.lot_id === lotId ? { ...a, allocation_pct: value } : a
-      ),
-    }));
-  }
-
   function addWorkerLine() {
     if (!workerPickId) {
       setModalError('Selecciona un trabajador para agregar.');
@@ -410,23 +391,8 @@ export default function LaborEntriesPage({ user }) {
         return 'Para unidad jornal, la cantidad debe ser 1.';
       }
     }
-    if (form.cost_scope === 'lot' && !form.lot_id) {
-      return 'Debes seleccionar un lote para alcance por lote.';
-    }
-    if (form.cost_scope === 'lot' && !form.farm_id) {
-      return 'Debes seleccionar una finca para filtrar lotes.';
-    }
-    if (form.cost_scope === 'farm' && !form.farm_id) {
-      return 'Debes seleccionar una finca para alcance por finca.';
-    }
-    if (form.cost_scope === 'farm') {
-      const farm = meta.farms.find((f) => f.id === form.farm_id);
-      if (farm?.labor_allocation_mode === 'manual') {
-        const total = sumAllocations(form.allocations);
-        if (Math.abs(total - 100) > 0.01) {
-          return 'En asignación manual, la suma de porcentajes debe ser 100.';
-        }
-      }
+    if (!form.lot_id) {
+      return 'Debes seleccionar una finca.';
     }
     if (form.is_bulk) {
       if (!form.from_date || !form.to_date) return 'Debes indicar rango de fechas.';
@@ -450,9 +416,8 @@ export default function LaborEntriesPage({ user }) {
 
   function commonPayloadFields() {
     const payload = {
-      cost_scope: form.cost_scope,
-      lot_id: form.cost_scope === 'lot' ? form.lot_id : null,
-      farm_id: form.cost_scope === 'farm' ? form.farm_id : null,
+      cost_scope: 'lot',
+      lot_id: form.lot_id,
       labor_type_id: form.labor_type_id,
       unit: form.unit,
       qty: Number(form.qty),
@@ -470,15 +435,6 @@ export default function LaborEntriesPage({ user }) {
       payload.work_date = form.work_date;
     }
 
-    if (form.cost_scope === 'farm') {
-      const farm = meta.farms.find((f) => f.id === form.farm_id);
-      if (farm?.labor_allocation_mode === 'manual') {
-        payload.allocations = form.allocations.map((a) => ({
-          lot_id: a.lot_id,
-          allocation_pct: Number(a.allocation_pct || 0),
-        }));
-      }
-    }
     return payload;
   }
 
@@ -550,20 +506,6 @@ export default function LaborEntriesPage({ user }) {
     }
   }
 
-  const selectedFarmMode = useMemo(
-    () => meta.farms.find((f) => f.id === form.farm_id)?.labor_allocation_mode,
-    [meta.farms, form.farm_id]
-  );
-
-  const lotsWithoutArea = useMemo(
-    () =>
-      farmLots.filter((l) => {
-        const area = Number(l.area_ha || 0);
-        return !Number.isFinite(area) || area <= 0;
-      }),
-    [farmLots]
-  );
-
   const filteredLaborTypes = useMemo(() => {
     const term = String(laborTypeSearch || '').trim().toLowerCase();
     if (!term) return meta.laborTypes;
@@ -629,7 +571,7 @@ export default function LaborEntriesPage({ user }) {
       <header className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h3 className="text-base font-semibold text-lime-800">Registro de labores</h3>
-          <p className="text-sm text-slate-600">Registro por lote o por finca con asignación de costos.</p>
+          <p className="text-sm text-slate-600">Registro de labores por finca operativa.</p>
         </div>
         {!readOnly ? (
           <button
@@ -646,19 +588,19 @@ export default function LaborEntriesPage({ user }) {
       <div className="grid grid-cols-1 gap-2 md:grid-cols-3 xl:grid-cols-6">
         <input type="date" value={filters.from_date} onChange={(e) => setFilter('from_date', e.target.value)} className="rounded border border-slate-300 px-3 py-2 text-sm" />
         <input type="date" value={filters.to_date} onChange={(e) => setFilter('to_date', e.target.value)} className="rounded border border-slate-300 px-3 py-2 text-sm" />
-        <select value={filters.cost_scope} onChange={(e) => setFilter('cost_scope', e.target.value)} className="rounded border border-slate-300 px-3 py-2 text-sm">
-          <option value="">Todos los alcances</option>
-          <option value="lot">Por lote</option>
-          <option value="farm">Por finca</option>
+        <select value={filters.record_type} onChange={(e) => setFilter('record_type', e.target.value)} className="rounded border border-slate-300 px-3 py-2 text-sm">
+          <option value="">Todos los registros</option>
+          <option value="lot">Solo por finca</option>
+          <option value="legacy_empresa">Solo histórico empresa</option>
         </select>
         <select value={filters.active} onChange={(e) => setFilter('active', e.target.value)} className="rounded border border-slate-300 px-3 py-2 text-sm">
           <option value="true">Activos</option>
           <option value="false">Inactivos</option>
           <option value="all">Todos</option>
         </select>
-        <select value={filters.farm_id} onChange={(e) => setFilter('farm_id', e.target.value)} className="rounded border border-slate-300 px-3 py-2 text-sm">
+        <select value={filters.lot_id} onChange={(e) => setFilter('lot_id', e.target.value)} className="rounded border border-slate-300 px-3 py-2 text-sm">
           <option value="">Todas las fincas</option>
-          {meta.farms.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+          {activeLots.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
         <select value={filters.worker_id} onChange={(e) => setFilter('worker_id', e.target.value)} className="rounded border border-slate-300 px-3 py-2 text-sm">
           <option value="">Todos los trabajadores</option>
@@ -681,11 +623,11 @@ export default function LaborEntriesPage({ user }) {
       {showSummary ? (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <div className="rounded-xl border border-slate-200 bg-white p-3">
-            <h4 className="mb-2 text-sm font-semibold text-slate-800">Resumen por lote</h4>
+            <h4 className="mb-2 text-sm font-semibold text-slate-800">Resumen por finca</h4>
             <div className="max-h-40 overflow-auto text-sm">
               {summaryLot.length ? summaryLot.map((r) => (
                 <div key={r.lot_id} className="flex justify-between border-b border-slate-100 py-1">
-                  <span>{r.lot_name || 'Sin lote'}</span>
+                  <span>{r.lot_name || 'Sin finca'}</span>
                   <span>{Number(r.total_amount || 0).toFixed(2)}</span>
                 </div>
               )) : <p className="text-slate-500">Sin datos.</p>}
@@ -710,8 +652,7 @@ export default function LaborEntriesPage({ user }) {
           <thead className="bg-slate-100 text-slate-700">
             <tr>
               <th className="px-3 py-2 text-left">Fecha</th>
-              <th className="px-3 py-2 text-left">Alcance</th>
-              <th className="px-3 py-2 text-left">Finca/Lote</th>
+              <th className="px-3 py-2 text-left">Finca</th>
               <th className="px-3 py-2 text-left">Trabajador</th>
               <th className="px-3 py-2 text-left">Labor</th>
               <th className="px-3 py-2 text-left">Monto</th>
@@ -721,14 +662,13 @@ export default function LaborEntriesPage({ user }) {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="px-3 py-4 text-center text-slate-500">Cargando...</td></tr>
+              <tr><td colSpan={7} className="px-3 py-4 text-center text-slate-500">Cargando...</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={8} className="px-3 py-4 text-center text-slate-500">Sin registros.</td></tr>
+              <tr><td colSpan={7} className="px-3 py-4 text-center text-slate-500">Sin registros.</td></tr>
             ) : rows.map((r) => (
               <tr key={r.id} className="border-t border-slate-200">
                 <td className="px-3 py-2">{String(r.work_date).slice(0, 10)}</td>
-                <td className="px-3 py-2">{r.cost_scope === 'farm' ? 'Finca' : 'Lote'}</td>
-                <td className="px-3 py-2">{r.cost_scope === 'farm' ? r.farm_name : r.lot_name}</td>
+                <td className="px-3 py-2">{operationalLocationLabel(r)}</td>
                 <td className="px-3 py-2">{[r.first_name, r.last_name_1, r.last_name_2].filter(Boolean).join(' ')}</td>
                 <td className="px-3 py-2">{r.labor_type_name}</td>
                 <td className="px-3 py-2">{Number(r.amount || 0).toFixed(2)}</td>
@@ -760,41 +700,22 @@ export default function LaborEntriesPage({ user }) {
               <button type="button" onClick={closeModal} className="rounded border border-slate-300 bg-white px-2 py-1 text-xs">Cerrar</button>
             </div>
 
+            {editingId && form.cost_scope === 'farm' ? (
+              <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                Registro histórico por empresa. El alcance no se puede cambiar; solo fecha, montos y notas.
+              </p>
+            ) : null}
+
             <form onSubmit={submit} className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-              <label className="text-sm">
-                <span className="mb-1 block font-medium">Asignar por:</span>
-                <select value={form.cost_scope} onChange={(e) => onChange('cost_scope', e.target.value)} disabled={saving || !!editingId} className="w-full rounded border border-slate-300 px-3 py-2">
-                  <option value="lot">Por lote</option>
-                  <option value="farm">Por finca</option>
+              <label className="text-sm lg:col-span-2">
+                <span className="mb-1 block font-medium">Finca *</span>
+                <select value={form.lot_id} onChange={(e) => onChange('lot_id', e.target.value)} disabled={saving || !!editingId || form.cost_scope === 'farm'} className="w-full rounded border border-slate-300 px-3 py-2">
+                  <option value="">Selecciona finca</option>
+                  {activeLots.map((l) => (
+                    <option key={l.id} value={l.id}>{l.name}</option>
+                  ))}
                 </select>
               </label>
-
-              {form.cost_scope === 'farm' ? (
-                <label className="text-sm">
-                  <span className="mb-1 block font-medium">Finca *</span>
-                  <select value={form.farm_id} onChange={(e) => onChange('farm_id', e.target.value)} disabled={saving} className="w-full rounded border border-slate-300 px-3 py-2">
-                    <option value="">Selecciona finca</option>
-                    {meta.farms.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-                  </select>
-                </label>
-              ) : (
-                <>
-                  <label className="text-sm">
-                    <span className="mb-1 block font-medium">Finca *</span>
-                    <select value={form.farm_id} onChange={(e) => onChange('farm_id', e.target.value)} disabled={saving} className="w-full rounded border border-slate-300 px-3 py-2">
-                      <option value="">Selecciona finca</option>
-                      {meta.farms.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-                    </select>
-                  </label>
-                  <label className="text-sm">
-                    <span className="mb-1 block font-medium">Lote *</span>
-                    <select value={form.lot_id} onChange={(e) => onChange('lot_id', e.target.value)} disabled={saving || !form.farm_id} className="w-full rounded border border-slate-300 px-3 py-2">
-                      <option value="">{form.farm_id ? 'Selecciona lote' : 'Primero selecciona finca'}</option>
-                      {farmLots.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                    </select>
-                  </label>
-                </>
-              )}
 
               {!editingId ? (
                 <label className="inline-flex items-center gap-2 text-sm lg:col-span-3">
@@ -1089,41 +1010,6 @@ export default function LaborEntriesPage({ user }) {
                 <span className="mb-1 block font-medium">Notas</span>
                 <textarea value={form.notes} onChange={(e) => onChange('notes', e.target.value)} disabled={saving} rows={2} className="w-full rounded border border-slate-300 px-3 py-2" />
               </label>
-
-              {form.cost_scope === 'farm' && selectedFarmMode === 'manual' ? (
-                <div className="lg:col-span-3 rounded border border-slate-200 bg-slate-50 p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-700">Prorrateo manual (%)</span>
-                    <button type="button" onClick={ensureManualAllocationsSeed} className="rounded border border-slate-300 bg-white px-2 py-1 text-xs">Cargar lotes</button>
-                  </div>
-                  {form.allocations.length === 0 ? (
-                    <p className="text-sm text-slate-500">Primero carga lotes de la finca seleccionada.</p>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                      {form.allocations.map((a) => {
-                        const lot = farmLots.find((l) => l.id === a.lot_id);
-                        return (
-                          <label key={a.lot_id} className="flex items-center justify-between gap-2 text-sm">
-                            <span>{lot?.name || a.lot_id}</span>
-                            <input type="number" step="0.001" min="0" max="100" value={a.allocation_pct} onChange={(e) => updateAllocation(a.lot_id, e.target.value)} className="w-24 rounded border border-slate-300 px-2 py-1" />
-                          </label>
-                        );
-                      })}
-                      <p className="md:col-span-2 text-xs text-slate-600">
-                        Suma actual: {sumAllocations(form.allocations).toFixed(3)}%
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : null}
-
-              {form.cost_scope === 'farm' && selectedFarmMode === 'area' && lotsWithoutArea.length > 0 ? (
-                <p className="lg:col-span-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                  Esta finca usa asignación por área. Los lotes sin área tendrán asignación 0%:{' '}
-                  {lotsWithoutArea.map((l) => l.name).join(', ')}. Si deseas cambiar esto, edita la finca y ajusta el
-                  método de asignación de costos.
-                </p>
-              ) : null}
 
               {modalError ? <p className="lg:col-span-3 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">{modalError}</p> : null}
 

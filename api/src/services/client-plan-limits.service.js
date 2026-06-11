@@ -55,7 +55,7 @@ async function assertLotCapacityOnFarm({ db, clientId, farmId, excludeLotId = nu
   const n = await countActiveLotsOnFarm({ db, clientId, farmId, excludeLotId });
   if (n >= Number(max)) {
     const err = new Error(
-      'Has alcanzado el máximo de lotes activos permitidos por finca según tu plan.'
+      'Has alcanzado el máximo de fincas activas permitidas según tu plan.'
     );
     err.status = 409;
     throw err;

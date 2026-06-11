@@ -1,11 +1,19 @@
 const { pool } = require('../db');
-const { getClientPlanLimits } = require('./client-plan-limits.service');
+const { formatLocationDisplay, resolveCrGeo, normalizeNullableText } = require('./geo-cr.service');
+const {
+  assertCanCreateFarm,
+  assertEmpresaNotInactivated,
+  recalculateEmpresaAreaIfAuto,
+} = require('./tenant-farm.service');
 
 const VALID_LABOR_MODES = new Set(['area', 'manual']);
+const VALID_OWNER_ID_TYPES = new Set(['nacional', 'extranjero']);
 const DEFAULT_LABOR_MODE = 'manual';
 
 const FARM_SELECT = `
-  SELECT f.id, f.name, f.area_ha, f.labor_allocation_mode,
+  SELECT f.id, f.name, f.area_ha, f.area_ha_manual, f.labor_allocation_mode,
+         f.owner_name, f.owner_id_type, f.owner_id_number,
+         f.legal_name, f.legal_id_number, f.phone, f.address,
          f.province_id, f.canton_id, f.district_id, f.community,
          p.name AS province_name,
          c.name AS canton_name,
@@ -16,36 +24,21 @@ const FARM_SELECT = `
   LEFT JOIN cantons c ON c.id = f.canton_id
   LEFT JOIN districts d ON d.id = f.district_id`;
 
-function normalizeNullableText(value) {
-  if (value == null) return null;
-  const v = String(value).trim();
-  return v ? v : null;
-}
-
-function normalizeOptionalId(value) {
-  if (value === undefined) return undefined;
-  if (value === null || value === '') return null;
-  const n = Number(value);
-  if (!Number.isInteger(n) || n <= 0) {
-    const err = new Error('Identificador geográfico inválido.');
-    err.status = 400;
-    throw err;
-  }
-  return n;
-}
-
-function formatFarmLocationDisplay({ provinceName, cantonName, districtName, community }) {
-  const parts = [provinceName, cantonName, districtName, community].filter(Boolean);
-  return parts.length ? parts.join(', ') : null;
-}
-
 function mapFarmRow(row) {
   if (!row) return null;
   return {
     id: row.id,
     name: row.name,
     area_ha: row.area_ha,
+    area_ha_manual: row.area_ha_manual,
     labor_allocation_mode: row.labor_allocation_mode,
+    owner_name: row.owner_name,
+    owner_id_type: row.owner_id_type,
+    owner_id_number: row.owner_id_number,
+    legal_name: row.legal_name,
+    legal_id_number: row.legal_id_number,
+    phone: row.phone,
+    address: row.address,
     province_id: row.province_id,
     canton_id: row.canton_id,
     district_id: row.district_id,
@@ -53,7 +46,7 @@ function mapFarmRow(row) {
     province_name: row.province_name,
     canton_name: row.canton_name,
     district_name: row.district_name,
-    location_display: formatFarmLocationDisplay({
+    location_display: formatLocationDisplay({
       provinceName: row.province_name,
       cantonName: row.canton_name,
       districtName: row.district_name,
@@ -68,7 +61,7 @@ function mapFarmRow(row) {
 
 function normalizeArea(value) {
   if (value === undefined) return undefined;
-  if (value === null || value === '') return 0;
+  if (value === null || value === '') return null;
   const n = Number(value);
   if (!Number.isFinite(n) || n < 0) {
     const err = new Error('El área (ha) debe ser un número mayor o igual a 0.');
@@ -89,139 +82,16 @@ function normalizeLaborMode(value, { required = false } = {}) {
   return v;
 }
 
-/**
- * Valida y normaliza provincia / cantón / distrito (jerarquía CR).
- * @param {{ provinceId?: *, cantonId?: *, districtId?: *, community?: *, requireProvince?: boolean }} opts
- */
-async function resolveFarmGeo({ provinceId, cantonId, districtId, community, requireProvince = false }) {
-  const hasGeoInput =
-    provinceId !== undefined ||
-    cantonId !== undefined ||
-    districtId !== undefined ||
-    community !== undefined;
-
-  if (!hasGeoInput) {
-    return {
-      provinceId: undefined,
-      cantonId: undefined,
-      districtId: undefined,
-      community: undefined,
-    };
-  }
-
-  let pid =
-    provinceId === undefined ? undefined : normalizeOptionalId(provinceId);
-  let cid = cantonId === undefined ? undefined : normalizeOptionalId(cantonId);
-  let did = districtId === undefined ? undefined : normalizeOptionalId(districtId);
-  const comm = community === undefined ? undefined : normalizeNullableText(community);
-
-  if (requireProvince && (pid === undefined || pid === null)) {
-    const err = new Error('La provincia es obligatoria.');
+function normalizeOwnerIdType(value) {
+  if (value === undefined) return undefined;
+  if (value === null || value === '') return null;
+  const v = String(value).trim().toLowerCase();
+  if (!VALID_OWNER_ID_TYPES.has(v)) {
+    const err = new Error('owner_id_type debe ser "nacional" o "extranjero".');
     err.status = 400;
     throw err;
   }
-
-  if (pid != null) {
-    const pRes = await pool.query(`SELECT id FROM provinces WHERE id = $1`, [pid]);
-    if (!pRes.rows[0]) {
-      const err = new Error('Provincia no encontrada.');
-      err.status = 400;
-      throw err;
-    }
-  }
-
-  if (cid != null) {
-    const cRes = await pool.query(
-      `SELECT id, province_id FROM cantons WHERE id = $1`,
-      [cid]
-    );
-    const canton = cRes.rows[0];
-    if (!canton) {
-      const err = new Error('Cantón no encontrado.');
-      err.status = 400;
-      throw err;
-    }
-    if (pid != null && canton.province_id !== pid) {
-      const err = new Error('El cantón no pertenece a la provincia seleccionada.');
-      err.status = 400;
-      throw err;
-    }
-    if (pid == null) pid = canton.province_id;
-  } else if (did != null) {
-    const err = new Error('Debe seleccionar cantón para elegir un distrito.');
-    err.status = 400;
-    throw err;
-  }
-
-  if (did != null) {
-    const dRes = await pool.query(
-      `SELECT id, canton_id FROM districts WHERE id = $1`,
-      [did]
-    );
-    const district = dRes.rows[0];
-    if (!district) {
-      const err = new Error('Distrito no encontrado.');
-      err.status = 400;
-      throw err;
-    }
-    if (cid != null && district.canton_id !== cid) {
-      const err = new Error('El distrito no pertenece al cantón seleccionado.');
-      err.status = 400;
-      throw err;
-    }
-    if (cid == null) {
-      const cRes = await pool.query(
-        `SELECT id, province_id FROM cantons WHERE id = $1`,
-        [district.canton_id]
-      );
-      cid = cRes.rows[0]?.id ?? null;
-      if (pid == null && cRes.rows[0]) pid = cRes.rows[0].province_id;
-    }
-  }
-
-  return {
-    provinceId: pid,
-    cantonId: cid,
-    districtId: did,
-    community: comm,
-  };
-}
-
-async function getClientFarmLimit(clientId) {
-  return getClientPlanLimits(clientId);
-}
-
-async function countActiveFarms(clientId) {
-  const res = await pool.query(
-    `SELECT COUNT(*)::int AS total
-     FROM farms
-     WHERE client_id = $1 AND is_active = true`,
-    [clientId]
-  );
-  return res.rows[0]?.total || 0;
-}
-
-async function assertFarmLimitForActivation(clientId) {
-  const planRow = await getClientFarmLimit(clientId);
-  if (!planRow) {
-    const err = new Error('Cliente no encontrado.');
-    err.status = 404;
-    throw err;
-  }
-  if (planRow.plan_id == null) {
-    const err = new Error('El cliente no tiene un plan asignado.');
-    err.status = 409;
-    throw err;
-  }
-  if (planRow.max_farms == null) {
-    return;
-  }
-  const activeFarms = await countActiveFarms(clientId);
-  if (activeFarms >= Number(planRow.max_farms)) {
-    const err = new Error('Has alcanzado el máximo de fincas permitidas por tu plan.');
-    err.status = 409;
-    throw err;
-  }
+  return v;
 }
 
 async function listFarms({ clientId, includeInactive = false }) {
@@ -229,7 +99,8 @@ async function listFarms({ clientId, includeInactive = false }) {
     `${FARM_SELECT}
      WHERE f.client_id = $1
        AND ($2::boolean = true OR f.is_active = true)
-     ORDER BY f.is_active DESC, f.name ASC`,
+     ORDER BY f.is_active DESC, f.created_at ASC
+     LIMIT 1`,
     [clientId, includeInactive]
   );
   return res.rows.map(mapFarmRow);
@@ -246,42 +117,43 @@ async function createFarm({
   areaHa,
   laborAllocationMode,
 }) {
+  await assertCanCreateFarm(clientId);
+
   const cleanName = String(name || '').trim();
   if (!cleanName) {
-    const err = new Error('El nombre de la finca es obligatorio.');
+    const err = new Error('El nombre de la empresa es obligatorio.');
     err.status = 400;
     throw err;
   }
-  const cleanArea = normalizeArea(areaHa);
+  const cleanArea = areaHa === undefined ? 0 : normalizeArea(areaHa);
   const cleanMode =
     laborAllocationMode === undefined
       ? DEFAULT_LABOR_MODE
       : normalizeLaborMode(laborAllocationMode, { required: true });
 
-  const geo = await resolveFarmGeo({
+  const geo = await resolveCrGeo({
     provinceId,
     cantonId,
     districtId,
     community,
-    requireProvince: true,
+    requireProvince: false,
   });
-
-  await assertFarmLimitForActivation(clientId);
 
   const res = await pool.query(
     `INSERT INTO farms (
         name, province_id, canton_id, district_id, community,
-        area_ha, labor_allocation_mode, client_id, created_by_user_id, updated_by_user_id
+        area_ha, area_ha_manual, labor_allocation_mode, client_id,
+        created_by_user_id, updated_by_user_id
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
+     VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8, $9, $9)
      RETURNING id`,
     [
       cleanName,
-      geo.provinceId,
-      geo.cantonId,
-      geo.districtId,
-      geo.community,
-      cleanArea,
+      geo.provinceId ?? null,
+      geo.cantonId ?? null,
+      geo.districtId ?? null,
+      geo.community ?? null,
+      cleanArea ?? 0,
       cleanMode,
       clientId,
       userId,
@@ -305,7 +177,16 @@ async function updateFarm({
   districtId,
   community,
   areaHa,
+  areaHaManual,
+  recalculateAreaFromLots,
   laborAllocationMode,
+  ownerName,
+  ownerIdType,
+  ownerIdNumber,
+  legalName,
+  legalIdNumber,
+  phone,
+  address,
 }) {
   const fields = [];
   const values = [];
@@ -314,7 +195,7 @@ async function updateFarm({
   if (name !== undefined) {
     const cleanName = String(name || '').trim();
     if (!cleanName) {
-      const err = new Error('El nombre de la finca es obligatorio.');
+      const err = new Error('El nombre de la empresa es obligatorio.');
       err.status = 400;
       throw err;
     }
@@ -329,31 +210,72 @@ async function updateFarm({
     community !== undefined;
 
   if (geoTouched) {
-    const geo = await resolveFarmGeo({
+    const geo = await resolveCrGeo({
       provinceId,
       cantonId,
       districtId,
       community,
-      requireProvince: true,
+      requireProvince: false,
     });
     fields.push(`province_id = $${idx++}`);
-    values.push(geo.provinceId);
+    values.push(geo.provinceId ?? null);
     fields.push(`canton_id = $${idx++}`);
-    values.push(geo.cantonId);
+    values.push(geo.cantonId ?? null);
     fields.push(`district_id = $${idx++}`);
-    values.push(geo.districtId);
+    values.push(geo.districtId ?? null);
     fields.push(`community = $${idx++}`);
-    values.push(geo.community);
+    values.push(geo.community ?? null);
+  }
+
+  if (recalculateAreaFromLots === true) {
+    fields.push(`area_ha_manual = $${idx++}`);
+    values.push(false);
+  } else if (areaHaManual !== undefined) {
+    fields.push(`area_ha_manual = $${idx++}`);
+    values.push(!!areaHaManual);
   }
 
   if (areaHa !== undefined) {
     fields.push(`area_ha = $${idx++}`);
     values.push(normalizeArea(areaHa));
+    if (areaHaManual === undefined && recalculateAreaFromLots !== true) {
+      fields.push(`area_ha_manual = $${idx++}`);
+      values.push(true);
+    }
   }
 
   if (laborAllocationMode !== undefined) {
     fields.push(`labor_allocation_mode = $${idx++}`);
     values.push(normalizeLaborMode(laborAllocationMode, { required: true }));
+  }
+
+  if (ownerName !== undefined) {
+    fields.push(`owner_name = $${idx++}`);
+    values.push(normalizeNullableText(ownerName));
+  }
+  if (ownerIdType !== undefined) {
+    fields.push(`owner_id_type = $${idx++}`);
+    values.push(normalizeOwnerIdType(ownerIdType));
+  }
+  if (ownerIdNumber !== undefined) {
+    fields.push(`owner_id_number = $${idx++}`);
+    values.push(normalizeNullableText(ownerIdNumber));
+  }
+  if (legalName !== undefined) {
+    fields.push(`legal_name = $${idx++}`);
+    values.push(normalizeNullableText(legalName));
+  }
+  if (legalIdNumber !== undefined) {
+    fields.push(`legal_id_number = $${idx++}`);
+    values.push(normalizeNullableText(legalIdNumber));
+  }
+  if (phone !== undefined) {
+    fields.push(`phone = $${idx++}`);
+    values.push(normalizeNullableText(phone));
+  }
+  if (address !== undefined) {
+    fields.push(`address = $${idx++}`);
+    values.push(normalizeNullableText(address));
   }
 
   if (!fields.length) {
@@ -380,6 +302,10 @@ async function updateFarm({
 
   if (!res.rows[0]) return null;
 
+  if (recalculateAreaFromLots === true) {
+    await recalculateEmpresaAreaIfAuto(clientId);
+  }
+
   const loaded = await pool.query(`${FARM_SELECT} WHERE f.id = $1 AND f.client_id = $2`, [
     farmId,
     clientId,
@@ -387,59 +313,11 @@ async function updateFarm({
   return mapFarmRow(loaded.rows[0]);
 }
 
-async function inactivateFarm({ farmId, clientId, userId }) {
-  const db = await pool.connect();
-  try {
-    await db.query('BEGIN');
-
-    const farmRes = await db.query(
-      `UPDATE farms
-       SET is_active = false,
-           deactivated_at = NOW(),
-           updated_by_user_id = $3,
-           updated_at = NOW()
-       WHERE id = $1
-         AND client_id = $2
-         AND is_active = true
-       RETURNING id`,
-      [farmId, clientId, userId]
-    );
-    const farmIdRow = farmRes.rows[0]?.id || null;
-    if (!farmIdRow) {
-      await db.query('ROLLBACK');
-      return null;
-    }
-
-    await db.query(
-      `UPDATE lots
-       SET is_active = false,
-           deactivated_at = NOW(),
-           updated_by_user_id = $3,
-           updated_at = NOW()
-       WHERE farm_id = $1
-         AND client_id = $2
-         AND is_active = true`,
-      [farmId, clientId, userId]
-    );
-
-    await db.query('COMMIT');
-
-    const loaded = await pool.query(`${FARM_SELECT} WHERE f.id = $1 AND f.client_id = $2`, [
-      farmId,
-      clientId,
-    ]);
-    return mapFarmRow(loaded.rows[0]);
-  } catch (e) {
-    await db.query('ROLLBACK');
-    throw e;
-  } finally {
-    db.release();
-  }
+async function inactivateFarm() {
+  assertEmpresaNotInactivated();
 }
 
 async function activateFarm({ farmId, clientId, userId }) {
-  await assertFarmLimitForActivation(clientId);
-
   const res = await pool.query(
     `UPDATE farms
      SET is_active = true,
@@ -467,5 +345,5 @@ module.exports = {
   updateFarm,
   inactivateFarm,
   activateFarm,
-  formatFarmLocationDisplay,
+  formatFarmLocationDisplay: formatLocationDisplay,
 };

@@ -1,21 +1,18 @@
 /**
- * Filtros comunes de estadísticas (fechas, finca, lote). Opcional: umbral de stock bajo.
+ * Filtros comunes de estadísticas (fechas, finca). Opcional: umbral de stock bajo.
  */
 export default function StatsFiltersBar({
   from,
   to,
-  farmId,
   lotId,
   harvestId,
   harvests,
   onHarvestChange,
   lowStock,
-  farms,
   lots,
   loading,
   onFromChange,
   onToChange,
-  onFarmChange,
   onLotChange,
   onLowStockChange,
   onRefresh,
@@ -63,28 +60,12 @@ export default function StatsFiltersBar({
         <div>
           <label className="mb-1 block text-xs font-medium text-stone-500">Finca</label>
           <select
-            value={farmId}
-            onChange={(e) => onFarmChange(e.target.value)}
+            value={lotId}
+            onChange={(e) => onLotChange(e.target.value)}
             className="min-w-[10rem] rounded-lg border border-stone-300 px-3 py-2 text-stone-800"
           >
             <option value="">Todas</option>
-            {farms.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-medium text-stone-500">Lote</label>
-          <select
-            value={lotId}
-            onChange={(e) => onLotChange(e.target.value)}
-            disabled={!farmId}
-            className="min-w-[10rem] rounded-lg border border-stone-300 px-3 py-2 text-stone-800 disabled:bg-stone-100"
-          >
-            <option value="">Todos</option>
-            {lots.map((l) => (
+            {(lots || []).map((l) => (
               <option key={l.id} value={l.id}>
                 {l.name}
               </option>

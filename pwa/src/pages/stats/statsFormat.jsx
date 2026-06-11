@@ -48,8 +48,7 @@ export function isCoffeeStats(data) {
 export function formatPeriodLine(data, { harvestLabel } = {}) {
   if (!data?.period) return null;
   let line = `Periodo aplicado: ${data.period.from} — ${data.period.to}`;
-  if (data.filters?.farm_id) line += ' · Finca filtrada';
-  if (data.filters?.lot_id) line += ' · Lote filtrado';
+  if (data.filters?.lot_id) line += ' · Finca filtrada';
   if (harvestLabel) line += ` · Cosecha: ${harvestLabel}`;
   return line;
 }

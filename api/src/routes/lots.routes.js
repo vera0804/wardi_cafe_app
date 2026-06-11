@@ -64,6 +64,10 @@ router.post('/', requireCsrf, requireWritePermission, async (req, res) => {
       areaHa: req.body?.area_ha,
       plantCount: req.body?.plant_count,
       varietyIds: req.body?.variety_ids,
+      provinceId: req.body?.province_id,
+      cantonId: req.body?.canton_id,
+      districtId: req.body?.district_id,
+      community: req.body?.community,
     });
     return res.status(201).json(lot);
   } catch (e) {
@@ -79,11 +83,14 @@ router.patch('/:id', requireCsrf, requireWritePermission, async (req, res) => {
       lotId: req.params.id,
       clientId: req.user.clientId,
       userId: req.user.id,
-      farmId: req.body?.farm_id,
       name: req.body?.name,
       areaHa: req.body?.area_ha,
       plantCount: req.body?.plant_count,
       varietyIds: req.body?.variety_ids,
+      provinceId: req.body?.province_id,
+      cantonId: req.body?.canton_id,
+      districtId: req.body?.district_id,
+      community: req.body?.community,
     });
     if (!lot) {
       return res.status(404).json({ message: 'Lote no encontrado.' });

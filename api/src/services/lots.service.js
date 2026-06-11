@@ -1,16 +1,58 @@
 const { pool } = require('../db');
 const { assertLotCapacityOnFarm } = require('./client-plan-limits.service');
+const { formatLocationDisplay, resolveCrGeo } = require('./geo-cr.service');
+const {
+  getCanonicalFarmForClient,
+  recalculateEmpresaAreaIfAuto,
+} = require('./tenant-farm.service');
 
-function normalizeUuid(value) {
-  if (value === undefined) return undefined;
-  const v = String(value || '').trim();
-  return v || null;
+const LOT_SELECT = `
+  SELECT l.id, l.farm_id, f.name AS farm_name, l.name, l.area_ha, l.plant_count,
+         l.province_id, l.canton_id, l.district_id, l.community,
+         p.name AS province_name,
+         c.name AS canton_name,
+         d.name AS district_name,
+         l.is_active, l.deactivated_at, l.created_at, l.updated_at
+  FROM lots l
+  JOIN farms f ON f.id = l.farm_id
+  LEFT JOIN provinces p ON p.id = l.province_id
+  LEFT JOIN cantons c ON c.id = l.canton_id
+  LEFT JOIN districts d ON d.id = l.district_id`;
+
+function mapLotRow(row, varieties = []) {
+  return {
+    id: row.id,
+    farm_id: row.farm_id,
+    farm_name: row.farm_name,
+    name: row.name,
+    area_ha: row.area_ha,
+    plant_count: row.plant_count,
+    province_id: row.province_id,
+    canton_id: row.canton_id,
+    district_id: row.district_id,
+    community: row.community,
+    province_name: row.province_name,
+    canton_name: row.canton_name,
+    district_name: row.district_name,
+    location_display: formatLocationDisplay({
+      provinceName: row.province_name,
+      cantonName: row.canton_name,
+      districtName: row.district_name,
+      community: row.community,
+    }),
+    is_active: row.is_active,
+    deactivated_at: row.deactivated_at,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    varieties,
+    variety_ids: varieties.map((v) => v.id),
+  };
 }
 
 function normalizeName(value) {
   const cleanName = String(value || '').trim();
   if (!cleanName) {
-    const err = new Error('El nombre del lote es obligatorio.');
+    const err = new Error('El nombre de la finca es obligatorio.');
     err.status = 400;
     throw err;
   }
@@ -59,20 +101,19 @@ function normalizeVarietyIds(value) {
   return unique;
 }
 
-async function assertUniqueLotNameByFarm({ db, farmId, clientId, name, excludeLotId = null }) {
+async function assertUniqueLotNameByClient({ db, clientId, name, excludeLotId = null }) {
   const cx = db || pool;
   const res = await cx.query(
     `SELECT id
      FROM lots
-     WHERE farm_id = $1
-       AND client_id = $2
-       AND lower(trim(name)) = lower(trim($3))
-       AND ($4::uuid IS NULL OR id <> $4::uuid)
+     WHERE client_id = $1
+       AND lower(trim(name)) = lower(trim($2))
+       AND ($3::uuid IS NULL OR id <> $3::uuid)
      LIMIT 1`,
-    [farmId, clientId, name, excludeLotId]
+    [clientId, name, excludeLotId]
   );
   if (res.rows[0]) {
-    const err = new Error('Ya existe un lote con ese nombre en la finca seleccionada.');
+    const err = new Error('Ya existe una finca con ese nombre.');
     err.status = 409;
     throw err;
   }
@@ -129,95 +170,123 @@ async function getVarietiesByLotIds(lotIds) {
 
 async function listLots({ clientId, farmId, includeInactive = false }) {
   const res = await pool.query(
-    `SELECT l.id, l.farm_id, f.name AS farm_name, l.name, l.area_ha, l.plant_count,
-            l.is_active, l.deactivated_at, l.created_at, l.updated_at
-     FROM lots l
-     JOIN farms f ON f.id = l.farm_id
+    `${LOT_SELECT}
      WHERE l.client_id = $1
        AND ($2::uuid IS NULL OR l.farm_id = $2::uuid)
        AND ($3::boolean = true OR l.is_active = true)
-     ORDER BY l.is_active DESC, f.name ASC, l.name ASC`,
+     ORDER BY l.is_active DESC, l.name ASC`,
     [clientId, farmId || null, includeInactive]
   );
   const lots = res.rows;
   const byLot = await getVarietiesByLotIds(lots.map((l) => l.id));
-  return lots.map((lot) => ({
-    ...lot,
-    varieties: byLot.get(lot.id) || [],
-    variety_ids: (byLot.get(lot.id) || []).map((v) => v.id),
-  }));
+  return lots.map((lot) => mapLotRow(lot, byLot.get(lot.id) || []));
 }
 
 async function getLotById({ lotId, clientId }) {
   const res = await pool.query(
-    `SELECT l.id, l.farm_id, f.name AS farm_name, l.name, l.area_ha, l.plant_count,
-            l.is_active, l.deactivated_at, l.created_at, l.updated_at
-     FROM lots l
-     JOIN farms f ON f.id = l.farm_id
-     WHERE l.id = $1
-       AND l.client_id = $2`,
+    `${LOT_SELECT}
+     WHERE l.id = $1 AND l.client_id = $2`,
     [lotId, clientId]
   );
   const lot = res.rows[0] || null;
   if (!lot) return null;
   const byLot = await getVarietiesByLotIds([lot.id]);
-  const varieties = byLot.get(lot.id) || [];
-  return {
-    ...lot,
-    varieties,
-    variety_ids: varieties.map((v) => v.id),
-  };
+  return mapLotRow(lot, byLot.get(lot.id) || []);
 }
 
-async function createLot({ clientId, userId, farmId, name, areaHa, plantCount, varietyIds }) {
-  const cleanFarmId = normalizeUuid(farmId);
-  if (!cleanFarmId) {
-    const err = new Error('farm_id es obligatorio.');
-    err.status = 400;
+async function resolveCanonicalFarmId({ db, clientId, farmId }) {
+  const cx = db || pool;
+  if (farmId) {
+    const farmRes = await cx.query(
+      `SELECT id FROM farms WHERE id = $1 AND client_id = $2 AND is_active = true`,
+      [farmId, clientId]
+    );
+    if (!farmRes.rows[0]) {
+      const err = new Error('La empresa no existe o está inactiva.');
+      err.status = 409;
+      throw err;
+    }
+    return farmRes.rows[0].id;
+  }
+  const canonical = await getCanonicalFarmForClient(clientId, { db: cx });
+  if (!canonical) {
+    const err = new Error('No hay ficha de empresa configurada. Contacte al administrador.');
+    err.status = 409;
     throw err;
   }
+  return canonical.id;
+}
+
+async function createLot({
+  clientId,
+  userId,
+  farmId,
+  name,
+  areaHa,
+  plantCount,
+  varietyIds,
+  provinceId,
+  cantonId,
+  districtId,
+  community,
+}) {
   const cleanName = normalizeName(name);
   const cleanArea = normalizeArea(areaHa);
   const cleanPlantCount = normalizePlantCount(plantCount);
   const cleanVarietyIds = normalizeVarietyIds(varietyIds) || [];
 
+  const geo = await resolveCrGeo({
+    provinceId,
+    cantonId,
+    districtId,
+    community,
+    requireProvince: true,
+  });
+
   const db = await pool.connect();
   try {
     await db.query('BEGIN');
-    const farmRes = await db.query(
-      `SELECT id
-       FROM farms
-       WHERE id = $1
-         AND client_id = $2
-         AND is_active = true
-       FOR UPDATE`,
+    const cleanFarmId = await resolveCanonicalFarmId({ db, clientId, farmId });
+
+    await db.query(
+      `SELECT id FROM farms WHERE id = $1 AND client_id = $2 FOR UPDATE`,
       [cleanFarmId, clientId]
     );
-    if (!farmRes.rows[0]) {
-      const err = new Error('La finca seleccionada no existe o está inactiva.');
-      err.status = 409;
-      throw err;
-    }
-    await assertUniqueLotNameByFarm({ db, farmId: cleanFarmId, clientId, name: cleanName });
+
+    await assertUniqueLotNameByClient({ db, clientId, name: cleanName });
     await assertValidVarieties(cleanVarietyIds);
     await assertLotCapacityOnFarm({ db, clientId, farmId: cleanFarmId, excludeLotId: null });
 
     const res = await db.query(
       `INSERT INTO lots (
-         farm_id, name, area_ha, plant_count, client_id, created_by_user_id, updated_by_user_id
+         farm_id, name, area_ha, plant_count,
+         province_id, canton_id, district_id, community,
+         client_id, created_by_user_id, updated_by_user_id
        )
-       VALUES ($1, $2, $3, COALESCE($4, 0), $5, $6, $6)
+       VALUES ($1, $2, $3, COALESCE($4, 0), $5, $6, $7, $8, $9, $10, $10)
        RETURNING id`,
-      [cleanFarmId, cleanName, cleanArea, cleanPlantCount, clientId, userId]
+      [
+        cleanFarmId,
+        cleanName,
+        cleanArea,
+        cleanPlantCount,
+        geo.provinceId,
+        geo.cantonId,
+        geo.districtId,
+        geo.community,
+        clientId,
+        userId,
+      ]
     );
     const lotId = res.rows[0].id;
     await replaceLotVarieties({ db, lotId, userId, varietyIds: cleanVarietyIds });
+    await recalculateEmpresaAreaIfAuto(clientId, { db });
     await db.query('COMMIT');
     return getLotById({ lotId, clientId });
   } catch (e) {
     await db.query('ROLLBACK');
     if (e.code === '23505') {
-      const err = new Error('Ya existe un lote con ese nombre en la finca seleccionada.');
+      const err = new Error('Ya existe una finca con ese nombre.');
       err.status = 409;
       throw err;
     }
@@ -227,16 +296,22 @@ async function createLot({ clientId, userId, farmId, name, areaHa, plantCount, v
   }
 }
 
-async function updateLot({ lotId, clientId, userId, farmId, name, areaHa, plantCount, varietyIds }) {
+async function updateLot({
+  lotId,
+  clientId,
+  userId,
+  name,
+  areaHa,
+  plantCount,
+  varietyIds,
+  provinceId,
+  cantonId,
+  districtId,
+  community,
+}) {
   const current = await getLotById({ lotId, clientId });
   if (!current) return null;
 
-  const nextFarmId = farmId !== undefined ? normalizeUuid(farmId) : current.farm_id;
-  if (!nextFarmId) {
-    const err = new Error('farm_id es obligatorio.');
-    err.status = 400;
-    throw err;
-  }
   const nextName = name !== undefined ? normalizeName(name) : current.name;
   const nextArea = areaHa !== undefined ? normalizeArea(areaHa) : undefined;
   const nextPlantCount = plantCount !== undefined ? normalizePlantCount(plantCount) : undefined;
@@ -246,10 +321,6 @@ async function updateLot({ lotId, clientId, userId, farmId, name, areaHa, plantC
   const values = [];
   let idx = 1;
 
-  if (farmId !== undefined) {
-    fields.push(`farm_id = $${idx++}`);
-    values.push(nextFarmId);
-  }
   if (name !== undefined) {
     fields.push(`name = $${idx++}`);
     values.push(nextName);
@@ -263,35 +334,41 @@ async function updateLot({ lotId, clientId, userId, farmId, name, areaHa, plantC
     values.push(nextPlantCount);
   }
 
+  const geoTouched =
+    provinceId !== undefined ||
+    cantonId !== undefined ||
+    districtId !== undefined ||
+    community !== undefined;
+
+  if (geoTouched) {
+    const geo = await resolveCrGeo({
+      provinceId: provinceId !== undefined ? provinceId : current.province_id,
+      cantonId: cantonId !== undefined ? cantonId : current.canton_id,
+      districtId: districtId !== undefined ? districtId : current.district_id,
+      community: community !== undefined ? community : current.community,
+      requireProvince: true,
+    });
+    fields.push(`province_id = $${idx++}`);
+    values.push(geo.provinceId);
+    fields.push(`canton_id = $${idx++}`);
+    values.push(geo.cantonId);
+    fields.push(`district_id = $${idx++}`);
+    values.push(geo.districtId);
+    fields.push(`community = $${idx++}`);
+    values.push(geo.community);
+  }
+
   const db = await pool.connect();
   try {
     await db.query('BEGIN');
-    const farmRes = await db.query(
-      `SELECT id
-       FROM farms
-       WHERE id = $1
-         AND client_id = $2
-         AND is_active = true
-       FOR UPDATE`,
-      [nextFarmId, clientId]
-    );
-    if (!farmRes.rows[0]) {
-      const err = new Error('La finca seleccionada no existe o está inactiva.');
-      err.status = 409;
-      throw err;
-    }
-    await assertUniqueLotNameByFarm({
+    await assertUniqueLotNameByClient({
       db,
-      farmId: nextFarmId,
       clientId,
       name: nextName,
       excludeLotId: lotId,
     });
     if (nextVarietyIds !== undefined) {
       await assertValidVarieties(nextVarietyIds);
-    }
-    if (current.is_active && String(nextFarmId) !== String(current.farm_id)) {
-      await assertLotCapacityOnFarm({ db, clientId, farmId: nextFarmId, excludeLotId: lotId });
     }
     if (fields.length > 0) {
       fields.push(`updated_by_user_id = $${idx++}`);
@@ -309,12 +386,13 @@ async function updateLot({ lotId, clientId, userId, farmId, name, areaHa, plantC
     }
 
     await replaceLotVarieties({ db, lotId, userId, varietyIds: nextVarietyIds });
+    await recalculateEmpresaAreaIfAuto(clientId, { db });
     await db.query('COMMIT');
     return getLotById({ lotId, clientId });
   } catch (e) {
     await db.query('ROLLBACK');
     if (e.code === '23505') {
-      const err = new Error('Ya existe un lote con ese nombre en la finca seleccionada.');
+      const err = new Error('Ya existe una finca con ese nombre.');
       err.status = 409;
       throw err;
     }
@@ -332,8 +410,7 @@ async function setLotActive({ lotId, clientId, userId, isActive }) {
     const lotRes = await db.query(
       `SELECT l.id, l.farm_id, l.is_active
        FROM lots l
-       WHERE l.id = $1
-         AND l.client_id = $2
+       WHERE l.id = $1 AND l.client_id = $2
        FOR UPDATE`,
       [lotId, clientId]
     );
@@ -345,16 +422,13 @@ async function setLotActive({ lotId, clientId, userId, isActive }) {
 
     if (want) {
       const farmRes = await db.query(
-        `SELECT id
-         FROM farms
-         WHERE id = $1
-           AND client_id = $2
-           AND is_active = true
+        `SELECT id FROM farms
+         WHERE id = $1 AND client_id = $2 AND is_active = true
          FOR UPDATE`,
         [lotRow.farm_id, clientId]
       );
       if (!farmRes.rows[0]) {
-        const err = new Error('No se puede activar el lote porque la finca está inactiva.');
+        const err = new Error('No se puede activar la finca porque la empresa está inactiva.');
         err.status = 409;
         throw err;
       }
@@ -372,8 +446,7 @@ async function setLotActive({ lotId, clientId, userId, isActive }) {
            deactivated_at = CASE WHEN $3::boolean THEN NULL ELSE NOW() END,
            updated_by_user_id = $4,
            updated_at = NOW()
-       WHERE id = $1
-         AND client_id = $2
+       WHERE id = $1 AND client_id = $2
        RETURNING id`,
       [lotId, clientId, want, userId]
     );
@@ -381,6 +454,7 @@ async function setLotActive({ lotId, clientId, userId, isActive }) {
       await db.query('ROLLBACK');
       return null;
     }
+    await recalculateEmpresaAreaIfAuto(clientId, { db });
     await db.query('COMMIT');
     return getLotById({ lotId, clientId });
   } catch (e) {
@@ -393,11 +467,11 @@ async function setLotActive({ lotId, clientId, userId, isActive }) {
 
 async function listActiveFarmsForLots({ clientId }) {
   const res = await pool.query(
-    `SELECT id, name
+    `SELECT id, name, labor_allocation_mode
      FROM farms
-     WHERE client_id = $1
-       AND is_active = true
-     ORDER BY name ASC`,
+     WHERE client_id = $1 AND is_active = true
+     ORDER BY created_at ASC
+     LIMIT 1`,
     [clientId]
   );
   return res.rows;
@@ -422,4 +496,3 @@ module.exports = {
   listActiveFarmsForLots,
   listActiveVarieties,
 };
-

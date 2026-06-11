@@ -223,7 +223,7 @@ export default function LotExpensesPage({ embedded = false, refreshKey = 0 }) {
       {pendingCount > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
           <span>
-            Hay {pendingCount} cambio(s) de gastos por lote pendiente(s) de sincronizar.
+            Hay {pendingCount} cambio(s) de gastos por finca pendiente(s) de sincronizar.
           </span>
           <button
             type="button"
@@ -241,18 +241,13 @@ export default function LotExpensesPage({ embedded = false, refreshKey = 0 }) {
 
       {embedded ? (
         <p className="text-xs text-slate-600">
-          Monto completo a un lote; la finca es dato del lote. Para un alta nuevo use la pestaña <strong>Registrar gasto por lote</strong>.
+          El monto completo se imputa a la finca elegida. Para un alta nuevo use la pestaña <strong>Gasto por finca</strong>.
         </p>
-      ) : (
-        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-          <strong className="text-slate-800">Por lote:</strong> el monto va entero al lote; la finca es dato del lote. Los altas nuevas se hacen con{' '}
-          <strong>Nuevo gasto</strong> arriba.
-        </div>
-      )}
+      ) : null}
 
       <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 lg:grid-cols-12 lg:items-end">
         <label className="text-sm lg:col-span-2">
-          <span className="mb-1 block font-medium text-slate-800">Lote</span>
+          <span className="mb-1 block font-medium text-slate-800">Finca</span>
           <select
             value={filters.lot_id}
             onChange={(e) => {
@@ -332,7 +327,6 @@ export default function LotExpensesPage({ embedded = false, refreshKey = 0 }) {
             <tr>
               <th className="px-3 py-2 text-left">Fecha</th>
               <th className="px-3 py-2 text-left">Finca</th>
-              <th className="px-3 py-2 text-left">Lote</th>
               <th className="px-3 py-2 text-left">Categoría</th>
               <th className="px-3 py-2 text-right">Monto CRC</th>
               <th className="px-3 py-2 text-left">Estado</th>
@@ -342,13 +336,13 @@ export default function LotExpensesPage({ embedded = false, refreshKey = 0 }) {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-3 py-6 text-center text-slate-500">
                   Cargando…
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-3 py-6 text-center text-slate-500">
                   Sin gastos con estos filtros.
                 </td>
               </tr>
@@ -356,8 +350,7 @@ export default function LotExpensesPage({ embedded = false, refreshKey = 0 }) {
               rows.map((r) => (
                 <tr key={r.id} className="border-t border-slate-200">
                   <td className="px-3 py-2 whitespace-nowrap">{String(r.exp_date || '').slice(0, 10)}</td>
-                  <td className="px-3 py-2 text-slate-600">{r.farm_name || '—'}</td>
-                  <td className="px-3 py-2">{r.lot_name}</td>
+                  <td className="px-3 py-2">{r.lot_name || '—'}</td>
                   <td className="px-3 py-2">{r.category}</td>
                   <td className="px-3 py-2 text-right font-mono text-xs">
                     {Number(r.amount_crc || 0).toLocaleString('es-CR', { style: 'currency', currency: 'CRC' })}
@@ -427,7 +420,7 @@ export default function LotExpensesPage({ embedded = false, refreshKey = 0 }) {
             {modalError ? <p className="mt-2 text-sm text-rose-700">{modalError}</p> : null}
             <form onSubmit={handleSubmit} className="mt-4 space-y-3">
               <label className="block text-sm">
-                <span className="font-medium text-slate-800">Lote</span>
+                <span className="font-medium text-slate-800">Finca</span>
                 <select
                   required
                   value={form.lot_id}

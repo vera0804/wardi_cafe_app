@@ -125,7 +125,7 @@ export default function GeneralExpenseDetailPage() {
         <h3 className="text-base font-semibold text-lime-800">{expense.category}</h3>
             <p className="text-sm text-slate-600">
               {String(expense.exp_date || '').slice(0, 10)} · Alcance:{' '}
-              <strong>{expense.farm_id ? expense.farm_name || 'Finca' : 'Todas las fincas (todos los lotes con área)'}</strong>{' '}
+              <strong>{expense.farm_id ? expense.farm_name || 'Empresa' : 'Toda la empresa (todas las fincas con área)'}</strong>{' '}
               · Total{' '}
               <strong>{Number(expense.amount_crc || 0).toLocaleString('es-CR', { style: 'currency', currency: 'CRC' })}</strong>
             </p>
@@ -133,8 +133,8 @@ export default function GeneralExpenseDetailPage() {
           Reparto:{' '}
           <strong>
             {expense.allocation_method === 'manual'
-              ? 'manual entre lotes (según finca al crear el gasto)'
-              : 'por hectáreas entre lotes'}
+              ? 'manual entre fincas (según método en Empresa)'
+              : 'por hectáreas entre fincas'}
           </strong>
         </p>
         {expense.description ? <p className="mt-2 text-sm text-slate-700">{expense.description}</p> : null}
@@ -148,7 +148,7 @@ export default function GeneralExpenseDetailPage() {
             onClick={handleSeed}
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
           >
-            Generar líneas por lote
+            Generar líneas por finca
           </button>
         </div>
       ) : null}
@@ -187,9 +187,8 @@ export default function GeneralExpenseDetailPage() {
 
       {isArea ? (
         <p className="text-sm text-slate-600">
-          Las filas se generan o actualizan en el servidor según el <strong>área (ha)</strong> de cada lote dentro del
-          alcance del gasto (finca elegida o todas las fincas si no hay finca). Si no aparecen líneas, revise que los
-          lotes tengan área &gt; 0 y estén activos.
+          Las filas se calculan según el <strong>área (ha)</strong> de cada finca dentro del alcance del gasto. Si no
+          aparecen líneas, revise que las fincas tengan área &gt; 0 y estén activas.
         </p>
       ) : null}
 
@@ -197,7 +196,6 @@ export default function GeneralExpenseDetailPage() {
         <table className="min-w-full text-sm">
           <thead className="bg-slate-100 text-slate-700">
             <tr>
-              <th className="px-3 py-2 text-left">Lote</th>
               <th className="px-3 py-2 text-left">Finca</th>
               <th className="px-3 py-2 text-right">%</th>
               <th className="px-3 py-2 text-right">Asignado CRC</th>
@@ -207,15 +205,14 @@ export default function GeneralExpenseDetailPage() {
           <tbody>
             {allocations.length === 0 ? (
               <tr>
-                <td colSpan={isManual ? 5 : 4} className="px-3 py-6 text-center text-slate-500">
-                  {isManual ? 'Sin líneas. Use «Generar líneas por lote».' : 'Sin asignaciones (revise áreas de lotes o estado del gasto).'}
+                <td colSpan={isManual ? 4 : 3} className="px-3 py-6 text-center text-slate-500">
+                  {isManual ? 'Sin líneas. Use «Generar líneas por finca».' : 'Sin asignaciones (revise áreas de fincas o estado del gasto).'}
                 </td>
               </tr>
             ) : (
               allocations.map((a) => (
                 <tr key={`${a.id}-${a.allocation_pct ?? 'p'}-${a.amount_allocated ?? 'm'}`} className="border-t border-slate-200">
                   <td className="px-3 py-2">{a.lot_name}</td>
-                  <td className="px-3 py-2">{a.farm_name || '—'}</td>
                   <td className="px-3 py-2 text-right font-mono text-xs">{a.allocation_pct != null ? a.allocation_pct : '—'}</td>
                   <td className="px-3 py-2 text-right font-mono text-xs">
                     {a.amount_allocated != null

@@ -108,7 +108,7 @@ export default function GeneralExpensesPage({ embedded = false, refreshKey = 0 }
     <div className="space-y-4">
       {pendingCount > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          <span>Hay {pendingCount} operación(es) pendiente(s) de gastos generales.</span>
+          <span>Hay {pendingCount} operación(es) pendiente(s) de gastos por empresa.</span>
           <button
             type="button"
             onClick={() => flushQueue().then(() => refreshPending()).then(() => loadList())}
@@ -125,33 +125,14 @@ export default function GeneralExpensesPage({ embedded = false, refreshKey = 0 }
 
       {embedded ? (
         <p className="text-xs text-slate-600">
-          Reparto entre lotes según alcance (finca o empresa) y método. Manual: ajuste en Detalle. Alta nuevo: pestaña{' '}
-          <strong>Registrar gasto general</strong>.
+          El total se reparte entre fincas según el método de Empresa. Ajuste manual en Detalle. Alta nuevo: pestaña{' '}
+          <strong>Gasto por empresa</strong>.
         </p>
-      ) : (
-        <div className="rounded-lg border border-lime-200 bg-lime-50/80 px-3 py-3 text-sm text-slate-800">
-          <p className="font-semibold text-lime-900">Cómo se asigna un gasto general</p>
-          <ul className="mt-2 list-inside list-disc space-y-1 text-slate-700">
-            <li>
-              <strong>Alcance:</strong> si deja <strong>finca vacía</strong>, el monto se reparte entre{' '}
-              <strong>todos los lotes activos con hectáreas</strong> de su empresa. Si elige una <strong>finca</strong>, solo entran los lotes activos con área de esa finca.
-            </li>
-            <li>
-              <strong>Por hectáreas:</strong> el servidor reparte el total en proporción al área (ha) de cada lote dentro del alcance; no hace falta guardar reparto manual.
-            </li>
-            <li>
-              <strong>Manual:</strong> en Detalle puede generar una línea por lote (mismo alcance) y luego ajustar % o montos hasta que la suma coincida con el total.
-            </li>
-          </ul>
-          <p className="mt-2 text-xs text-slate-600">
-            Esto es distinto de <strong>Por lote</strong>, donde elige un solo lote y el monto va entero a ese lote. Para registrar un gasto nuevo use <strong>Nuevo gasto</strong> en la barra superior.
-          </p>
-        </div>
-      )}
+      ) : null}
 
       <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 lg:grid-cols-12 lg:items-end">
         <label className="text-sm lg:col-span-2">
-          <span className="mb-1 block font-medium text-slate-800">Finca</span>
+          <span className="mb-1 block font-medium text-slate-800">Alcance</span>
           <select
             value={filters.farm_id}
             onChange={(e) => {
@@ -160,7 +141,7 @@ export default function GeneralExpensesPage({ embedded = false, refreshKey = 0 }
             }}
             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
           >
-            <option value="">Todas las fincas (todos los lotes)</option>
+            <option value="">Toda la empresa</option>
             {farms.map((x) => (
               <option key={x.id} value={x.id}>
                 {x.name}
@@ -226,7 +207,7 @@ export default function GeneralExpensesPage({ embedded = false, refreshKey = 0 }
             <tr>
               <th className="px-3 py-2 text-left">Fecha</th>
               <th className="px-3 py-2 text-left">Categoría</th>
-              <th className="px-3 py-2 text-left">Finca</th>
+              <th className="px-3 py-2 text-left">Alcance</th>
               <th className="px-3 py-2 text-left">Método</th>
               <th className="px-3 py-2 text-right">CRC</th>
               <th className="px-3 py-2 text-left">Estado</th>
@@ -251,7 +232,7 @@ export default function GeneralExpensesPage({ embedded = false, refreshKey = 0 }
                 <tr key={r.id} className="border-t border-slate-200">
                   <td className="px-3 py-2 whitespace-nowrap">{String(r.exp_date || '').slice(0, 10)}</td>
                   <td className="px-3 py-2">{r.category}</td>
-                  <td className="px-3 py-2">{r.farm_id ? r.farm_name || '—' : 'Todas las fincas'}</td>
+                  <td className="px-3 py-2">{r.farm_id ? r.farm_name || '—' : 'Toda la empresa'}</td>
                   <td className="px-3 py-2 text-xs uppercase">{r.allocation_method}</td>
                   <td className="px-3 py-2 text-right font-mono text-xs">
                     {Number(r.amount_crc || 0).toLocaleString('es-CR', { style: 'currency', currency: 'CRC' })}

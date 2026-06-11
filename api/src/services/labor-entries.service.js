@@ -23,8 +23,8 @@ function normalizeText(value) {
 function normalizeScope(value, { required = false } = {}) {
   if (value === undefined && !required) return undefined;
   const v = String(value || '').trim().toLowerCase();
-  if (!['lot', 'farm'].includes(v)) {
-    const err = new Error("cost_scope debe ser 'lot' o 'farm'.");
+  if (v !== 'lot') {
+    const err = new Error("cost_scope debe ser 'lot'. El registro por empresa ya no está disponible.");
     err.status = 400;
     throw err;
   }

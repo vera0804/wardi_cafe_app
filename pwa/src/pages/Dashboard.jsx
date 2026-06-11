@@ -121,12 +121,12 @@ export default function Dashboard() {
       mainClassName={mainClassName}
       mainStyle={mainStyle}
     >
-            {activeMenu === 'Fincas' ? (
-              <OfflineModuleGate menuLabel="Fincas">
+            {activeMenu === 'Empresa' ? (
+              <OfflineModuleGate menuLabel="Empresa">
                 <FarmsPage user={user} />
               </OfflineModuleGate>
-            ) : activeMenu === 'Lotes' ? (
-              <OfflineModuleGate menuLabel="Lotes">
+            ) : activeMenu === 'Fincas' ? (
+              <OfflineModuleGate menuLabel="Fincas">
                 <LotsPage user={user} />
               </OfflineModuleGate>
             ) : activeMenu === 'Trabajadores' ? (
@@ -272,16 +272,16 @@ function homeMenuCardsForUser(user) {
 }
 
 const HOME_CARD_DESCRIPTION = {
+  Empresa: 'Datos de la empresa y del dueño.',
   Fincas: 'Administra fincas y ubicaciones.',
-  Lotes: 'Gestiona lotes por finca.',
   Inventario: 'Stock, insumos y movimientos.',
-  Aplicaciones: 'Registro y seguimiento de aplicaciones.',
-  'Producción de café': 'Cajuelas y fanegas cosechadas por lote.',
+  Aplicaciones: 'Consumos y mezclas por finca.',
+  'Producción de café': 'Cajuelas y fanegas cosechadas por finca.',
   Trabajadores: 'Directorio y datos del personal.',
   'Registro de labores': 'Labores diarias en campo.',
   Cronograma: 'Planificación de actividades.',
   Activos: 'Activos fijos y depreciación.',
-  Gastos: 'Gastos generales y por lote.',
+  Gastos: 'Gastos generales y por finca.',
   Planilla: 'Nómina y pagos al personal.',
   Estadísticas: 'Indicadores y reportes operativos.',
 };

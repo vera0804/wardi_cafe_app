@@ -13,7 +13,7 @@ const MODULES = [
     emoji: '💰',
     title: '2. Costos, gastos e inversión',
     description:
-      'Gastos por finca y lote, costo por hectárea, top 10 rubros de gasto y costo por fanega a nivel lote y finca.',
+      'Gastos por finca, costo por hectárea, top 10 rubros de gasto y costo por fanega.',
   },
   {
     to: '/stats/mano-obra',
@@ -26,14 +26,14 @@ const MODULES = [
     to: '/stats/inventario',
     emoji: '📦',
     title: '4. Inventario y agroinsumos',
-    description: 'Productos más usados, costo por insumo y lote en el periodo, y stock crítico según umbral.',
+    description: 'Productos más usados, costo por insumo y finca en el periodo, y stock crítico según umbral.',
   },
   {
     to: '/stats/rentabilidad',
     emoji: '📈',
     title: '5. Rentabilidad',
     description:
-      'Fincas y lotes más rentables, margen por fanega, y comparación de costo total frente a producción e ingresos por lote.',
+      'Fincas más rentables, margen por fanega, y comparación de costo total frente a producción e ingresos.',
   },
 ];
 
@@ -44,7 +44,7 @@ export default function StatsHubPage() {
       <p className="mb-8 text-sm text-stone-600">
         Indicadores y análisis de la operación cafetalera. En cada módulo puede filtrar por{' '}
         <strong>rango de fechas</strong>, <strong>cosecha</strong> (atajo que rellena el periodo),{' '}
-        <strong>finca</strong> y <strong>lote</strong>; en inventario y resumen también por umbral de stock bajo. Los
+        <strong>finca</strong>; en inventario y resumen también por umbral de stock bajo. Los
         volúmenes se expresan en <strong>fanegas</strong> (cajuelas ÷ 20).
       </p>
       <ul className="space-y-3">

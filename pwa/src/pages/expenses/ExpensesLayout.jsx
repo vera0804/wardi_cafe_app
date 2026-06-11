@@ -46,8 +46,8 @@ export default function ExpensesLayout() {
             <h2 className="text-lg font-semibold text-lime-800">Gastos</h2>
             <p className="mt-1 text-sm text-slate-600">
               {isGeneralDetail
-                ? 'Detalle del gasto general y reparto entre lotes. Use el enlace «Volver» para regresar al historial.'
-                : 'Consulte el historial o registre un gasto nuevo desde las pestañas, al estilo de Aplicaciones.'}
+                ? 'Detalle del gasto por empresa y reparto entre fincas. Use «Volver» para regresar al historial.'
+                : 'Registre gastos por finca o por empresa, y consulte el historial desde las pestañas.'}
             </p>
           </div>
           <BccrUsdReference className="shrink-0 sm:mt-0.5" />

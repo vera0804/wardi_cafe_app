@@ -4,6 +4,7 @@
 
 - **`20260521170000_client_license_plans.sql`** — planes con `billing_model` / `trial_days` / `description` y clientes con `license_starts_on`, `license_expires_on`, `billing_anchor_day`. Ver guía completa en [`docs/LICENSE.md`](docs/LICENSE.md).
 - **`20260522120000_plans_is_active.sql`** — `plans.is_active` para catálogo editable (CRUD superadmin en `/superadmin/plans`). Ver [`docs/PLANS.md`](docs/PLANS.md).
+- **`20260529120000_empresa_fincas_model.sql`** — modelo Empresa (`farms` ×1 con datos del dueño) + Fincas operativas (`lots` con ubicación CR); fusión de fincas duplicadas por cliente; auto-`max_farms = 1` en planes.
 - `20260521130000_coffee_varieties_seed.sql` reemplaza el catálogo de variedades de aguacate por **15 variedades de café** habituales en Costa Rica y vacía los vínculos lote↔variedad (hay que reasignar variedades en **Lotes** tras migrar).
 - Los archivos están en `database/migrations/` y se aplican **en orden léxico** (`*.sql`).
 - El runner registra cada archivo ejecutado en `public.schema_migrations`.

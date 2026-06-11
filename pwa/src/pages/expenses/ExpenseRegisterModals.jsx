@@ -49,7 +49,6 @@ function isNetworkish(err) {
 
 export function ExpenseRegisterLotModal({ open, onClose, onSaved }) {
   const [meta, setMeta] = useState({ lots: [] });
-  const [farmId, setFarmId] = useState('');
   const [form, setForm] = useState(emptyLotForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -58,35 +57,12 @@ export function ExpenseRegisterLotModal({ open, onClose, onSaved }) {
     if (!open) return;
     setError('');
     setForm(emptyLotForm);
-    setFarmId('');
     getExpensesMeta()
       .then((data) => setMeta({ lots: data?.lots || [] }))
       .catch(() => setMeta({ lots: [] }));
   }, [open]);
 
-  const farms = useMemo(() => {
-    const m = new Map();
-    (meta.lots || []).forEach((l) => {
-      if (l.farm_id && !m.has(l.farm_id)) m.set(l.farm_id, { id: l.farm_id, name: l.farm_name || '—' });
-    });
-    return [...m.values()].sort((a, b) => String(a.name).localeCompare(String(b.name), 'es'));
-  }, [meta.lots]);
-
-  const lotsForFarm = useMemo(
-    () => (meta.lots || []).filter((l) => !farmId || l.farm_id === farmId),
-    [meta.lots, farmId]
-  );
-
-  useEffect(() => {
-    if (!farmId) {
-      setForm((f) => ({ ...f, lot_id: '' }));
-      return;
-    }
-    setForm((f) => {
-      const still = (meta.lots || []).some((l) => l.farm_id === farmId && l.id === f.lot_id);
-      return still ? f : { ...f, lot_id: '' };
-    });
-  }, [farmId, meta.lots]);
+  const activeLots = useMemo(() => meta.lots || [], [meta.lots]);
 
   if (!open) return null;
 
@@ -141,41 +117,25 @@ export function ExpenseRegisterLotModal({ open, onClose, onSaved }) {
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-base font-semibold text-lime-800">Registrar gasto por lote</h3>
-        <p className="mt-1 text-xs text-slate-600">
-          Elija finca y lote; el monto completo se imputa a ese lote.
+        <h3 className="text-base font-semibold text-lime-800">Registrar gasto por finca</h3>
+        <p className="mt-1 text-xs leading-relaxed text-slate-600">
+          Elija la finca operativa. El <strong className="font-medium text-slate-800">monto completo</strong> queda
+          imputado solo a esa finca (no se reparte).
         </p>
         {error ? <p className="mt-2 rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-sm text-rose-800">{error}</p> : null}
         <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-          <fieldset className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3 sm:grid-cols-2">
-            <legend className="sr-only">Ubicación del gasto</legend>
-            <label className="block text-sm sm:col-span-2">
+          <fieldset className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3">
+            <legend className="sr-only">Finca del gasto</legend>
+            <label className="block text-sm">
               <span className="font-medium text-slate-800">Finca *</span>
               <select
                 required
-                value={farmId}
-                onChange={(e) => setFarmId(e.target.value)}
+                value={form.lot_id}
+                onChange={(e) => setForm((f) => ({ ...f, lot_id: e.target.value }))}
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
               >
                 <option value="">Seleccione…</option>
-                {farms.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm sm:col-span-2">
-              <span className="font-medium text-slate-800">Lote *</span>
-              <select
-                required
-                value={form.lot_id}
-                disabled={!farmId}
-                onChange={(e) => setForm((f) => ({ ...f, lot_id: e.target.value }))}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100"
-              >
-                <option value="">{farmId ? 'Seleccione lote…' : 'Primero elija la finca'}</option>
-                {lotsForFarm.map((l) => (
+                {activeLots.map((l) => (
                   <option key={l.id} value={l.id}>
                     {l.name}
                   </option>
@@ -330,23 +290,24 @@ export function ExpenseRegisterGeneralModal({ open, onClose, onSaved }) {
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-base font-semibold text-lime-800">Registrar gasto general</h3>
-        <p className="mt-1 text-xs text-slate-600">
-          Elija el alcance (una finca o toda la empresa). El reparto entre lotes usa el método configurado en la finca
-          (área o manual); si el alcance es toda la empresa, se prorratea por área de lote.
+        <h3 className="text-base font-semibold text-lime-800">Registrar gasto por empresa</h3>
+        <p className="mt-1 text-xs leading-relaxed text-slate-600">
+          El monto se reparte entre las <strong className="font-medium text-slate-800">fincas operativas</strong>. Por
+          defecto aplica a <strong className="font-medium text-slate-800">toda la empresa</strong>. El reparto usa el
+          método configurado en Empresa (por hectáreas o manual en el detalle).
         </p>
         {error ? <p className="mt-2 rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-sm text-rose-800">{error}</p> : null}
         <form onSubmit={handleSubmit} className="mt-4 space-y-3">
           <fieldset className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3">
             <legend className="sr-only">Alcance y reparto</legend>
             <label className="block text-sm">
-              <span className="font-medium text-slate-800">Finca del alcance (opcional)</span>
+              <span className="font-medium text-slate-800">Alcance del gasto</span>
               <select
                 value={form.farm_id}
                 onChange={(e) => setForm((f) => ({ ...f, farm_id: e.target.value }))}
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
               >
-                <option value="">Todas las fincas (lotes con área de la empresa)</option>
+                <option value="">Toda la empresa</option>
                 {farms.map((x) => (
                   <option key={x.id} value={x.id}>
                     {x.name}
@@ -356,17 +317,17 @@ export function ExpenseRegisterGeneralModal({ open, onClose, onSaved }) {
             </label>
             {form.farm_id ? (
               <p className="text-xs text-slate-600">
-                Reparto entre lotes:{' '}
+                Reparto entre fincas:{' '}
                 <strong>
                   {generalExpenseAllocationMethodForCreate(form.farm_id, farms) === 'manual'
-                    ? 'manual (como en la finca)'
-                    : 'por hectáreas (como en la finca)'}
+                    ? 'manual (como en Empresa)'
+                    : 'por hectáreas (como en Empresa)'}
                 </strong>
                 .
               </p>
             ) : (
               <p className="text-xs text-slate-600">
-                Alcance global: reparto <strong>por hectáreas</strong> entre lotes con área de la empresa.
+                Alcance global: reparto <strong>por hectáreas</strong> entre fincas con área registrada.
               </p>
             )}
           </fieldset>
@@ -435,7 +396,7 @@ export function ExpenseRegisterGeneralModal({ open, onClose, onSaved }) {
               disabled={saving}
               className="rounded-lg bg-lime-700 px-4 py-2 text-sm font-semibold text-white hover:bg-lime-800 disabled:opacity-60"
             >
-              {saving ? 'Guardando…' : 'Crear gasto general'}
+              {saving ? 'Guardando…' : 'Crear gasto por empresa'}
             </button>
           </div>
         </form>

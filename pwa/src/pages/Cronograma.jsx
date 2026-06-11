@@ -98,6 +98,7 @@ export default function Cronograma({ user }) {
 
   const [meta, setMeta] = useState({ farms: [], lots: [], laborTypes: [] });
   const [farmId, setFarmId] = useState('');
+  const [lotId, setLotId] = useState('');
   const [cursor, setCursor] = useState(() => {
     const n = new Date();
     return { year: n.getFullYear(), month: n.getMonth() + 1 };
@@ -118,6 +119,11 @@ export default function Cronograma({ user }) {
 
   const { from, to } = useMemo(() => monthRangeIso(cursor.year, cursor.month), [cursor.year, cursor.month]);
   const cells = useMemo(() => buildMonthCells(cursor.year, cursor.month), [cursor.year, cursor.month]);
+
+  const empresaName = useMemo(
+    () => (meta.farms || []).find((f) => f.id === farmId)?.name || '',
+    [meta.farms, farmId]
+  );
 
   const farmLots = useMemo(
     () => (meta.lots || []).filter((l) => !farmId || l.farm_id === farmId),
@@ -155,11 +161,15 @@ export default function Cronograma({ user }) {
     (async () => {
       try {
         const laborMeta = await getLaborEntriesMeta();
+        const farms = laborMeta?.farms || [];
         setMeta({
-          farms: laborMeta?.farms || [],
+          farms,
           lots: laborMeta?.lots || [],
           laborTypes: laborMeta?.laborTypes || [],
         });
+        if (farms.length && !farmId) {
+          setFarmId(farms[0].id);
+        }
       } catch (e) {
         setError(e?.message || 'No se pudieron cargar catálogos.');
       }
@@ -174,7 +184,12 @@ export default function Cronograma({ user }) {
     setLoading(true);
     setError('');
     try {
-      const rows = await listCalendarActivities({ farm_id: farmId, from, to });
+      const rows = await listCalendarActivities({
+        farm_id: farmId,
+        from,
+        to,
+        lot_id: lotId || undefined,
+      });
       setRawActivities(Array.isArray(rows) ? rows : []);
     } catch (e) {
       setError(e?.message || 'No se pudieron cargar las actividades.');
@@ -182,7 +197,7 @@ export default function Cronograma({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [farmId, from, to]);
+  }, [farmId, lotId, from, to]);
 
   useEffect(() => {
     loadActivities();
@@ -228,7 +243,7 @@ export default function Cronograma({ user }) {
     e.preventDefault();
     setCreateError('');
     if (!farmId) {
-      setCreateError('Elegí una finca.');
+      setCreateError('No hay empresa configurada para este cliente.');
       return;
     }
     if (!createForm.labor_type_id) {
@@ -288,7 +303,7 @@ export default function Cronograma({ user }) {
         <div>
           <h2 className="text-xl font-semibold text-lime-800">Cronograma</h2>
           <p className="text-sm text-slate-600">
-            Planificación por finca: qué labor corresponde a cada día, estado y notas.
+            Planificación de labores por finca y día. Podés filtrar por una finca o ver todas.
           </p>
         </div>
         <Legend />
@@ -307,19 +322,26 @@ export default function Cronograma({ user }) {
       ) : null}
 
       <div className="mb-4 flex flex-col flex-wrap gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-end">
+        {empresaName ? (
+          <p className="min-w-[200px] flex-1 text-sm text-slate-600">
+            <span className="font-medium text-slate-800">Empresa:</span> {empresaName}
+          </p>
+        ) : null}
+
         <label className="flex min-w-[200px] flex-1 flex-col gap-1 text-sm">
           <span className="font-medium text-slate-700">Finca</span>
           <select
-            value={farmId}
-            onChange={(e) => setFarmId(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2"
+            value={lotId}
+            onChange={(e) => setLotId(e.target.value)}
+            disabled={!farmId}
+            className="rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100"
           >
-            <option value="">— Elegir finca —</option>
-            {(meta.farms || []).map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
+            <option value="">Todas las fincas</option>
+            {farmLots.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -358,7 +380,7 @@ export default function Cronograma({ user }) {
       </div>
 
       {!farmId ? (
-        <p className="text-sm text-slate-600">Seleccioná una finca para ver el calendario.</p>
+        <p className="text-sm text-slate-600">Configurá la ficha de empresa antes de usar el cronograma.</p>
       ) : loading ? (
         <p className="text-sm text-slate-600">Cargando…</p>
       ) : (
@@ -418,7 +440,7 @@ export default function Cronograma({ user }) {
                         className={`rounded border px-2 py-1.5 text-left text-xs leading-snug shadow-sm ${statusCardClasses(a.status)}`}
                       >
                         <div className="font-semibold">{a.labor_type_name || '—'}</div>
-                        <div className="mt-0.5 text-[11px] opacity-90">{a.lot_name ? a.lot_name : 'Sin lote'}</div>
+                        <div className="mt-0.5 text-[11px] opacity-90">{a.lot_name ? a.lot_name : 'Sin finca'}</div>
                       </button>
                     ))}
                   </div>
@@ -447,13 +469,13 @@ export default function Cronograma({ user }) {
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm">
-                <span>Lote (opcional)</span>
+                <span>Finca (opcional)</span>
                 <select
                   value={createForm.lot_id}
                   onChange={(e) => setCreateForm((f) => ({ ...f, lot_id: e.target.value }))}
                   className="rounded-lg border border-slate-300 px-3 py-2"
                 >
-                  <option value="">Sin lote</option>
+                  <option value="">Todas / sin finca específica</option>
                   {farmLots.map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.name}
@@ -508,7 +530,7 @@ export default function Cronograma({ user }) {
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
             <h3 className="text-lg font-semibold text-slate-800">Actividad</h3>
             <p className="mt-1 text-xs text-slate-600">
-              {editRow.labor_type_name} · {editRow.lot_name || 'Sin lote'} · {activityDayKey(editRow.activity_date)}
+              {editRow.labor_type_name} · {editRow.lot_name || 'Sin finca'} · {activityDayKey(editRow.activity_date)}
             </p>
             {readOnly ? (
               <>

@@ -29,9 +29,8 @@ function parseDateRange(query) {
     err.status = 400;
     throw err;
   }
-  const farmId = query.farm_id && String(query.farm_id).trim() ? String(query.farm_id).trim() : null;
   const lotId = query.lot_id && String(query.lot_id).trim() ? String(query.lot_id).trim() : null;
-  return { from, to, farmId, lotId };
+  return { from, to, farmId: null, lotId };
 }
 
 /**
@@ -2205,7 +2204,7 @@ async function getOverview(query) {
     production_mode: 'cafe',
     production_unit: 'fanega',
     period: { from, to },
-    filters: { farm_id: farmId, lot_id: lotId },
+    filters: { lot_id: lotId },
     cost_production: {
       total_cajuelas: round2(prod.totalCajuelas),
       total_fanegas: round4(prod.totalFanegas),

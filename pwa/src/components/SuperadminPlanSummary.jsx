@@ -14,7 +14,7 @@ export default function SuperadminPlanSummary({ plan }) {
           <li>Vence el mismo día del mes siguiente al pago / renovación</li>
         ) : null}
         <li>
-          Límites: {plan.max_farms} finca(s), {plan.max_lots_per_farm} lote(s)/finca,{' '}
+          Límites: {plan.max_lots_per_farm} finca(s) operativas,{' '}
           {plan.max_users_admin} admin(s), {plan.max_users_operario} operario(s)
         </li>
         <li>Precio referencia: ₡{Number(plan.price || 0).toLocaleString('es-CR')}</li>

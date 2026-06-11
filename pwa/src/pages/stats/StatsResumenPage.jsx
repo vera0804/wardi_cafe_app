@@ -42,8 +42,8 @@ export default function StatsResumenPage() {
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight text-stone-900">Resumen operativo</h1>
         <p className="mt-1 max-w-2xl text-sm text-stone-600">
-          Costo por fanega, ingresos según precio de cosecha configurado, costos directos imputados a lotes y
-          rentabilidad por lote y finca. Ajuste el periodo, la cosecha o los filtros territoriales.
+          Costo por fanega, ingresos según precio de cosecha configurado, costos directos imputados a fincas y
+          rentabilidad por finca. Ajuste el periodo, la cosecha o el filtro de finca.
         </p>
       </div>
 
@@ -64,7 +64,7 @@ export default function StatsResumenPage() {
             </h2>
             <p className="mb-4 text-sm text-stone-600">
               Fanegas y cajuelas de producción diaria, ingresos valorizados por precio de cosecha y costos directos
-              imputados a lotes en el mismo rango de fechas.
+              imputados a fincas en el mismo rango de fechas.
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <KpiCard
@@ -97,26 +97,26 @@ export default function StatsResumenPage() {
             </div>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <KpiCard title="Margen total" value={crc(cp.margin_total_crc)} subtitle="Ingresos − costos" />
-              <KpiCard title="Gastos a lote" value={crc(cp.breakdown_crc?.expenses)} subtitle="Gastos directos" />
-              <KpiCard title="Labores" value={crc(cp.breakdown_crc?.labor)} subtitle="Lote + finca asignada" />
+              <KpiCard title="Gastos por finca" value={crc(cp.breakdown_crc?.expenses)} subtitle="Gastos directos" />
+              <KpiCard title="Labores" value={crc(cp.breakdown_crc?.labor)} subtitle="Finca + empresa asignada" />
               <KpiCard title="Insumos (consumos)" value={crc(cp.breakdown_crc?.inventory_consumption)} />
               <KpiCard title="Gastos generales (asign.)" value={crc(cp.breakdown_crc?.general_expense_allocations)} />
-              <KpiCard title="Planilla (asign. lotes)" value={crc(cp.breakdown_crc?.payroll_slip_lot_allocations)} />
+              <KpiCard title="Planilla (asign. fincas)" value={crc(cp.breakdown_crc?.payroll_slip_lot_allocations)} />
               <KpiCard title="Nómina fija (asign.)" value={crc(cp.breakdown_crc?.fixed_payroll_allocations)} />
               <KpiCard
                 title="Depreciación (activos)"
                 value={crc(cp.breakdown_crc?.asset_depreciation)}
-                subtitle="Activos y periodos activos; imputada a lotes por ha"
+                subtitle="Activos y periodos activos; imputada a fincas por ha"
               />
             </div>
           </section>
 
           <section id="rentabilidad">
             <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold text-stone-900">
-              <span aria-hidden>📈</span> 1.2 Rentabilidad por lote
+              <span aria-hidden>📈</span> 1.2 Rentabilidad por finca
             </h2>
             <p className="mb-4 text-sm text-stone-600">
-              Ingresos y costos por lote (costos incluyen depreciación de activos imputada por hectárea); margen en
+              Ingresos y costos por finca (costos incluyen depreciación de activos imputada por hectárea); margen en
               colores según signo.
             </p>
             {data?.rentability_lots?.length ? (
@@ -124,7 +124,6 @@ export default function StatsResumenPage() {
                 <thead className="border-b border-stone-200 bg-stone-50">
                   <tr>
                     <th className="p-3 text-left font-medium text-stone-700">Finca</th>
-                    <th className="p-3 text-left font-medium text-stone-700">Lote</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Cajuelas</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fanegas</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Ingreso</th>
@@ -136,7 +135,6 @@ export default function StatsResumenPage() {
                 <tbody>
                   {data.rentability_lots.map((r) => (
                     <tr key={r.lot_id} className="border-b border-stone-100 hover:bg-stone-50/80">
-                      <td className="p-3 text-stone-800">{r.farm_name}</td>
                       <td className="p-3 text-stone-800">{r.lot_name}</td>
                       <td className="p-3 text-right tabular-nums text-stone-800">{num(r.cajuelas, 2)}</td>
                       <td className="p-3 text-right tabular-nums text-stone-800">{num(fanegasOf(r), 4)}</td>
@@ -152,46 +150,7 @@ export default function StatsResumenPage() {
               </TableWrap>
             ) : (
               <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 shadow-sm">
-                Sin filas de rentabilidad por lote en el periodo.
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold text-stone-900">
-              <span aria-hidden>🌳</span> 1.3 Rentabilidad por finca
-            </h2>
-            <p className="mb-4 text-sm text-stone-600">Agregación de lotes por finca.</p>
-            {data?.rentability_farms?.length ? (
-              <TableWrap>
-                <thead className="border-b border-stone-200 bg-stone-50">
-                  <tr>
-                    <th className="p-3 text-left font-medium text-stone-700">Finca</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fanegas</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Ingreso</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Costo</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Margen</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Margen/fanega</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.rentability_farms.map((r) => (
-                    <tr key={r.farm_id || r.farm_name} className="border-b border-stone-100 hover:bg-stone-50/80">
-                      <td className="p-3 text-stone-800">{r.farm_name}</td>
-                      <td className="p-3 text-right tabular-nums text-stone-800">{num(fanegasOf(r), 4)}</td>
-                      <td className="p-3 text-right tabular-nums text-emerald-700">{crc(r.revenue_crc)}</td>
-                      <td className="p-3 text-right tabular-nums text-rose-700">{crc(r.cost_crc)}</td>
-                      <td className={`p-3 text-right font-medium tabular-nums ${marginToneClass(r.margin_crc)}`}>
-                        {crc(r.margin_crc)}
-                      </td>
-                      <td className="p-3 text-right tabular-nums text-stone-700">{formatMarginPerFanega(r)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </TableWrap>
-            ) : (
-              <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 shadow-sm">
-                Sin datos agregados por finca.
+                Sin filas de rentabilidad por finca en el periodo.
               </div>
             )}
           </section>
@@ -267,9 +226,9 @@ export default function StatsResumenPage() {
                 <span aria-hidden>🧑‍🌾</span> 1.6 Labores por tipo
               </h2>
               <p className="mb-4 text-sm text-stone-600">
-              Monto total por tipo = jornadas netas (costeo CRC) + planilla variable y nómina fija pagadas a lotes
+              Monto total por tipo = jornadas netas (costeo CRC) + planilla variable y nómina fija pagadas a fincas
               prorrateadas según jornadas registradas en el periodo de la planilla o en el mes de nómina fija en cada
-              lote. La suma se alinea con labores CRC + planilla variable + nómina fija a lotes.
+              finca. La suma se alinea con labores CRC + planilla variable + nómina fija a fincas.
               </p>
               {data?.labor_by_type?.length ? (
                 <TableWrap>
@@ -300,7 +259,7 @@ export default function StatsResumenPage() {
               <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold text-stone-900">
                 <span aria-hidden>💰</span> 1.7 Gastos por categoría
               </h2>
-              <p className="mb-4 text-sm text-stone-600">Gastos directos a lote por categoría.</p>
+              <p className="mb-4 text-sm text-stone-600">Gastos directos por finca según categoría.</p>
               {data?.expenses_by_category?.length ? (
                 <TableWrap>
                   <thead className="border-b border-stone-200 bg-stone-50">
@@ -320,7 +279,7 @@ export default function StatsResumenPage() {
                 </TableWrap>
               ) : (
                 <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 shadow-sm">
-                  Sin gastos directos a lote en el periodo.
+                  Sin gastos directos por finca en el periodo.
                 </div>
               )}
             </div>

@@ -190,6 +190,14 @@ async function createClientWithAdmin({
        VALUES (true, $1, $2, $3, $4, NULL, NULL, 'extranjero'::id_type, $5, $6, $7::uuid, $8::uuid, $9::uuid, $9::uuid)`,
       [fn, ln1, ln2, email, idNumber, hash, client.id, adminRoleId, createdBySuperadminUserId]
     );
+    await db.query(
+      `INSERT INTO farms (
+         name, client_id, labor_allocation_mode, area_ha_manual,
+         created_by_user_id, updated_by_user_id
+       )
+       VALUES ($1, $2, 'manual', false, $3, $3)`,
+      [name, client.id, createdBySuperadminUserId]
+    );
     await db.query('COMMIT');
 
     const list = await pool.query(

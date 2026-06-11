@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   createLot,
   getLotsMeta,
@@ -6,13 +6,17 @@ import {
   setLotActive,
   updateLot,
 } from '../services/lots.js';
+import { listCantons, listDistricts, listProvinces } from '../services/geo.js';
 
 const DEFAULT_FORM = {
-  farm_id: '',
   name: '',
   area_ha: '',
   plant_count: '0',
   variety_ids: [],
+  province_id: '',
+  canton_id: '',
+  district_id: '',
+  community: '',
 };
 
 function formatArea(value) {
@@ -20,10 +24,17 @@ function formatArea(value) {
   return Number(value).toFixed(2);
 }
 
+function locationLabel(lot) {
+  if (lot?.location_display) return lot.location_display;
+  const parts = [lot?.province_name, lot?.canton_name, lot?.district_name, lot?.community].filter(
+    Boolean
+  );
+  return parts.length ? parts.join(', ') : '—';
+}
+
 export default function LotsPage({ user }) {
   const [lots, setLots] = useState([]);
-  const [meta, setMeta] = useState({ farms: [], varieties: [] });
-  const [farmFilter, setFarmFilter] = useState('');
+  const [meta, setMeta] = useState({ varieties: [] });
   const [searchTerm, setSearchTerm] = useState('');
   const [includeInactive, setIncludeInactive] = useState(false);
   const [showVarietiesPicker, setShowVarietiesPicker] = useState(false);
@@ -33,6 +44,10 @@ export default function LotsPage({ user }) {
   const [error, setError] = useState('');
   const [form, setForm] = useState(DEFAULT_FORM);
   const [editingId, setEditingId] = useState(null);
+  const [provinces, setProvinces] = useState([]);
+  const [cantons, setCantons] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [geoLoading, setGeoLoading] = useState(false);
 
   const readOnly = false;
 
@@ -41,20 +56,23 @@ export default function LotsPage({ user }) {
       .trim()
       .toLowerCase();
     if (!term) return lots;
-    return lots.filter((lot) => String(lot?.name || '').toLowerCase().includes(term));
+    return lots.filter((lot) => {
+      const byName = String(lot?.name || '')
+        .toLowerCase()
+        .includes(term);
+      const byLoc = locationLabel(lot).toLowerCase().includes(term);
+      return byName || byLoc;
+    });
   }, [lots, searchTerm]);
 
   async function refresh() {
     setLoading(true);
     setError('');
     try {
-      const data = await listLots({
-        farmId: farmFilter || undefined,
-        includeInactive,
-      });
+      const data = await listLots({ includeInactive });
       setLots(data || []);
     } catch (e) {
-      setError(e?.message || 'No se pudieron cargar los lotes.');
+      setError(e?.message || 'No se pudieron cargar las fincas.');
     } finally {
       setLoading(false);
     }
@@ -63,12 +81,9 @@ export default function LotsPage({ user }) {
   async function refreshMeta() {
     try {
       const data = await getLotsMeta();
-      setMeta({
-        farms: data?.farms || [],
-        varieties: data?.varieties || [],
-      });
+      setMeta({ varieties: data?.varieties || [] });
     } catch (e) {
-      setError(e?.message || 'No se pudieron cargar fincas y variedades.');
+      setError(e?.message || 'No se pudieron cargar variedades.');
     }
   }
 
@@ -78,20 +93,92 @@ export default function LotsPage({ user }) {
 
   useEffect(() => {
     refresh();
-  }, [farmFilter, includeInactive]);
+  }, [includeInactive]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await listProvinces();
+        if (!cancelled) setProvinces(Array.isArray(rows) ? rows : []);
+      } catch {
+        if (!cancelled) setProvinces([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const loadCantons = useCallback(async (provinceId) => {
+    if (!provinceId) {
+      setCantons([]);
+      return;
+    }
+    setGeoLoading(true);
+    try {
+      const rows = await listCantons(provinceId);
+      setCantons(Array.isArray(rows) ? rows : []);
+    } catch {
+      setCantons([]);
+    } finally {
+      setGeoLoading(false);
+    }
+  }, []);
+
+  const loadDistricts = useCallback(async (cantonId) => {
+    if (!cantonId) {
+      setDistricts([]);
+      return;
+    }
+    setGeoLoading(true);
+    try {
+      const rows = await listDistricts(cantonId);
+      setDistricts(Array.isArray(rows) ? rows : []);
+    } catch {
+      setDistricts([]);
+    } finally {
+      setGeoLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!form.province_id) {
+      setCantons([]);
+      return;
+    }
+    loadCantons(form.province_id);
+  }, [form.province_id, loadCantons]);
+
+  useEffect(() => {
+    if (!form.canton_id) {
+      setDistricts([]);
+      return;
+    }
+    loadDistricts(form.canton_id);
+  }, [form.canton_id, loadDistricts]);
 
   function resetForm() {
-    setForm((prev) => ({
-      ...DEFAULT_FORM,
-      farm_id: prev.farm_id || '',
-    }));
+    setForm(DEFAULT_FORM);
     setEditingId(null);
     setShowVarietiesPicker(false);
     setShowForm(false);
+    setCantons([]);
+    setDistricts([]);
   }
 
   function onChange(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === 'province_id') {
+        next.canton_id = '';
+        next.district_id = '';
+      }
+      if (field === 'canton_id') {
+        next.district_id = '';
+      }
+      return next;
+    });
   }
 
   function onToggleVariety(varietyId) {
@@ -107,16 +194,19 @@ export default function LotsPage({ user }) {
   }
 
   function validateForm() {
-    if (!String(form.farm_id || '').trim()) {
-      return 'Debes seleccionar una finca activa.';
-    }
     if (!String(form.name || '').trim()) {
-      return 'El nombre del lote es obligatorio.';
+      return 'El nombre de la finca es obligatorio.';
+    }
+    if (!String(form.province_id || '').trim()) {
+      return 'La provincia es obligatoria.';
     }
     if (form.area_ha !== '' && Number(form.area_ha) <= 0) {
       return 'El área (ha) debe ser mayor que 0.';
     }
-    if (form.plant_count !== '' && (!Number.isInteger(Number(form.plant_count)) || Number(form.plant_count) < 0)) {
+    if (
+      form.plant_count !== '' &&
+      (!Number.isInteger(Number(form.plant_count)) || Number(form.plant_count) < 0)
+    ) {
       return 'La cantidad de plantas debe ser un entero mayor o igual a 0.';
     }
     return null;
@@ -133,11 +223,14 @@ export default function LotsPage({ user }) {
     }
 
     const payload = {
-      farm_id: form.farm_id,
       name: form.name.trim(),
       area_ha: form.area_ha === '' ? null : Number(form.area_ha),
       plant_count: form.plant_count === '' ? 0 : Number(form.plant_count),
       variety_ids: form.variety_ids,
+      province_id: Number(form.province_id),
+      canton_id: form.canton_id ? Number(form.canton_id) : null,
+      district_id: form.district_id ? Number(form.district_id) : null,
+      community: form.community.trim() || null,
     };
 
     setSaving(true);
@@ -151,7 +244,7 @@ export default function LotsPage({ user }) {
       resetForm();
       await refresh();
     } catch (e) {
-      setError(e?.message || 'No se pudo guardar el lote.');
+      setError(e?.message || 'No se pudo guardar la finca.');
     } finally {
       setSaving(false);
     }
@@ -165,47 +258,40 @@ export default function LotsPage({ user }) {
       await setLotActive(lot.id, !lot.is_active);
       await refresh();
     } catch (e) {
-      setError(e?.message || 'No se pudo actualizar el estado del lote.');
+      setError(e?.message || 'No se pudo actualizar el estado de la finca.');
     } finally {
       setSaving(false);
     }
   }
 
-  function startEdit(lot) {
+  async function startEdit(lot) {
     setEditingId(lot.id);
     setShowForm(true);
     setShowVarietiesPicker(true);
     setForm({
-      farm_id: lot.farm_id || '',
       name: lot.name || '',
       area_ha: lot.area_ha ?? '',
       plant_count: lot.plant_count ?? 0,
       variety_ids: Array.isArray(lot.variety_ids) ? lot.variety_ids : [],
+      province_id: lot.province_id != null ? String(lot.province_id) : '',
+      canton_id: lot.canton_id != null ? String(lot.canton_id) : '',
+      district_id: lot.district_id != null ? String(lot.district_id) : '',
+      community: lot.community || '',
     });
+    if (lot.province_id) await loadCantons(lot.province_id);
+    if (lot.canton_id) await loadDistricts(lot.canton_id);
   }
 
   return (
     <section className="space-y-4 rounded-2xl border border-white/50 bg-white/90 p-5 text-slate-800 shadow">
       <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h3 className="text-base font-semibold text-lime-800">Lotes</h3>
+          <h3 className="text-base font-semibold text-lime-800">Fincas</h3>
           <p className="text-sm text-slate-600">
-            Gestiona lotes por finca. Por defecto se muestran solo lotes activos.
+            Gestiona las fincas operativas de la empresa. Cada finca tiene su propia ubicación.
           </p>
         </div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <select
-            value={farmFilter}
-            onChange={(e) => setFarmFilter(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-          >
-            <option value="">Todas las fincas activas</option>
-            {meta.farms.map((farm) => (
-              <option key={farm.id} value={farm.id}>
-                {farm.name}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <label className="inline-flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
@@ -213,13 +299,13 @@ export default function LotsPage({ user }) {
               onChange={(e) => setIncludeInactive(e.target.checked)}
               className="h-4 w-4 rounded border-slate-300"
             />
-            Mostrar inactivos
+            Mostrar inactivas
           </label>
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Filtrar por nombre de lote"
+            placeholder="Filtrar por nombre o ubicación"
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
           />
         </div>
@@ -238,10 +324,7 @@ export default function LotsPage({ user }) {
             onClick={() => {
               if (!showForm) {
                 setEditingId(null);
-                setForm((prev) => ({
-                  ...DEFAULT_FORM,
-                  farm_id: farmFilter || prev.farm_id || '',
-                }));
+                setForm(DEFAULT_FORM);
                 setShowVarietiesPicker(false);
               }
               setShowForm((v) => !v);
@@ -249,7 +332,7 @@ export default function LotsPage({ user }) {
             disabled={saving}
             className="rounded-lg bg-lime-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {showForm ? 'Ocultar formulario' : 'Crear lote'}
+            {showForm ? 'Ocultar formulario' : 'Crear finca'}
           </button>
         ) : (
           <p className="text-sm text-slate-600">Tu rol tiene acceso de solo lectura.</p>
@@ -260,27 +343,71 @@ export default function LotsPage({ user }) {
         <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
             <label className="text-sm lg:col-span-2">
-              <span className="mb-1 block font-medium">Finca *</span>
+              <span className="mb-1 block font-medium">Nombre *</span>
+              <input
+                value={form.name}
+                onChange={(e) => onChange('name', e.target.value)}
+                disabled={readOnly || saving}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+              />
+            </label>
+
+            <label className="text-sm">
+              <span className="mb-1 block font-medium">Provincia *</span>
               <select
-                value={form.farm_id}
-                onChange={(e) => onChange('farm_id', e.target.value)}
+                value={form.province_id}
+                onChange={(e) => onChange('province_id', e.target.value)}
                 disabled={readOnly || saving}
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
               >
-                <option value="">Selecciona una finca activa</option>
-                {meta.farms.map((farm) => (
-                  <option key={farm.id} value={farm.id}>
-                    {farm.name}
+                <option value="">Seleccione provincia</option>
+                {provinces.map((p) => (
+                  <option key={p.id} value={String(p.id)}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-sm">
+              <span className="mb-1 block font-medium">Cantón</span>
+              <select
+                value={form.canton_id}
+                onChange={(e) => onChange('canton_id', e.target.value)}
+                disabled={readOnly || saving || !form.province_id || geoLoading}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 disabled:bg-slate-100"
+              >
+                <option value="">Opcional</option>
+                {cantons.map((c) => (
+                  <option key={c.id} value={String(c.id)}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-sm">
+              <span className="mb-1 block font-medium">Distrito</span>
+              <select
+                value={form.district_id}
+                onChange={(e) => onChange('district_id', e.target.value)}
+                disabled={readOnly || saving || !form.canton_id || geoLoading}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 disabled:bg-slate-100"
+              >
+                <option value="">Opcional</option>
+                {districts.map((d) => (
+                  <option key={d.id} value={String(d.id)}>
+                    {d.name}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="text-sm lg:col-span-2">
-              <span className="mb-1 block font-medium">Nombre *</span>
+              <span className="mb-1 block font-medium">Comunidad</span>
               <input
-                value={form.name}
-                onChange={(e) => onChange('name', e.target.value)}
+                value={form.community}
+                onChange={(e) => onChange('community', e.target.value)}
                 disabled={readOnly || saving}
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
               />
@@ -356,7 +483,7 @@ export default function LotsPage({ user }) {
               disabled={readOnly || saving}
               className="rounded-lg bg-lime-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {editingId ? 'Guardar cambios' : 'Crear lote'}
+              {editingId ? 'Guardar cambios' : 'Crear finca'}
             </button>
             <button
               type="button"
@@ -375,7 +502,7 @@ export default function LotsPage({ user }) {
           <thead className="bg-slate-100 text-slate-700">
             <tr>
               <th className="px-3 py-2 text-left">Finca</th>
-              <th className="px-3 py-2 text-left">Lote</th>
+              <th className="px-3 py-2 text-left">Ubicación</th>
               <th className="px-3 py-2 text-left">Área (ha)</th>
               <th className="px-3 py-2 text-left">Plantas</th>
               <th className="px-3 py-2 text-left">Variedades</th>
@@ -387,20 +514,20 @@ export default function LotsPage({ user }) {
             {loading ? (
               <tr>
                 <td colSpan={7} className="px-3 py-4 text-center text-slate-500">
-                  Cargando lotes...
+                  Cargando fincas...
                 </td>
               </tr>
             ) : filteredLots.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-3 py-4 text-center text-slate-500">
-                  No hay lotes que coincidan con el filtro.
+                  No hay fincas que coincidan con el filtro.
                 </td>
               </tr>
             ) : (
               filteredLots.map((lot) => (
                 <tr key={lot.id} className="border-t border-slate-200">
-                  <td className="px-3 py-2">{lot.farm_name}</td>
                   <td className="px-3 py-2 font-medium">{lot.name}</td>
+                  <td className="px-3 py-2">{locationLabel(lot)}</td>
                   <td className="px-3 py-2">{formatArea(lot.area_ha)}</td>
                   <td className="px-3 py-2">{lot.plant_count ?? 0}</td>
                   <td className="px-3 py-2">
@@ -414,7 +541,7 @@ export default function LotsPage({ user }) {
                         lot.is_active ? 'bg-lime-100 text-lime-800' : 'bg-slate-200 text-slate-700'
                       }`}
                     >
-                      {lot.is_active ? 'Activo' : 'Inactivo'}
+                      {lot.is_active ? 'Activa' : 'Inactiva'}
                     </span>
                   </td>
                   <td className="px-3 py-2">
@@ -446,4 +573,3 @@ export default function LotsPage({ user }) {
     </section>
   );
 }
-

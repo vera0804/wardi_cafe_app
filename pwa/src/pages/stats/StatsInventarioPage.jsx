@@ -10,7 +10,7 @@ export default function StatsInventarioPage() {
   return (
     <StatsSectionShell
       title="Inventario y agroinsumos"
-      description="Productos más utilizados, costo por combinación insumo–lote en el periodo y alertas de existencia baja."
+      description="Productos más utilizados, costo por combinación insumo–finca en el periodo y alertas de existencia baja."
       filtersProps={st.filtersProps}
       periodLine={st.periodLine}
       showLowStockInFilters
@@ -54,7 +54,7 @@ export default function StatsInventarioPage() {
           </section>
 
           <section>
-            <h2 className="mb-1 text-lg font-semibold text-stone-900">Costo por producto, finca y lote</h2>
+            <h2 className="mb-1 text-lg font-semibold text-stone-900">Costo por producto y finca</h2>
             <p className="mb-3 text-sm text-stone-600">
               Principales combinaciones por monto en el rango de fechas (hasta 40 filas).
             </p>
@@ -63,7 +63,7 @@ export default function StatsInventarioPage() {
                 <thead className="border-b border-stone-200 bg-stone-50">
                   <tr>
                     <th className="p-3 text-left font-medium text-stone-700">Insumo</th>
-                    <th className="p-3 text-left font-medium text-stone-700">Finca / lote</th>
+                    <th className="p-3 text-left font-medium text-stone-700">Finca</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Cantidad</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Monto CRC</th>
                   </tr>
@@ -72,9 +72,7 @@ export default function StatsInventarioPage() {
                   {st.data.inventory_consumed_by_item_lot.map((r) => (
                     <tr key={`${r.item_id}-${r.lot_id}`} className="border-b border-stone-100 hover:bg-stone-50/80">
                       <td className="p-3 text-stone-800">{r.item_name}</td>
-                      <td className="p-3 text-stone-700">
-                        {r.farm_name} — {r.lot_name}
-                      </td>
+                      <td className="p-3 text-stone-700">{r.lot_name}</td>
                       <td className="p-3 text-right tabular-nums">
                         {num(r.qty, 3)} {r.item_unit}
                       </td>
@@ -85,7 +83,7 @@ export default function StatsInventarioPage() {
               </TableWrap>
             ) : (
               <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 shadow-sm">
-                Sin consumos por lote en el periodo.
+                Sin consumos por finca en el periodo.
               </div>
             )}
           </section>

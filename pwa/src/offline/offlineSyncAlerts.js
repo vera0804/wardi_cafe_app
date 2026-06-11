@@ -17,8 +17,8 @@ function summarizePath(path) {
   const p = String(path || '').split('?')[0];
   if (p.startsWith('/api/labor-entries')) return 'Registro de labores';
   if (p.startsWith('/api/workers')) return 'Trabajadores';
-  if (p.startsWith('/api/farms')) return 'Fincas';
-  if (p.startsWith('/api/lots')) return 'Lotes';
+  if (p.startsWith('/api/farms')) return 'Empresa';
+  if (p.startsWith('/api/lots')) return 'Fincas';
   if (p.startsWith('/api/inventory-movements')) return 'Inventario';
   if (p.startsWith('/api/inventory-items')) return 'Insumos';
   if (p.startsWith('/api/mix-applications')) return 'Aplicaciones';

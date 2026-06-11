@@ -2,8 +2,8 @@ export const DASHBOARD_MENU_STORAGE_KEY = 'wardi.dashboard.menu';
 
 export const MENU_ITEMS = [
   { label: 'Inicio', icon: 'home' },
-  { label: 'Fincas', icon: 'farm' },
-  { label: 'Lotes', icon: 'lot' },
+  { label: 'Empresa', icon: 'farm' },
+  { label: 'Fincas', icon: 'lot' },
   { label: 'Inventario', icon: 'inventory' },
   { label: 'Aplicaciones', icon: 'spray' },
   { label: 'Producción de café', icon: 'production' },

@@ -57,7 +57,16 @@ router.patch('/:farmId', requireCsrf, requireWritePermission, async (req, res) =
       districtId: req.body?.district_id,
       community: req.body?.community,
       areaHa: req.body?.area_ha,
+      areaHaManual: req.body?.area_ha_manual,
+      recalculateAreaFromLots: req.body?.recalculate_area_from_lots,
       laborAllocationMode: req.body?.labor_allocation_mode,
+      ownerName: req.body?.owner_name,
+      ownerIdType: req.body?.owner_id_type,
+      ownerIdNumber: req.body?.owner_id_number,
+      legalName: req.body?.legal_name,
+      legalIdNumber: req.body?.legal_id_number,
+      phone: req.body?.phone,
+      address: req.body?.address,
     });
     if (!farm) {
       return res.status(404).json({ message: 'Finca no encontrada.' });

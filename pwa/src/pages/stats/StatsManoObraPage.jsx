@@ -54,7 +54,7 @@ export default function StatsManoObraPage() {
       : 0;
   const laborNetForCosting =
     cp?.breakdown_crc?.labor != null ? Number(cp.breakdown_crc.labor) : 0;
-  /** Labores CRC + planilla variable a lotes + nómina fija pagada a lotes (coherente con la suma de tipos). */
+  /** Labores CRC + planilla variable a fincas + nómina fija pagada a fincas (coherente con la suma de tipos). */
   const laborInvestmentTotal = laborNetForCosting + payrollPaidToLots + fixedPayrollToLots;
   const totalFanegas =
     cp?.total_fanegas != null ? Number(cp.total_fanegas) : cp?.total_kg != null ? Number(cp.total_kg) : 0;
@@ -82,7 +82,7 @@ export default function StatsManoObraPage() {
                 highlight
                 title="Inversión en mano de obra"
                 value={crc(laborInvestmentTotal)}
-                subtitle={`${crc(laborNetForCosting)} labores CRC + ${crc(payrollPaidToLots)} planilla variable a lotes + ${crc(fixedPayrollToLots)} nómina fija a lotes`}
+                subtitle={`${crc(laborNetForCosting)} labores CRC + ${crc(payrollPaidToLots)} planilla variable a fincas + ${crc(fixedPayrollToLots)} nómina fija a fincas`}
               />
               <KpiCard
                 title="Mano de obra por fanega producida"
@@ -94,7 +94,7 @@ export default function StatsManoObraPage() {
                 }
               />
               <KpiCard
-                title="Planilla pagada (asign. lotes)"
+                title="Planilla pagada (asign. fincas)"
                 value={crc(cp.breakdown_crc?.payroll_slip_lot_allocations)}
                 subtitle="Variable según planillas en estado pagada"
               />
@@ -104,9 +104,9 @@ export default function StatsManoObraPage() {
           <section>
             <h2 className="mb-1 text-lg font-semibold text-stone-900">Mano de obra por trabajador</h2>
             <p className="mb-3 text-sm text-stone-600">
-              Total pagado y horas registradas por trabajador en el periodo y alcance del filtro (finca, lote o todos
-              los lotes). El <strong>total pagado</strong> suma labores no duplicadas con planilla del mismo día, más
-              planilla variable y nómina fija asignada a lotes (coherente con el resumen de inversión). Las{' '}
+              Total pagado y horas registradas por trabajador en el periodo y alcance del filtro (finca o todas las
+              fincas). El <strong>total pagado</strong> suma labores no duplicadas con planilla del mismo día, más
+              planilla variable y nómina fija asignada a fincas (coherente con el resumen de inversión). Las{' '}
               <strong>horas</strong> son la suma de cantidades en registros con unidad «hora».
             </p>
             {st.data?.labor_by_worker?.length ? (
@@ -197,8 +197,8 @@ export default function StatsManoObraPage() {
           <section>
             <h2 className="mb-1 text-lg font-semibold text-stone-900">Tipos de labor más realizados</h2>
             <p className="mb-3 text-sm text-stone-600">
-              Número de <strong>registros de labor</strong> distintos por tipo en el alcance del filtro (lote, finca o
-              todos los lotes del cliente). Cuenta <strong>todos</strong> los trabajadores (fijos y ocasionales). Un
+              Número de <strong>registros de labor</strong> distintos por tipo en el alcance del filtro (finca o todas
+              las fincas del cliente). Cuenta <strong>todos</strong> los trabajadores (fijos y ocasionales). Un
               mismo día puede contar varias veces si hay varios registros.
             </p>
             {st.data?.labor_type_registrations?.length ? (

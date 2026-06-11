@@ -83,14 +83,13 @@ export default function StatsProduccionPage() {
           </section>
 
           <section>
-            <h2 className="mb-1 text-lg font-semibold text-stone-900">Comparación por lote</h2>
-            <p className="mb-3 text-sm text-stone-600">Volumen e ingreso calculado por lote.</p>
+            <h2 className="mb-1 text-lg font-semibold text-stone-900">Comparación por finca</h2>
+            <p className="mb-3 text-sm text-stone-600">Volumen e ingreso calculado por finca.</p>
             {st.data?.rentability_lots?.length ? (
               <TableWrap>
                 <thead className="border-b border-stone-200 bg-stone-50">
                   <tr>
                     <th className="p-3 text-left font-medium text-stone-700">Finca</th>
-                    <th className="p-3 text-left font-medium text-stone-700">Lote</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Cajuelas</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fanegas</th>
                     <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Ingreso</th>
@@ -99,7 +98,6 @@ export default function StatsProduccionPage() {
                 <tbody>
                   {st.data.rentability_lots.map((r) => (
                     <tr key={r.lot_id} className="border-b border-stone-100 hover:bg-stone-50/80">
-                      <td className="p-3 text-stone-800">{r.farm_name}</td>
                       <td className="p-3 text-stone-800">{r.lot_name}</td>
                       <td className="p-3 text-right tabular-nums">{num(r.cajuelas, 2)}</td>
                       <td className="p-3 text-right tabular-nums">{num(r.fanegas, 4)}</td>
@@ -110,111 +108,44 @@ export default function StatsProduccionPage() {
               </TableWrap>
             ) : (
               <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 shadow-sm">
-                Sin producción por lote en el periodo.
+                Sin producción por finca en el periodo.
               </div>
             )}
           </section>
 
           <section>
-            <h2 className="mb-1 text-lg font-semibold text-stone-900">Comparación por finca</h2>
-            {st.data?.rentability_farms?.length ? (
+            <h2 className="mb-1 text-lg font-semibold text-stone-900">Rendimiento por hectárea</h2>
+            <p className="mb-3 text-sm text-stone-600">Fanegas por hectárea (requiere área registrada en la finca).</p>
+            {st.data?.yield_by_lot?.some((y) => y.fanegas_per_ha != null || y.kg_per_ha != null) ? (
               <TableWrap>
                 <thead className="border-b border-stone-200 bg-stone-50">
                   <tr>
                     <th className="p-3 text-left font-medium text-stone-700">Finca</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Cajuelas</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fanegas</th>
-                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Ingreso</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fan.</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Ha</th>
+                    <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fan./Ha</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {st.data.rentability_farms.map((r) => (
-                    <tr key={r.farm_id || r.farm_name} className="border-b border-stone-100 hover:bg-stone-50/80">
-                      <td className="p-3 text-stone-800">{r.farm_name}</td>
-                      <td className="p-3 text-right tabular-nums">{num(r.cajuelas, 2)}</td>
-                      <td className="p-3 text-right tabular-nums">{num(r.fanegas, 4)}</td>
-                      <td className="p-3 text-right tabular-nums text-emerald-800">{crc(r.revenue_crc)}</td>
-                    </tr>
-                  ))}
+                  {st.data.yield_by_lot
+                    .filter((y) => y.fanegas_per_ha != null || y.kg_per_ha != null)
+                    .map((y) => (
+                      <tr key={y.lot_id} className="border-b border-stone-100 hover:bg-stone-50/80">
+                        <td className="p-3 text-stone-800">{y.lot_name}</td>
+                        <td className="p-3 text-right tabular-nums">{num(y.fanegas ?? y.kg, 4)}</td>
+                        <td className="p-3 text-right tabular-nums">{num(y.area_ha, 2)}</td>
+                        <td className="p-3 text-right font-medium tabular-nums text-lime-900">
+                          {num(y.fanegas_per_ha ?? y.kg_per_ha, 4)}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </TableWrap>
             ) : (
-              <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 shadow-sm">
-                Sin datos por finca.
+              <div className="rounded-xl border border-stone-200 bg-white p-6 text-sm text-stone-500 shadow-sm">
+                Sin fincas con área y producción en el periodo para calcular fanegas/Ha.
               </div>
             )}
-          </section>
-
-          <section className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <div>
-              <h2 className="mb-1 text-lg font-semibold text-stone-900">Rendimiento por lote</h2>
-              <p className="mb-3 text-sm text-stone-600">Fanegas por hectárea (requiere área en el lote).</p>
-              {st.data?.yield_by_lot?.some((y) => y.fanegas_per_ha != null || y.kg_per_ha != null) ? (
-                <TableWrap>
-                  <thead className="border-b border-stone-200 bg-stone-50">
-                    <tr>
-                      <th className="p-3 text-left font-medium text-stone-700">Lote</th>
-                      <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fan.</th>
-                      <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Ha</th>
-                      <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fan./Ha</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {st.data.yield_by_lot
-                      .filter((y) => y.fanegas_per_ha != null || y.kg_per_ha != null)
-                      .map((y) => (
-                        <tr key={y.lot_id} className="border-b border-stone-100 hover:bg-stone-50/80">
-                          <td className="p-3 text-stone-800">
-                            {y.farm_name} — {y.lot_name}
-                          </td>
-                          <td className="p-3 text-right tabular-nums">{num(y.fanegas ?? y.kg, 4)}</td>
-                          <td className="p-3 text-right tabular-nums">{num(y.area_ha, 2)}</td>
-                          <td className="p-3 text-right font-medium tabular-nums text-lime-900">
-                            {num(y.fanegas_per_ha ?? y.kg_per_ha, 4)}
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </TableWrap>
-              ) : (
-                <div className="rounded-xl border border-stone-200 bg-white p-6 text-sm text-stone-500 shadow-sm">
-                  Sin lotes con área y producción en el periodo para calcular fanegas/Ha.
-                </div>
-              )}
-            </div>
-            <div>
-              <h2 className="mb-1 text-lg font-semibold text-stone-900">Rendimiento por finca</h2>
-              {st.data?.yield_by_farm?.some((y) => y.fanegas_per_ha != null || y.kg_per_ha != null) ? (
-                <TableWrap>
-                  <thead className="border-b border-stone-200 bg-stone-50">
-                    <tr>
-                      <th className="p-3 text-left font-medium text-stone-700">Finca</th>
-                      <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fan.</th>
-                      <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Ha</th>
-                      <th className="p-3 text-right font-medium text-stone-700 tabular-nums">Fan./Ha</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {st.data.yield_by_farm
-                      .filter((y) => y.fanegas_per_ha != null || y.kg_per_ha != null)
-                      .map((y) => (
-                        <tr key={y.farm_id || y.farm_name} className="border-b border-stone-100 hover:bg-stone-50/80">
-                          <td className="p-3 text-stone-800">{y.farm_name}</td>
-                          <td className="p-3 text-right tabular-nums">{num(y.fanegas ?? y.kg, 4)}</td>
-                          <td className="p-3 text-right tabular-nums">{num(y.area_ha, 2)}</td>
-                          <td className="p-3 text-right font-medium tabular-nums text-lime-900">
-                            {num(y.fanegas_per_ha ?? y.kg_per_ha, 4)}
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </TableWrap>
-              ) : (
-                <div className="rounded-xl border border-stone-200 bg-white p-6 text-sm text-stone-500 shadow-sm">
-                  Sin fincas con área acumulada y producción en el periodo.
-                </div>
-              )}
-            </div>
           </section>
 
           <section className="grid grid-cols-1 gap-8 lg:grid-cols-2">

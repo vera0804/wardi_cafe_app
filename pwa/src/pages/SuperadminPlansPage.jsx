@@ -241,7 +241,7 @@ export default function SuperadminPlansPage() {
                     <td className="py-3 pr-3 font-medium">{p.name}</td>
                     <td className="py-3 pr-3 text-slate-600">{p.billing_model_label}</td>
                     <td className="py-3 pr-3 text-xs text-slate-600">
-                      {p.max_farms} fincas · {p.max_lots_per_farm} lotes · {p.max_users_admin}/
+                      {p.max_lots_per_farm} fincas · {p.max_users_admin}/
                       {p.max_users_operario} usuarios
                     </td>
                     <td className="py-3 pr-3">{p.active_client_count ?? 0}</td>
@@ -332,19 +332,9 @@ export default function SuperadminPlansPage() {
                 />
               </label>
               <div className="grid grid-cols-2 gap-3">
-                <label className="block text-sm">
-                  <span className="text-slate-600">Máx. fincas</span>
-                  <input
-                    type="number"
-                    min={1}
-                    required
-                    className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-                    value={form.max_farms}
-                    onChange={(ev) => setForm((f) => ({ ...f, max_farms: ev.target.value }))}
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="text-slate-600">Lotes / finca</span>
+                <input type="hidden" value="1" readOnly />
+                <label className="block text-sm sm:col-span-2">
+                  <span className="text-slate-600">Máx. fincas operativas</span>
                   <input
                     type="number"
                     min={1}

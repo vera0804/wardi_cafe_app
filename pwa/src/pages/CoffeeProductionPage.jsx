@@ -48,7 +48,6 @@ function buildBulkDateRange(fromDate, toDate) {
 }
 
 const DEFAULT_FORM = {
-  farm_id: '',
   lot_id: '',
   prod_date: today(),
   from_date: today(),
@@ -59,12 +58,11 @@ const DEFAULT_FORM = {
 };
 
 export default function CoffeeProductionPage({ user }) {
-  const [meta, setMeta] = useState({ farms: [], lots: [] });
+  const [meta, setMeta] = useState({ lots: [] });
   const [filters, setFilters] = useState({
     from_date: '',
     to_date: '',
     active: 'true',
-    farm_id: '',
     lot_id: '',
   });
   const [rows, setRows] = useState([]);
@@ -81,15 +79,7 @@ export default function CoffeeProductionPage({ user }) {
   const canWrite = canWriteCoffeeProduction(user);
   const isBulkCreate = form.is_bulk && !editingId;
 
-  const filterLots = useMemo(() => {
-    if (!filters.farm_id) return meta.lots;
-    return meta.lots.filter((l) => l.farm_id === filters.farm_id);
-  }, [meta.lots, filters.farm_id]);
-
-  const formLots = useMemo(() => {
-    if (!form.farm_id) return meta.lots;
-    return meta.lots.filter((l) => l.farm_id === form.farm_id);
-  }, [meta.lots, form.farm_id]);
+  const formLots = useMemo(() => meta.lots || [], [meta.lots]);
 
   const bulkDates = useMemo(() => {
     if (!isBulkCreate) return [];
@@ -120,9 +110,9 @@ export default function CoffeeProductionPage({ user }) {
     (async () => {
       try {
         const data = await getLotProductionMeta();
-        setMeta({ farms: data?.farms || [], lots: data?.lots || [] });
+        setMeta({ lots: data?.lots || [] });
       } catch (e) {
-        setListError(e?.message || 'No se pudo cargar catálogo de fincas y lotes.');
+        setListError(e?.message || 'No se pudo cargar catálogo de fincas.');
       }
     })();
   }, []);
@@ -142,14 +132,10 @@ export default function CoffeeProductionPage({ user }) {
 
   useEffect(() => {
     refresh();
-  }, [filters.from_date, filters.to_date, filters.active, filters.farm_id, filters.lot_id]);
+  }, [filters.from_date, filters.to_date, filters.active, filters.lot_id]);
 
   function setFilter(field, value) {
-    setFilters((prev) => {
-      const next = { ...prev, [field]: value };
-      if (field === 'farm_id') next.lot_id = '';
-      return next;
-    });
+    setFilters((prev) => ({ ...prev, [field]: value }));
   }
 
   function resetForm() {
@@ -166,10 +152,8 @@ export default function CoffeeProductionPage({ user }) {
   }
 
   function openEdit(row) {
-    const farmId = meta.lots.find((l) => l.id === row.lot_id)?.farm_id || '';
     setEditingId(row.id);
     setForm({
-      farm_id: farmId,
       lot_id: row.lot_id || '',
       prod_date: String(row.prod_date).slice(0, 10),
       from_date: today(),
@@ -191,11 +175,7 @@ export default function CoffeeProductionPage({ user }) {
   }
 
   function onFormChange(field, value) {
-    setForm((prev) => {
-      const next = { ...prev, [field]: value };
-      if (field === 'farm_id') next.lot_id = '';
-      return next;
-    });
+    setForm((prev) => ({ ...prev, [field]: value }));
     if (field === 'from_date' || field === 'to_date' || field === 'is_bulk' || field === 'cajuelas') {
       if (field === 'from_date' || field === 'to_date' || field === 'is_bulk') {
         setExcludedBulkDates(new Set());
@@ -249,7 +229,7 @@ export default function CoffeeProductionPage({ user }) {
   }
 
   function validateForm() {
-    if (!form.farm_id || !form.lot_id) return 'Seleccione finca y lote.';
+    if (!form.lot_id) return 'Seleccione la finca.';
     const baseCaj = Number(form.cajuelas);
     if (!isBulkCreate) {
       if (!form.prod_date) return 'Indique la fecha de producción.';
@@ -339,7 +319,7 @@ export default function CoffeeProductionPage({ user }) {
         <div>
           <h3 className="text-base font-semibold text-lime-800">Producción de café</h3>
           <p className="text-sm text-slate-600">
-            Registra cajuelas cosechadas por lote y fecha. Las fanegas se calculan automáticamente (÷ 20). Puedes cargar
+            Registra cajuelas cosechadas por finca y fecha. Las fanegas se calculan automáticamente (÷ 20). Podés cargar
             un rango de días y excluir los que no hubo cosecha.
           </p>
         </div>
@@ -388,28 +368,12 @@ export default function CoffeeProductionPage({ user }) {
         <label className="flex flex-col gap-1 text-xs text-slate-600">
           Finca
           <select
-            value={filters.farm_id}
-            onChange={(e) => setFilter('farm_id', e.target.value)}
-            className="rounded border border-slate-300 px-2 py-1.5 text-sm"
-          >
-            <option value="">Todas</option>
-            {meta.farms.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs text-slate-600">
-          Lote
-          <select
             value={filters.lot_id}
             onChange={(e) => setFilter('lot_id', e.target.value)}
             className="rounded border border-slate-300 px-2 py-1.5 text-sm"
-            disabled={!filters.farm_id && filterLots.length === meta.lots.length}
           >
-            <option value="">Todos</option>
-            {filterLots.map((l) => (
+            <option value="">Todas</option>
+            {meta.lots.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.name}
               </option>
@@ -428,7 +392,7 @@ export default function CoffeeProductionPage({ user }) {
             <tr>
               <th className="px-3 py-2">Fecha</th>
               <th className="px-3 py-2">Semana</th>
-              <th className="px-3 py-2">Finca · Lote</th>
+              <th className="px-3 py-2">Finca</th>
               <th className="px-3 py-2 text-right">Cajuelas</th>
               <th className="px-3 py-2 text-right">Fanegas</th>
               <th className="px-3 py-2">Notas</th>
@@ -456,10 +420,7 @@ export default function CoffeeProductionPage({ user }) {
                   <tr key={r.id} className="border-t border-slate-100">
                     <td className="px-3 py-2 whitespace-nowrap">{formatDateDisplay(String(r.prod_date).slice(0, 10))}</td>
                     <td className="px-3 py-2 whitespace-nowrap">{r.work_week || '—'}</td>
-                    <td className="px-3 py-2">
-                      {r.farm_name ? `${r.farm_name} · ` : ''}
-                      {r.lot_name || '—'}
-                    </td>
+                    <td className="px-3 py-2">{r.lot_name || '—'}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{formatNum(r.cajuelas)}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{formatNum(r.fanegas, 4)}</td>
                     <td className="max-w-[200px] truncate px-3 py-2 text-slate-600" title={r.notes || ''}>
@@ -515,33 +476,16 @@ export default function CoffeeProductionPage({ user }) {
               </button>
             </div>
             <form className="grid grid-cols-1 gap-3 md:grid-cols-2" onSubmit={handleSubmit}>
-              <label className="block text-sm md:col-span-1">
+              <label className="block text-sm md:col-span-2">
                 Finca
-                <select
-                  required
-                  value={form.farm_id}
-                  onChange={(e) => onFormChange('farm_id', e.target.value)}
-                  disabled={saving}
-                  className="mt-1 w-full rounded border border-slate-300 px-2 py-2 text-sm"
-                >
-                  <option value="">Seleccione finca</option>
-                  {meta.farms.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm md:col-span-1">
-                Lote
                 <select
                   required
                   value={form.lot_id}
                   onChange={(e) => onFormChange('lot_id', e.target.value)}
-                  disabled={saving || !form.farm_id}
+                  disabled={saving}
                   className="mt-1 w-full rounded border border-slate-300 px-2 py-2 text-sm"
                 >
-                  <option value="">Seleccione lote</option>
+                  <option value="">Seleccione finca</option>
                   {formLots.map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.name}

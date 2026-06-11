@@ -11,13 +11,11 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
   const def = defaultDateRange();
   const [from, setFrom] = useState(def.from);
   const [to, setTo] = useState(def.to);
-  const [farmId, setFarmId] = useState('');
   const [lotId, setLotId] = useState('');
   const [harvestId, setHarvestId] = useState('');
   const [harvestLabel, setHarvestLabel] = useState('');
   const [harvests, setHarvests] = useState([]);
   const [lowStock, setLowStock] = useState('10');
-  const [farms, setFarms] = useState([]);
   const [lots, setLots] = useState([]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -25,22 +23,9 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
 
   const blocked = !canAccessEstadisticas(user);
 
-  const loadFarms = useCallback(async () => {
+  const loadLots = useCallback(async () => {
     try {
-      const rows = await apiRequest('/api/farms');
-      setFarms(Array.isArray(rows) ? rows : []);
-    } catch {
-      setFarms([]);
-    }
-  }, []);
-
-  const loadLots = useCallback(async (fid) => {
-    if (!fid) {
-      setLots([]);
-      return;
-    }
-    try {
-      const rows = await apiRequest(`/api/lots?farm_id=${encodeURIComponent(fid)}`);
+      const rows = await apiRequest('/api/lots');
       setLots(Array.isArray(rows) ? rows : []);
     } catch {
       setLots([]);
@@ -59,14 +44,9 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
   }, []);
 
   useEffect(() => {
-    loadFarms();
+    loadLots();
     loadHarvests();
-  }, [loadFarms, loadHarvests]);
-
-  useEffect(() => {
-    loadLots(farmId);
-    if (!farmId) setLotId('');
-  }, [farmId, loadLots]);
+  }, [loadLots, loadHarvests]);
 
   const refresh = useCallback(async () => {
     setError('');
@@ -75,7 +55,6 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
       const overview = await fetchStatsOverview({
         from,
         to,
-        farmId: farmId || undefined,
         lotId: lotId || undefined,
         lowStockThreshold:
           includeLowStockInRequest && lowStock !== '' ? Number(lowStock) : undefined,
@@ -87,7 +66,7 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
     } finally {
       setLoading(false);
     }
-  }, [from, to, farmId, lotId, lowStock, includeLowStockInRequest]);
+  }, [from, to, lotId, lowStock, includeLowStockInRequest]);
 
   useEffect(() => {
     if (!blocked) refresh();
@@ -110,21 +89,15 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
   const filtersProps = {
     from,
     to,
-    farmId,
     lotId,
     harvestId,
     harvests,
     onHarvestChange,
     lowStock,
-    farms,
     lots,
     loading,
     onFromChange: setFrom,
     onToChange: setTo,
-    onFarmChange: (v) => {
-      setFarmId(v);
-      setLotId('');
-    },
     onLotChange: setLotId,
     onLowStockChange: setLowStock,
     onRefresh: refresh,
@@ -137,8 +110,6 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
     setFrom,
     to,
     setTo,
-    farmId,
-    setFarmId,
     lotId,
     setLotId,
     harvestId,
@@ -147,7 +118,6 @@ export function useStatsOverview({ includeLowStockInRequest = true } = {}) {
     onHarvestChange,
     lowStock,
     setLowStock,
-    farms,
     lots,
     filtersProps,
     periodLine,
