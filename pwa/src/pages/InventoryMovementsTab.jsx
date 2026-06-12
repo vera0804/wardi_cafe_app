@@ -380,7 +380,7 @@ export default function InventoryMovementsTab({ user, openRegisterSignal = 0 }) 
         return;
       }
       if (!form.source_layer_id) {
-        setError('Debe elegir la capa (lote) de la que sale la mercadería.');
+        setError('Debe elegir la capa de la que sale la mercadería.');
         return;
       }
       const qOut = Number(form.qty);
@@ -712,7 +712,7 @@ export default function InventoryMovementsTab({ user, openRegisterSignal = 0 }) 
           </div>
           {form.movement === 'out' ? (
             <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-sm">
-              <p className="font-medium text-amber-950">Salida por capa (lote)</p>
+              <p className="font-medium text-amber-950">Salida por capa</p>
               <p className="text-xs text-amber-900/90">
                 Elija de qué ingreso sale la mercadería (solo capas con saldo). Puede dar de baja todo el saldo de esa
                 capa o solo una parte. El costo sigue la valorización de la capa. Luego responda si el proveedor (o
@@ -1337,7 +1337,7 @@ export default function InventoryMovementsTab({ user, openRegisterSignal = 0 }) 
                 </div>
                 {viewRow.movement === 'out' && viewRow.source_inbound_mov_date ? (
                   <div className="border-t border-slate-200 px-4 py-3">
-                    <h6 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Ingreso origen (lote)</h6>
+                    <h6 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Ingreso origen (capa)</h6>
                     <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-4">
                       <Detail label="Fecha ingreso" value={String(viewRow.source_inbound_mov_date || '').slice(0, 10)} />
                       <Detail label="Tipo de envase" value={viewRow.source_inbound_pack_label || '—'} />

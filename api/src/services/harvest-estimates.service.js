@@ -38,7 +38,7 @@ async function assertLotForClient({ db, lotId, clientId }) {
   );
   const row = res.rows[0];
   if (!row) {
-    const err = new Error('Lote no encontrado, inactivo o no pertenece a tu organización.');
+    const err = new Error('Finca no encontrada, inactiva o no pertenece a tu organización.');
     err.status = 409;
     throw err;
   }

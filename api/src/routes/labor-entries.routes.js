@@ -41,7 +41,7 @@ router.get('/summary/lot', async (req, res) => {
   } catch (e) {
     if (e.status) return res.status(e.status).json({ message: e.message });
     console.error('GET /labor-entries/summary/lot', e);
-    return res.status(500).json({ message: 'No se pudo generar resumen por lote.' });
+    return res.status(500).json({ message: 'No se pudo generar resumen por finca.' });
   }
 });
 

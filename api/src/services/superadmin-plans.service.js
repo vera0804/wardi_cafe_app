@@ -168,7 +168,7 @@ function parsePlanInput(body, { isCreate = false } = {}) {
     trial_days: trialDays,
     description,
     max_farms: 1,
-    max_lots_per_farm: parseLimit(body?.max_lots_per_farm ?? 50, 'Lotes por finca', { min: 1 }),
+    max_lots_per_farm: parseLimit(body?.max_lots_per_farm ?? 50, 'Fincas operativas', { min: 1 }),
     max_users_admin: parseLimit(body?.max_users_admin ?? 1, 'Usuarios admin', { min: 1 }),
     max_users_operario: parseLimit(body?.max_users_operario ?? 1, 'Usuarios operario', { min: 0 }),
     price,

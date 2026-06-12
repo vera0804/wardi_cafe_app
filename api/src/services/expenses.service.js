@@ -204,7 +204,7 @@ async function assertLotForClient({ lotId, clientId }) {
     clientId,
   ]);
   if (!r.rows[0]) {
-    const err = new Error('Lote no encontrado o inactivo.');
+    const err = new Error('Finca no encontrada o inactiva.');
     err.status = 409;
     throw err;
   }

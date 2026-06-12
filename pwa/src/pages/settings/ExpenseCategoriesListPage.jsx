@@ -37,7 +37,7 @@ export default function ExpenseCategoriesListPage() {
         <div>
           <h3 className="text-base font-semibold text-lime-800">Categorías de gastos</h3>
           <p className="text-sm text-slate-600">
-            Catálogo usado al registrar gastos por lote o generales. Se puede crear también desde el formulario de
+            Catálogo usado al registrar gastos por finca o de empresa. Se puede crear también desde el formulario de
             gasto.
           </p>
         </div>

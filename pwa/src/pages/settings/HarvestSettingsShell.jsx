@@ -36,7 +36,7 @@ export default function HarvestSettingsShell({ user }) {
         <h3 className="text-base font-semibold text-lime-800">Definición de períodos de cosecha</h3>
         <p className="mt-1 text-sm text-slate-600">
           Define temporadas de cosecha (calendario y precio de referencia por fanega) y metas planificadas
-          en cajuelas por lote. La producción diaria real se registra en Producción de café.
+          en cajuelas por finca. La producción diaria real se registra en Producción de café.
         </p>
       </header>
 

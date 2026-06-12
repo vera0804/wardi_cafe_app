@@ -36,7 +36,7 @@ async function getActiveLotsByFarm({ db = pool, farmId, clientId }) {
 async function computeAreaAllocations({ db = pool, farmId, clientId }) {
   const lots = await getActiveLotsByFarm({ db, farmId, clientId });
   if (!lots.length) {
-    const err = new Error('La finca no tiene lotes activos para prorratear.');
+    const err = new Error('La empresa no tiene fincas activas para prorratear.');
     err.status = 409;
     throw err;
   }
@@ -75,7 +75,7 @@ async function validateManualAllocations({ db = pool, farmId, clientId, allocati
     .filter((a) => a.lot_id);
 
   if (!normalized.length) {
-    const err = new Error('Allocations inválidas: no se encontraron lotes válidos.');
+    const err = new Error('Asignaciones inválidas: no se encontraron fincas válidas.');
     err.status = 400;
     throw err;
   }
@@ -83,7 +83,7 @@ async function validateManualAllocations({ db = pool, farmId, clientId, allocati
   const seen = new Set();
   for (const a of normalized) {
     if (seen.has(a.lot_id)) {
-      const err = new Error('Allocations inválidas: hay lotes repetidos.');
+      const err = new Error('Asignaciones inválidas: hay fincas repetidas.');
       err.status = 400;
       throw err;
     }
@@ -100,7 +100,7 @@ async function validateManualAllocations({ db = pool, farmId, clientId, allocati
   const activeLotIds = new Set(lots.map((l) => l.id));
   for (const a of normalized) {
     if (!activeLotIds.has(a.lot_id)) {
-      const err = new Error('Todos los lotes del prorrateo deben pertenecer a la finca y estar activos.');
+      const err = new Error('Todas las fincas del prorrateo deben pertenecer a la empresa y estar activas.');
       err.status = 409;
       throw err;
     }

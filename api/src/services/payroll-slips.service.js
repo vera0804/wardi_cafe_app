@@ -141,13 +141,13 @@ async function replaceSlipLotAllocations(db, clientId, slipId, lotAllocations) {
 
   const lotIds = [...new Set(rows.map((r) => r.lot_id).filter(Boolean))];
   if (lotIds.length !== rows.length) {
-    const err = new Error('Las asignaciones por lote deben tener un lote distinto por fila.');
+    const err = new Error('Las asignaciones por finca deben tener una finca distinta por fila.');
     err.status = 400;
     throw err;
   }
   for (const row of rows) {
     if (!row.lot_id) {
-      const err = new Error('Cada asignación debe incluir un lote válido.');
+      const err = new Error('Cada asignación debe incluir una finca válida.');
       err.status = 400;
       throw err;
     }
@@ -162,7 +162,7 @@ async function replaceSlipLotAllocations(db, clientId, slipId, lotAllocations) {
   );
   const n = cntRes.rows[0]?.n ?? 0;
   if (n !== lotIds.length) {
-    const err = new Error('Uno o más lotes no pertenecen a este cliente o no existen.');
+    const err = new Error('Una o más fincas no pertenecen a este cliente o no existen.');
     err.status = 400;
     throw err;
   }
@@ -312,7 +312,7 @@ async function sumLaborGross({ db, clientId, workerId, periodFrom, periodTo }) {
 function buildLotAllocations(totalLiability, lotRows) {
   if (!lotRows.length) {
     const err = new Error(
-      'No hay labores registradas en el periodo para prorratear por lote. Registre labores con lote o asignación a lotes.'
+      'No hay labores registradas en el periodo para prorratear por finca. Registre labores con finca o asignación a fincas.'
     );
     err.status = 409;
     throw err;

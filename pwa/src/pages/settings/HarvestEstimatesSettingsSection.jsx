@@ -186,15 +186,15 @@ export default function HarvestEstimatesSettingsSection({ user }) {
       {farmTotals.length > 0 ? (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <h4 className="border-b border-slate-100 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">
-            Resumen por finca (solo lotes con estimación guardada)
+            Resumen por empresa (solo fincas con estimación guardada)
           </h4>
           <table className="min-w-full text-sm">
             <thead className="bg-slate-100 text-left">
               <tr>
-                <th className="px-3 py-2">Finca</th>
+                <th className="px-3 py-2">Empresa</th>
                 <th className="px-3 py-2">Cajuelas est.</th>
                 <th className="px-3 py-2">Fanegas est.</th>
-                <th className="px-3 py-2">Lotes con meta</th>
+                <th className="px-3 py-2">Fincas con meta</th>
               </tr>
             </thead>
             <tbody>
@@ -212,7 +212,7 @@ export default function HarvestEstimatesSettingsSection({ user }) {
       ) : null}
 
       {loading && !rows.length ? (
-        <p className="text-sm text-slate-500">Cargando lotes…</p>
+        <p className="text-sm text-slate-500">Cargando fincas…</p>
       ) : null}
 
       {rowsByFarm.map((farm) => (
@@ -223,7 +223,7 @@ export default function HarvestEstimatesSettingsSection({ user }) {
           <table className="min-w-full text-sm">
             <thead className="bg-slate-100 text-left">
               <tr>
-                <th className="px-3 py-2">Lote</th>
+                <th className="px-3 py-2">Finca</th>
                 <th className="px-3 py-2">Cajuelas est.</th>
                 <th className="px-3 py-2">Fanegas est.</th>
                 {canWrite ? <th className="px-3 py-2 text-right">Acción</th> : null}

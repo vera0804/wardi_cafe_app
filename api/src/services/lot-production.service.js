@@ -1,7 +1,7 @@
 const { pool } = require('../db');
 
-const DUPLICATE_ACTIVE_MSG = 'Ya existe un registro activo para este lote y fecha.';
-const LOT_INVALID_MSG = 'Lote no encontrado, inactivo o no pertenece a tu organización.';
+const DUPLICATE_ACTIVE_MSG = 'Ya existe un registro activo para esta finca y fecha.';
+const LOT_INVALID_MSG = 'Finca no encontrada, inactiva o no pertenece a tu organización.';
 
 function normalizeText(value) {
   if (value == null) return null;

@@ -180,7 +180,7 @@ async function validateScopeEntities({ db, scope, lotId, farmId, clientId }) {
   if (scope === 'lot') {
     const lot = await getLotById({ db, lotId, clientId });
     if (!lot || !lot.is_active) {
-      const err = new Error('Lote no encontrado o inactivo.');
+      const err = new Error('Finca no encontrada o inactiva.');
       err.status = 409;
       throw err;
     }

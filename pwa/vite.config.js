@@ -15,7 +15,7 @@ export default defineConfig({
         id: '/',
         name: 'Wardi — Gestión de fincas cafetaleras',
         short_name: 'Wardi',
-        description: 'Gestión operativa de fincas cafetaleras, lotes, labores y producción de café.',
+        description: 'Gestión operativa de fincas cafetaleras, labores y producción de café.',
         lang: 'es',
         dir: 'ltr',
         theme_color: '#4d7c0f',

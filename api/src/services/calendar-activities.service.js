@@ -140,7 +140,7 @@ async function listCalendarActivities({
       [lot, farmId, clientId]
     );
     if (!lotOk.rows[0]) {
-      const err = new Error('El lote no pertenece a la finca indicada o a tu organización.');
+      const err = new Error('La finca no pertenece a la empresa indicada o a tu organización.');
       err.status = 400;
       throw err;
     }
@@ -201,7 +201,7 @@ async function ensureFarmLotLabor({ db, clientId, farmId, lotId, laborTypeId }) 
       [lotId, farmId, clientId]
     );
     if (!lotRes.rows[0]) {
-      const err = new Error('Lote no encontrado, no pertenece a la finca o está inactivo.');
+      const err = new Error('Finca no encontrada, no pertenece a la empresa o está inactiva.');
       err.status = 400;
       throw err;
     }

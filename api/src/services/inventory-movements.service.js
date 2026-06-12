@@ -328,7 +328,7 @@ async function consumeSpecificLayer({ db, clientId, itemId, layerId, qtyToConsum
   const layer = lr.rows[0];
   if (!layer) {
     const err = new Error(
-      'La capa (lote) seleccionada no existe, no pertenece a este insumo o no tiene saldo disponible.'
+      'La capa seleccionada no existe, no pertenece a este insumo o no tiene saldo disponible.'
     );
     err.status = 400;
     throw err;
@@ -612,7 +612,7 @@ async function createMovement({ clientId, userId, payload, actorRole }) {
       }
       const sourceLayerId = normalizeText(payload?.source_layer_id);
       if (!sourceLayerId) {
-        const err = new Error('Debe elegir la capa (lote) de la que sale la mercadería (source_layer_id).');
+        const err = new Error('Debe elegir la capa de la que sale la mercadería (source_layer_id).');
         err.status = 400;
         throw err;
       }

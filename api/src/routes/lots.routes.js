@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
     return res.json(rows);
   } catch (e) {
     console.error('GET /lots', e);
-    return res.status(500).json({ message: 'No se pudieron cargar los lotes.' });
+    return res.status(500).json({ message: 'No se pudieron cargar las fincas.' });
   }
 });
 
@@ -45,12 +45,12 @@ router.get('/:id', async (req, res) => {
       clientId: req.user.clientId,
     });
     if (!lot) {
-      return res.status(404).json({ message: 'Lote no encontrado.' });
+      return res.status(404).json({ message: 'Finca no encontrada.' });
     }
     return res.json(lot);
   } catch (e) {
     console.error('GET /lots/:id', e);
-    return res.status(500).json({ message: 'No se pudo cargar el lote.' });
+    return res.status(500).json({ message: 'No se pudo cargar la finca.' });
   }
 });
 
@@ -73,7 +73,7 @@ router.post('/', requireCsrf, requireWritePermission, async (req, res) => {
   } catch (e) {
     if (e.status) return res.status(e.status).json({ message: e.message });
     console.error('POST /lots', e);
-    return res.status(500).json({ message: 'No se pudo crear el lote.' });
+    return res.status(500).json({ message: 'No se pudo crear la finca.' });
   }
 });
 
@@ -93,13 +93,13 @@ router.patch('/:id', requireCsrf, requireWritePermission, async (req, res) => {
       community: req.body?.community,
     });
     if (!lot) {
-      return res.status(404).json({ message: 'Lote no encontrado.' });
+      return res.status(404).json({ message: 'Finca no encontrada.' });
     }
     return res.json(lot);
   } catch (e) {
     if (e.status) return res.status(e.status).json({ message: e.message });
     console.error('PATCH /lots/:id', e);
-    return res.status(500).json({ message: 'No se pudo actualizar el lote.' });
+    return res.status(500).json({ message: 'No se pudo actualizar la finca.' });
   }
 });
 
@@ -116,13 +116,13 @@ router.patch('/:id/active', requireCsrf, requireWritePermission, async (req, res
       isActive: req.body.is_active,
     });
     if (!lot) {
-      return res.status(404).json({ message: 'Lote no encontrado.' });
+      return res.status(404).json({ message: 'Finca no encontrada.' });
     }
     return res.json(lot);
   } catch (e) {
     if (e.status) return res.status(e.status).json({ message: e.message });
     console.error('PATCH /lots/:id/active', e);
-    return res.status(500).json({ message: 'No se pudo actualizar el estado del lote.' });
+    return res.status(500).json({ message: 'No se pudo actualizar el estado de la finca.' });
   }
 });
 

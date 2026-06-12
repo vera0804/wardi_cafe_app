@@ -23,7 +23,7 @@ function summarizePath(path) {
   if (p.startsWith('/api/inventory-items')) return 'Insumos';
   if (p.startsWith('/api/mix-applications')) return 'Aplicaciones';
   if (p.startsWith('/api/lot-production')) return 'Producción de café';
-  if (p.startsWith('/api/expenses')) return 'Gastos por lote';
+  if (p.startsWith('/api/expenses')) return 'Gastos por finca';
   if (p.startsWith('/api/general-expenses')) return 'Gastos generales';
   return p || 'Servidor';
 }

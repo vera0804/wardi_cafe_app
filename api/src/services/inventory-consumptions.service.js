@@ -70,7 +70,7 @@ async function assertLotBelongsToClient(db, lotId, clientId) {
     [lotId, clientId]
   );
   if (!r.rows[0]) {
-    const err = new Error('Lote no encontrado o inactivo.');
+    const err = new Error('Finca no encontrada o inactiva.');
     err.status = 404;
     throw err;
   }
@@ -464,7 +464,7 @@ async function createDirectConsumption({
     }
 
     if (!created.length) {
-      const err = new Error('No quedó cantidad asignada a ningún lote (revisá los porcentajes).');
+      const err = new Error('No quedó cantidad asignada a ninguna finca (revisá los porcentajes).');
       err.status = 400;
       throw err;
     }
@@ -556,7 +556,7 @@ async function updateInventoryConsumption({ clientId, userId, id, body }) {
   if (!current) return null;
 
   if (current.application_group_id && Object.prototype.hasOwnProperty.call(body || {}, 'lot_id')) {
-    const err = new Error('No se puede cambiar el lote en consumos prorrateados por finca.');
+    const err = new Error('No se puede cambiar la finca en consumos prorrateados por empresa.');
     err.status = 400;
     throw err;
   }

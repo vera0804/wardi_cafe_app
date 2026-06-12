@@ -491,7 +491,7 @@ async function getRentabilityByLot({ clientId, from, to, farmId, lotId, assetDep
     const margin = round2(revenue - cost);
     rows.push({
       lot_id: id,
-      lot_name: m?.lot_name || rev?.lot_name || 'Lote',
+      lot_name: m?.lot_name || rev?.lot_name || 'Finca',
       farm_id: m?.farm_id || rev?.farm_id || null,
       farm_name: m?.farm_name || rev?.farm_name || '—',
       revenue_crc: round2(revenue),
@@ -769,9 +769,9 @@ async function getLaborPayrollAttributedByLaborType({ clientId, from, to, farmId
 }
 
 const LABOR_BY_TYPE_NAME_NONE_AMOUNT =
-  'Planilla / nómina fija (sin jornadas en el lote en el periodo de la planilla o del mes de nómina)';
+  'Planilla / nómina fija (sin jornadas en la finca en el periodo de la planilla o del mes de nómina)';
 const LABOR_BY_TYPE_NAME_NONE_PRESENCE =
-  'Planilla / nómina fija (sin registros de labor en el lote en el periodo de la planilla o del mes de nómina)';
+  'Planilla / nómina fija (sin registros de labor en la finca en el periodo de la planilla o del mes de nómina)';
 
 /**
  * Igual que `getLaborPayrollAttributedByLaborType`, pero el reparto entre tipos usa **cantidad de registros**
@@ -2252,12 +2252,12 @@ async function getOverview(query) {
     notes: [
       'El costo por fanega usa fanegas de producción de café registradas en el periodo (cajuelas ÷ 20 en cada registro diario).',
       'Los ingresos se calculan como fanegas × precio por fanega (CRC) de la cosecha activa cuyo rango cubre la fecha de producción; sin precio o sin cosecha, esa producción aporta 0 al ingreso.',
-      'El costo de planilla variable proviene solo de planillas en estado pagada, repartido por lotes (payroll_slip_lot_allocations).',
-      'La depreciación de activos fijos (activos y periodos de depreciación en estado activo) se incluye en costos directos: se escala al alcance del filtro por proporción de hectáreas de lote y se reparte entre lotes por área.',
+      'El costo de planilla variable proviene solo de planillas en estado pagada, repartido por fincas (payroll_slip_lot_allocations).',
+      'La depreciación de activos fijos (activos y periodos de depreciación en estado activo) se incluye en costos directos: se escala al alcance del filtro por proporción de hectáreas de finca y se reparte entre fincas por área.',
       'Las labores en días ya cubiertos por planilla pagada del mismo trabajador no se suman al costeo de jornales (evita duplicar con planilla).',
-      'La tabla “Labores por tipo” (resumen global) sigue mostrando jornadas netas más planilla variable y nómina fija a lotes atribuida por tipo; la vista de mano de obra usa además columnas dedicadas: costo por tipo solo ocasionales, registros por tipo (todos los trabajadores) y picos temporales solo ocasionales.',
-      'En la pantalla de mano de obra: «Mano de obra por trabajador» muestra horas registradas (unidad hora) y total pagado = labores netas + planilla variable a lotes + nómina fija a lotes. «Costo por tipo (ocasionales)» suma montos de registros de labor (monto distinto de cero) de trabajadores ocasionales, sin excluir días cubiertos por planilla pagada ni sumar planilla. «Tipos más realizados» cuenta registros de labor con todos los trabajadores. Picos semana/mes/año suman montos de jornadas solo de ocasionales.',
-      'Rendimiento (fanegas/Ha) y costo/ha usan el área en hectáreas registrada en cada lote; lotes sin área no aportan al cociente.',
+      'La tabla “Labores por tipo” (resumen global) sigue mostrando jornadas netas más planilla variable y nómina fija a fincas atribuida por tipo; la vista de mano de obra usa además columnas dedicadas: costo por tipo solo ocasionales, registros por tipo (todos los trabajadores) y picos temporales solo ocasionales.',
+      'En la pantalla de mano de obra: «Mano de obra por trabajador» muestra horas registradas (unidad hora) y total pagado = labores netas + planilla variable a fincas + nómina fija a fincas. «Costo por tipo (ocasionales)» suma montos de registros de labor (monto distinto de cero) de trabajadores ocasionales, sin excluir días cubiertos por planilla pagada ni sumar planilla. «Tipos más realizados» cuenta registros de labor con todos los trabajadores. Picos semana/mes/año suman montos de jornadas solo de ocasionales.',
+      'Rendimiento (fanegas/Ha) y costo/ha usan el área en hectáreas registrada en cada finca; fincas sin área no aportan al cociente.',
       'Las curvas de cosecha semanal y mensual muestran fanegas agrupadas por periodo.',
     ],
   };

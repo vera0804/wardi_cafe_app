@@ -196,7 +196,7 @@ export default function PayrollCalculationPage({ user }) {
           Trabajador <strong>fijo</strong>: mes calendario completo, salario mensual bruto; si declara CCSS se aplican
           los porcentajes de la pestaña de nómina (CCSS patrono, otros patrono e INS, etc. suman al costo; trabajador
           queda como registro). Prorrateo del costo patrono (bruto + CCSS patrono + otros patrono) según labores por
-          lote en el mes. <strong>Ocasional</strong>: suma
+          finca en el mes. <strong>Ocasional</strong>: suma
           de pagos del periodo y misma lógica de aportes y prorrateo.
         </p>
 
@@ -411,7 +411,7 @@ export default function PayrollCalculationPage({ user }) {
                           className="mr-2 text-xs text-slate-600 underline"
                           onClick={() => setExpandedId((id) => (id === r.id ? null : r.id))}
                         >
-                          {expandedId === r.id ? 'Ocultar' : 'Lotes'}
+                          {expandedId === r.id ? 'Ocultar' : 'Fincas'}
                         </button>
                         {r.status === 'calculada' && !readOnly ? (
                           <>
@@ -448,11 +448,11 @@ export default function PayrollCalculationPage({ user }) {
                     {expandedId === r.id && Array.isArray(r.lot_allocations) && r.lot_allocations.length > 0 ? (
                       <tr className="bg-slate-50">
                         <td colSpan={10} className="px-4 py-2">
-                          <p className="mb-1 text-xs font-semibold text-slate-700">Prorrateo por lote</p>
+                          <p className="mb-1 text-xs font-semibold text-slate-700">Prorrateo por finca</p>
                           <ul className="text-xs text-slate-600">
                             {r.lot_allocations.map((a) => (
                               <li key={a.id}>
-                                {a.lot_name || 'Lote'} — {fmtMoney(a.amount_allocated)} (
+                                {a.lot_name || 'Finca'} — {fmtMoney(a.amount_allocated)} (
                                 {Number(a.allocation_pct).toFixed(2)} %)
                               </li>
                             ))}
