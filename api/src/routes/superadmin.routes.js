@@ -109,6 +109,57 @@ router.post('/plans/:planId/deactivate', requireCsrf, async (req, res, next) => 
   }
 });
 
+router.get('/clients/:clientId', async (req, res, next) => {
+  try {
+    res.json(await superadminService.getClientById(req.params.clientId));
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ message: e.message });
+    next(e);
+  }
+});
+
+router.patch('/clients/:clientId', requireCsrf, async (req, res, next) => {
+  try {
+    const row = await superadminService.updateClient({
+      clientId: req.params.clientId,
+      name: req.body?.name,
+    });
+    auditService.logSecurityEvent({
+      eventType: 'superadmin_client_updated',
+      userId: req.user.id,
+      clientId: row?.id || null,
+      ipAddress: clientIp(req),
+      userAgent: req.headers['user-agent'] || null,
+      metadata: { clientName: row?.name || null },
+    });
+    res.json(row);
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ message: e.message });
+    next(e);
+  }
+});
+
+router.post('/clients/:clientId/status', requireCsrf, async (req, res, next) => {
+  try {
+    const row = await superadminService.setClientStatus({
+      clientId: req.params.clientId,
+      status: req.body?.status,
+    });
+    auditService.logSecurityEvent({
+      eventType: 'superadmin_client_status_changed',
+      userId: req.user.id,
+      clientId: row?.id || null,
+      ipAddress: clientIp(req),
+      userAgent: req.headers['user-agent'] || null,
+      metadata: { clientName: row?.name || null, status: row?.status || null },
+    });
+    res.json(row);
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ message: e.message });
+    next(e);
+  }
+});
+
 router.get('/clients', async (req, res, next) => {
   try {
     const rows = await superadminService.listClients();

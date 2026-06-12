@@ -4,13 +4,20 @@
 
 | Ruta | Función |
 |------|---------|
-| `/superadmin/clients` | Organizaciones: alta con plan activo, renovar licencia, entrar como tenant |
+| `/superadmin/clients` | Organizaciones: alta, listado, entrar como tenant |
+| `/superadmin/clients/:id` | Detalle: editar nombre, suspender/reactivar, renovar licencia y cambiar plan |
 | `/superadmin/plans` | CRUD de planes + aviso de impacto al editar/inactivar |
 
 ## API (`/api/superadmin`, sesión superadmin + CSRF en mutaciones)
 
 | Método | Ruta | Uso |
 |--------|------|-----|
+| GET | `/clients` | Listado de organizaciones |
+| GET | `/clients/:id` | Detalle de organización |
+| PATCH | `/clients/:id` | Editar nombre (`name`) |
+| POST | `/clients/:id/status` | `{ status: "active" \| "suspended" }` — suspende cierra sesiones |
+| POST | `/clients/:id/license/renew` | Renovar licencia; opcional `plan_id`, fechas y demo |
+| POST | `/clients` | Alta con admin inicial |
 | GET | `/plans` | Solo planes `is_active = true` (selector al crear org) |
 | GET | `/plans/all` | Todos los planes + columna org. activas |
 | GET | `/plans/:id/impact` | Lista de `clients` con `status = active` y ese `plan_id` |

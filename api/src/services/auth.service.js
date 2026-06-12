@@ -832,15 +832,7 @@ async function setSessionActingClient({ sessionId, superadminUserId, actingClien
        AND lower(trim(r.name)) = 'superadmin'
        AND s.revoked_at IS NULL
        AND s.expires_at > NOW()
-       AND EXISTS (
-         SELECT 1 FROM clients c
-         WHERE c.id = $3::uuid
-           AND lower(trim(coalesce(c.status, ''))) = 'active'
-           AND (
-             c.license_expires_on IS NULL
-             OR c.license_expires_on >= CURRENT_DATE
-           )
-       )
+       AND EXISTS (SELECT 1 FROM clients c WHERE c.id = $3::uuid)
      RETURNING s.id`,
     [sessionId, superadminUserId, actingClientId]
   );
@@ -870,6 +862,7 @@ async function clearSessionActingClient({ sessionId, superadminUserId }) {
 
 function assertSessionClientLicense(row) {
   const isSuperadmin = roleNameNorm(row.role_name) === 'superadmin';
+  if (isSuperadmin) return true;
   const acting = row.acting_client_id != null ? String(row.acting_client_id) : null;
   const home = row.client_id != null ? String(row.client_id) : null;
   const effectiveClientId = isSuperadmin ? acting : home;

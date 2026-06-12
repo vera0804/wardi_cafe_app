@@ -33,6 +33,24 @@ export function deactivateSuperadminPlan(planId, payload = {}) {
   });
 }
 
+export function fetchSuperadminClient(clientId) {
+  return apiRequest(`/api/superadmin/clients/${clientId}`);
+}
+
+export function updateSuperadminClient(clientId, payload) {
+  return apiRequest(`/api/superadmin/clients/${clientId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function setSuperadminClientStatus(clientId, status) {
+  return apiRequest(`/api/superadmin/clients/${clientId}/status`, {
+    method: 'POST',
+    body: JSON.stringify({ status }),
+  });
+}
+
 export function fetchSuperadminClients() {
   return apiRequest('/api/superadmin/clients');
 }

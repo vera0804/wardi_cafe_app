@@ -5,6 +5,7 @@ const { assertPasswordPolicy } = require('../lib/passwordPolicy');
 const {
   buildLicenseFieldsFromPlan,
   fetchPlanForLicense,
+  revokeAllSessionsForClient,
 } = require('./client-license.service');
 const {
   formatLicenseExpiryDisplay,
@@ -12,6 +13,23 @@ const {
   toIsoDateFromDb,
 } = require('../lib/licenseDates');
 const { listActivePlans } = require('./superadmin-plans.service');
+
+const CLIENT_STATUS_LABELS = {
+  active: 'Activa',
+  suspended: 'Suspendida',
+  license_expired: 'Licencia vencida',
+};
+
+function normalizeClientStatus(status) {
+  const s = String(status || 'active').trim().toLowerCase();
+  if (s === 'suspended') return 'suspended';
+  if (s === 'license_expired') return 'license_expired';
+  return 'active';
+}
+
+function clientStatusLabel(status) {
+  return CLIENT_STATUS_LABELS[normalizeClientStatus(status)] || status || '—';
+}
 
 const BCRYPT_ROUNDS = 12;
 
@@ -43,10 +61,12 @@ function normalizeName(value, field) {
 function mapClientRow(row) {
   const expiresOn = toIsoDateFromDb(row.license_expires_on);
   const startsOn = toIsoDateFromDb(row.license_starts_on);
+  const status = normalizeClientStatus(row.status);
   return {
     id: row.id,
     name: row.name,
-    status: row.status,
+    status,
+    status_label: clientStatusLabel(status),
     plan_id: row.plan_id,
     plan_name: row.plan_name,
     plan_billing_model: row.plan_billing_model
@@ -59,6 +79,55 @@ function mapClientRow(row) {
     created_at: row.created_at,
   };
 }
+
+function mapClientDetailRow(row) {
+  const base = mapClientRow(row);
+  return {
+    ...base,
+    plan: row.plan_id
+      ? {
+          id: row.plan_id,
+          name: row.plan_name,
+          billing_model: row.plan_billing_model
+            ? normalizeBillingModel(row.plan_billing_model)
+            : null,
+          billing_model_label: row.plan_billing_model
+            ? normalizeBillingModel(row.plan_billing_model) === 'trial_days'
+              ? 'Demo / días fijos'
+              : normalizeBillingModel(row.plan_billing_model) === 'monthly_anchor'
+                ? 'Mensual (día de pago)'
+                : 'Sin vencimiento'
+            : null,
+          trial_days: row.trial_days,
+          description: row.description,
+          max_farms: row.max_farms,
+          max_lots_per_farm: row.max_lots_per_farm,
+          max_users_admin: row.max_users_admin,
+          max_users_operario: row.max_users_operario,
+          price: row.price != null ? Number(row.price) : 0,
+          is_active: row.plan_is_active !== false,
+        }
+      : null,
+    admin_email: row.admin_email || null,
+    active_users_count: row.active_users_count != null ? Number(row.active_users_count) : 0,
+    active_lots_count: row.active_lots_count != null ? Number(row.active_lots_count) : 0,
+  };
+}
+
+const CLIENT_DETAIL_SELECT = `
+  SELECT c.id, c.name, c.status, c.plan_id, c.created_at,
+         c.license_starts_on, c.license_expires_on, c.billing_anchor_day,
+         p.name AS plan_name, p.billing_model AS plan_billing_model,
+         p.trial_days, p.description, p.max_farms, p.max_lots_per_farm,
+         p.max_users_admin, p.max_users_operario, p.price, p.is_active AS plan_is_active,
+         (SELECT COUNT(*)::int FROM users u WHERE u.client_id = c.id AND u.is_active = true) AS active_users_count,
+         (SELECT COUNT(*)::int FROM lots l WHERE l.client_id = c.id AND l.is_active = true) AS active_lots_count,
+         (SELECT u.email FROM users u
+          INNER JOIN roles r ON r.id = u.role_id
+          WHERE u.client_id = c.id AND u.is_active = true AND lower(trim(r.name)) = 'admin'
+          ORDER BY u.created_at ASC NULLS LAST LIMIT 1) AS admin_email
+  FROM clients c
+  LEFT JOIN plans p ON p.id = c.plan_id`;
 
 async function assertGlobalActiveEmailFree({ db, email, excludeUserId = null }) {
   const res = await db.query(
@@ -82,14 +151,67 @@ async function listPlans() {
 
 async function listClients() {
   const res = await pool.query(
-    `SELECT c.id, c.name, c.status, c.plan_id, c.created_at,
-            c.license_starts_on, c.license_expires_on, c.billing_anchor_day,
-            p.name AS plan_name, p.billing_model AS plan_billing_model
-     FROM clients c
-     LEFT JOIN plans p ON p.id = c.plan_id
+    `${CLIENT_DETAIL_SELECT}
      ORDER BY c.name ASC`
   );
   return res.rows.map(mapClientRow);
+}
+
+async function getClientById(clientId) {
+  const cid = String(clientId || '').trim();
+  if (!cid) {
+    const err = new Error('client_id es obligatorio.');
+    err.status = 400;
+    throw err;
+  }
+  const res = await pool.query(`${CLIENT_DETAIL_SELECT} WHERE c.id = $1::uuid`, [cid]);
+  if (!res.rows[0]) {
+    const err = new Error('Organización no encontrada.');
+    err.status = 404;
+    throw err;
+  }
+  return mapClientDetailRow(res.rows[0]);
+}
+
+async function updateClient({ clientId, name }) {
+  const cid = String(clientId || '').trim();
+  const n = String(name || '').trim();
+  if (!n) {
+    const err = new Error('El nombre de la organización es obligatorio.');
+    err.status = 400;
+    throw err;
+  }
+  const res = await pool.query(
+    `UPDATE clients SET name = $2 WHERE id = $1::uuid RETURNING id`,
+    [cid, n]
+  );
+  if (!res.rowCount) {
+    const err = new Error('Organización no encontrada.');
+    err.status = 404;
+    throw err;
+  }
+  return getClientById(cid);
+}
+
+async function setClientStatus({ clientId, status }) {
+  const cid = String(clientId || '').trim();
+  const norm = normalizeClientStatus(status);
+  if (norm !== 'active' && norm !== 'suspended') {
+    const err = new Error('Estado no válido. Use active o suspended.');
+    err.status = 400;
+    throw err;
+  }
+  const res = await pool.query(`SELECT id, status FROM clients WHERE id = $1::uuid`, [cid]);
+  if (!res.rows[0]) {
+    const err = new Error('Organización no encontrada.');
+    err.status = 404;
+    throw err;
+  }
+  await pool.query(`UPDATE clients SET status = $2 WHERE id = $1::uuid`, [cid, norm]);
+  if (norm === 'suspended') {
+    await revokeAllSessionsForClient(cid, { reason: 'client_suspended' });
+  }
+  return getClientById(cid);
 }
 
 async function getRoleIdByName(db, roleNameNorm) {
@@ -260,6 +382,16 @@ async function renewClientLicense({
       err.status = 400;
       throw err;
     }
+    if (
+      planId != null &&
+      String(planId).trim() &&
+      String(planId).trim() !== String(client.plan_id) &&
+      planRow.is_active === false
+    ) {
+      const err = new Error('El plan seleccionado está inactivo. Elija otro plan o reactive este plan.');
+      err.status = 400;
+      throw err;
+    }
     const license = buildLicenseFieldsFromPlan({
       planRow,
       licenseStartsOn,
@@ -289,17 +421,7 @@ async function renewClientLicense({
       throw err;
     }
     await db.query('COMMIT');
-
-    const list = await pool.query(
-      `SELECT c.id, c.name, c.status, c.plan_id, c.created_at,
-              c.license_starts_on, c.license_expires_on, c.billing_anchor_day,
-              p.name AS plan_name, p.billing_model AS plan_billing_model
-       FROM clients c
-       LEFT JOIN plans p ON p.id = c.plan_id
-       WHERE c.id = $1`,
-      [cid]
-    );
-    return mapClientRow(list.rows[0]);
+    return getClientById(cid);
   } catch (e) {
     await db.query('ROLLBACK');
     throw e;
@@ -311,6 +433,9 @@ async function renewClientLicense({
 module.exports = {
   listPlans,
   listClients,
+  getClientById,
+  updateClient,
+  setClientStatus,
   createClientWithAdmin,
   renewClientLicense,
 };

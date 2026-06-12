@@ -9,6 +9,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'));
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
 const SuperadminClientsPage = lazy(() => import('./pages/SuperadminClientsPage.jsx'));
+const SuperadminClientDetailPage = lazy(() => import('./pages/SuperadminClientDetailPage.jsx'));
 const SuperadminPlansPage = lazy(() => import('./pages/SuperadminPlansPage.jsx'));
 const AssetAdminRoutes = lazy(() => import('./pages/assets/AssetAdminRoutes.jsx'));
 const AssetCategoriesRoutes = lazy(() => import('./pages/settings/AssetCategoriesRoutes.jsx'));
@@ -71,6 +72,18 @@ export default function AppRouter() {
         <Route path="/login" element={<Login />} />
         <Route path="/olvidaste-contrasena" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+          path="/superadmin/clients/:clientId"
+          element={
+            <ProtectedRoute>
+              <OnlineOnlyRoute>
+                <Suspense fallback={<RouteFallback />}>
+                  <SuperadminClientDetailPage />
+                </Suspense>
+              </OnlineOnlyRoute>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/superadmin/clients"
           element={

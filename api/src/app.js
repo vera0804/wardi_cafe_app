@@ -38,6 +38,7 @@ const superadminRoutes = require('./routes/superadmin.routes');
 const { apiPrivateNoStore } = require('./middleware/apiCache.middleware');
 
 const app = express();
+app.set('trust proxy', 1);
 
 if (config.trustProxy) {
   app.set('trust proxy', 1);

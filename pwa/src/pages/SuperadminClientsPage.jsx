@@ -1,11 +1,10 @@
+import { Link, useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import {
   createSuperadminClient,
   fetchSuperadminClients,
   fetchSuperadminPlans,
-  renewSuperadminClientLicense,
   superadminEnterTenant,
 } from '../services/superadminApi.js';
 import PasswordPolicyHint from '../components/PasswordPolicyHint.jsx';
@@ -29,7 +28,6 @@ export default function SuperadminClientsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
-  const [renewingId, setRenewingId] = useState(null);
   const [form, setForm] = useState({
     client_name: '',
     plan_id: '',
@@ -91,25 +89,6 @@ export default function SuperadminClientsPage() {
       navigate('/dashboard', { replace: true });
     } catch (e) {
       setError(e?.message || 'No se pudo entrar a la organización.');
-    }
-  }
-
-  async function handleRenew(client) {
-    setError('');
-    setRenewingId(client.id);
-    try {
-      await renewSuperadminClientLicense(client.id, {
-        license_starts_on: todayIsoLocal(),
-        billing_anchor_day:
-          client.plan_billing_model === 'monthly_anchor'
-            ? client.billing_anchor_day || Math.min(28, new Date().getDate())
-            : undefined,
-      });
-      await load();
-    } catch (e) {
-      setError(e?.message || 'No se pudo renovar la licencia.');
-    } finally {
-      setRenewingId(null);
     }
   }
 
@@ -312,9 +291,14 @@ export default function SuperadminClientsPage() {
               {clients.map((c) => (
                 <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                   <div>
-                    <div className="font-medium text-slate-800">{c.name}</div>
+                    <Link
+                      to={`/superadmin/clients/${c.id}`}
+                      className="font-medium text-slate-800 hover:text-lime-800 hover:underline"
+                    >
+                      {c.name}
+                    </Link>
                     <div className="text-xs text-slate-500">
-                      Plan: {c.plan_name || '—'} · Estado: {c.status || '—'}
+                      Plan: {c.plan_name || '—'} · {c.status_label || c.status || '—'}
                       {c.license_expires_on_display ? (
                         <> · Vence: {c.license_expires_on_display}</>
                       ) : (
@@ -323,14 +307,12 @@ export default function SuperadminClientsPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      disabled={renewingId === c.id}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                      onClick={() => handleRenew(c)}
+                    <Link
+                      to={`/superadmin/clients/${c.id}`}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
                     >
-                      {renewingId === c.id ? 'Renovando…' : 'Renovar licencia'}
-                    </button>
+                      Administrar
+                    </Link>
                     <button
                       type="button"
                       className="rounded-lg border border-lime-700 px-3 py-1.5 text-sm font-medium text-lime-800 hover:bg-lime-50"
