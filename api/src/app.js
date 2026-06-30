@@ -34,6 +34,7 @@ const payrollSlipsRoutes = require('./routes/payroll-slips.routes');
 const tenantUsersRoutes = require('./routes/tenant-users.routes');
 const statsRoutes = require('./routes/stats.routes');
 const exchangeRateRoutes = require('./routes/exchange-rate.routes');
+const contractsRoutes = require('./routes/contracts.routes');
 const superadminRoutes = require('./routes/superadmin.routes');
 const { apiPrivateNoStore } = require('./middleware/apiCache.middleware');
 
@@ -110,6 +111,7 @@ app.use('/api/payroll-slips', payrollSlipsRoutes);
 app.use('/api/tenant-users', tenantUsersRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/exchange-rate', exchangeRateRoutes);
+app.use('/api/contracts', contractsRoutes);
 
 /** Rutas /api no registradas → JSON 404 (no caer en el fallback SPA). */
 app.use('/api', (req, res) => {

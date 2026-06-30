@@ -42,6 +42,7 @@ const MOUNTED_ROUTES = [
   { mount: '/api/tenant-users', file: 'tenant-users.routes.js', tenantScope: 'tenant' },
   { mount: '/api/stats', file: 'stats.routes.js', tenantScope: 'tenant' },
   { mount: '/api/exchange-rate', file: 'exchange-rate.routes.js', tenantScope: 'external' },
+  { mount: '/api/contracts', file: 'contracts.routes.js', tenantScope: 'tenant-meta' },
 ];
 
 const TENANT_TABLE_RE =

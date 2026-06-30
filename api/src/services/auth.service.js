@@ -10,6 +10,7 @@ const {
   isClientLicenseActive,
   revokeAllSessionsForClient,
 } = require('./client-license.service');
+const appContract = require('./appContract.service');
 
 /** Valid bcrypt hash used when no user exists (mitigates timing leaks). */
 const DUMMY_PASSWORD_HASH =
@@ -93,7 +94,6 @@ function mapUserPayloadFromUserRow(row) {
     actingClientId: null,
     isSuperadmin,
     needsTenantSelection: isSuperadmin,
-    requiresContractAcceptance: false,
     ...license,
   };
 }
@@ -118,7 +118,6 @@ function mapUserPayloadFromSessionRow(row) {
     actingClientId: acting,
     isSuperadmin,
     needsTenantSelection: isSuperadmin && !acting,
-    requiresContractAcceptance: false,
     ...license,
   };
 }
@@ -520,7 +519,7 @@ async function login({ email, password, ip, userAgent }) {
     userAgent,
   });
 
-  const user = mapUserPayloadFromUserRow(row);
+  const user = await appContract.enrichUserProfile(mapUserPayloadFromUserRow(row));
   await auditService.logSecurityEvent({
     eventType: 'login_success',
     userId: row.id,

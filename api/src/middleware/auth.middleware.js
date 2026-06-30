@@ -1,5 +1,6 @@
 const config = require('../config');
 const authService = require('../services/auth.service');
+const appContract = require('../services/appContract.service');
 const auditService = require('../services/audit.service');
 
 function clientIp(req) {
@@ -258,7 +259,7 @@ async function requireAuth(req, res, next) {
   req.auth = {
     sessionId: row.session_id,
     tokenHash: renewal?.rotated ? authService.sha256Hex(renewal.token) : tokenHash,
-    user: authService.mapUserPayloadFromSessionRow(row),
+    user: await appContract.enrichUserProfile(authService.mapUserPayloadFromSessionRow(row)),
   };
   req.user = req.auth.user;
   return next();

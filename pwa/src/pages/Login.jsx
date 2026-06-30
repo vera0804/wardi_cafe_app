@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { adminMustAcceptTerms } from '../utils/contractGate.js';
 
 const LICENSE_MSG = 'Licencia vencida';
 
@@ -22,6 +23,10 @@ export default function Login() {
 
   useEffect(() => {
     if (ready && user) {
+      if (adminMustAcceptTerms(user)) {
+        navigate('/admin/terminos', { replace: true });
+        return;
+      }
       navigate('/dashboard', { replace: true });
     }
   }, [ready, user, navigate]);
@@ -32,7 +37,7 @@ export default function Login() {
     setLoading(true);
     try {
       const profile = await login(identifier.trim(), password);
-      if (profile.requiresContractAcceptance && profile.role === 'admin') {
+      if (adminMustAcceptTerms(profile)) {
         navigate('/admin/terminos', { replace: true });
         return;
       }

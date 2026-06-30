@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext.jsx';
 import { canManageExpenses, isTenantAdmin } from './layouts/dashboardMenuData.js';
+import { adminMustAcceptTerms } from './utils/contractGate.js';
 import OnlineOnlyRoute from './components/OnlineOnlyRoute.jsx';
 
 const Login = lazy(() => import('./pages/Login.jsx'));
@@ -18,6 +19,7 @@ const ExpensesRoutes = lazy(() => import('./pages/expenses/ExpensesRoutes.jsx'))
 const UsersSettingsRoutes = lazy(() => import('./pages/settings/UsersSettingsRoutes.jsx'));
 const ChangePasswordSettingsRoutes = lazy(() => import('./pages/settings/ChangePasswordSettingsRoutes.jsx'));
 const StatsRoutes = lazy(() => import('./pages/stats/StatsRoutes.jsx'));
+const ContractTermsPage = lazy(() => import('./pages/ContractTermsPage.jsx'));
 
 function RouteFallback() {
   return (
@@ -40,6 +42,12 @@ function ProtectedRoute({ children }) {
     const p = location.pathname;
     if (!p.startsWith('/superadmin') && !p.startsWith('/settings/change-password')) {
       return <Navigate to="/superadmin/clients" replace />;
+    }
+  }
+  if (adminMustAcceptTerms(user)) {
+    const p = location.pathname;
+    if (p !== '/admin/terminos') {
+      return <Navigate to="/admin/terminos" replace />;
     }
   }
   return children;
@@ -204,7 +212,16 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
-        <Route path="/admin/terminos" element={<Placeholder title="Términos del administrador" />} />
+        <Route
+          path="/admin/terminos"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback={<RouteFallback />}>
+                <ContractTermsPage />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
         <Route path="/admin/*" element={<Placeholder title="Panel administración" />} />
         <Route path="/piloto/*" element={<Placeholder title="Panel piloto" />} />
         <Route path="/" element={<Navigate to="/login" replace />} />

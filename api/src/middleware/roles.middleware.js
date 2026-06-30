@@ -79,6 +79,12 @@ function requireEffectiveClient(req, res, next) {
       code: 'TENANT_REQUIRED',
     });
   }
+  if (role === 'admin' && req.user?.requiresContractAcceptance) {
+    return res.status(403).json({
+      message: 'Debe aceptar los términos y condiciones antes de continuar.',
+      code: 'CONTRACT_ACCEPTANCE_REQUIRED',
+    });
+  }
   return bindTenantRlsContext(req, res, next);
 }
 

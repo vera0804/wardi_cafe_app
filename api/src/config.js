@@ -73,4 +73,7 @@ module.exports = {
   /** Cron diario: 23:59 en licenseTimezone. */
   licenseCronSchedule: process.env.LICENSE_CRON_SCHEDULE || '59 23 * * *',
   licenseCronEnabled: process.env.LICENSE_CRON_ENABLED !== '0',
+
+  /** Versión mostrada y registrada al aceptar términos (admin por organización). */
+  appContractVersion: String(process.env.APP_CONTRACT_VERSION || '1.0').trim() || '1.0',
 };
