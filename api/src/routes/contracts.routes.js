@@ -23,7 +23,7 @@ router.get('/status', requireAuth, async (req, res, next) => {
  * POST /api/contracts/accept { version }
  * Solo administrador de la organización; registra aceptación a nivel cliente.
  */
-router.post('/accept', requireAuth, requireRoles(['admin']), requireCsrf, async (req, res, next) => {
+router.post('/accept', requireAuth, requireRoles(['admin', 'administrador']), requireCsrf, async (req, res, next) => {
   try {
     const clientId = req.user?.clientId;
     if (clientId == null || !String(clientId).trim()) {

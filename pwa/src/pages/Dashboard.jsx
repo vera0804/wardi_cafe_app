@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { adminMustAcceptTerms } from '../utils/contractGate.js';
 import { superadminLeaveTenant } from '../services/superadminApi.js';
 import DashboardShell from '../layouts/DashboardShell.jsx';
 import { getUserDisplayName } from '../utils/userDisplayName.js';
@@ -46,6 +47,12 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('Inicio');
   const [activeSettingItem, setActiveSettingItem] = useState('');
+
+  useEffect(() => {
+    if (adminMustAcceptTerms(user)) {
+      navigate('/admin/terminos', { replace: true });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     try {

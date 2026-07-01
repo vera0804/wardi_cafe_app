@@ -1,6 +1,11 @@
+import { resolveAppRole } from './userRole.js';
+
 /**
- * @param {{ role?: string, requiresContractAcceptance?: boolean } | null | undefined} user
+ * Administrador debe aceptar términos salvo que la API indique explícitamente lo contrario.
+ *
+ * @param {{ role?: string, roleKey?: string, requiresContractAcceptance?: boolean } | null | undefined} user
  */
 export function adminMustAcceptTerms(user) {
-  return String(user?.role || '').toLowerCase() === 'admin' && Boolean(user?.requiresContractAcceptance);
+  if (resolveAppRole(user) !== 'admin') return false;
+  return user?.requiresContractAcceptance !== false;
 }

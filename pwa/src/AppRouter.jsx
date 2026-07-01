@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext.jsx';
 import { canManageExpenses, isTenantAdmin } from './layouts/dashboardMenuData.js';
 import { adminMustAcceptTerms } from './utils/contractGate.js';
+import { isSessionProfileComplete } from './utils/sessionProfile.js';
 import OnlineOnlyRoute from './components/OnlineOnlyRoute.jsx';
 
 const Login = lazy(() => import('./pages/Login.jsx'));
@@ -37,6 +38,9 @@ function ProtectedRoute({ children }) {
   }
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+  if (!isSessionProfileComplete(user)) {
+    return <Navigate to="/login" replace state={{ sessionInvalid: true }} />;
   }
   if (user.isSuperadmin && user.needsTenantSelection) {
     const p = location.pathname;

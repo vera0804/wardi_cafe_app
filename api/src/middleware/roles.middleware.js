@@ -1,3 +1,9 @@
+function normalizeRoleName(role, roleKey) {
+  const r = String(role || roleKey || '').trim().toLowerCase();
+  if (r === 'administrador') return 'admin';
+  return r;
+}
+
 /**
  * @param {string[]} allowedRoles role names (case-insensitive), e.g. ['admin', 'operario'].
  * Para permitir acceso en modo soporte con organización elegida, incluir explícitamente `'superadmin'`.
@@ -5,7 +11,7 @@
 function requireRoles(allowedRoles) {
   const allowed = new Set(allowedRoles.map((r) => String(r || '').trim().toLowerCase()));
   return function requireRolesMiddleware(req, res, next) {
-    const role = String(req.user?.role || '').trim().toLowerCase();
+    const role = normalizeRoleName(req.user?.role, req.user?.roleKey);
     if (role === 'superadmin') {
       if (!req.user?.actingClientId) {
         return res.status(400).json({
@@ -21,7 +27,7 @@ function requireRoles(allowedRoles) {
       }
       return next();
     }
-    if (!allowed.has(role)) {
+    if (!allowed.has(role) && !(role === 'admin' && allowed.has('administrador'))) {
       return res.status(403).json({ message: 'No tienes permiso para esta sección.' });
     }
     return next();
@@ -65,7 +71,7 @@ const { bindTenantRlsContext } = require('./tenant-rls.middleware');
  * Evita duplicar lógica de `requireRoles` cuando se permiten roles distintos por ruta.
  */
 function requireEffectiveClient(req, res, next) {
-  const role = String(req.user?.role || '').trim().toLowerCase();
+  const role = String(req.user?.role || req.user?.roleKey || '').trim().toLowerCase();
   if (role === 'superadmin' && !req.user?.actingClientId) {
     return res.status(400).json({
       message: 'Seleccione una organización para acceder a esta sección.',
@@ -79,11 +85,13 @@ function requireEffectiveClient(req, res, next) {
       code: 'TENANT_REQUIRED',
     });
   }
-  if (role === 'admin' && req.user?.requiresContractAcceptance) {
-    return res.status(403).json({
-      message: 'Debe aceptar los términos y condiciones antes de continuar.',
-      code: 'CONTRACT_ACCEPTANCE_REQUIRED',
-    });
+  if (role === 'admin' || role === 'administrador') {
+    if (req.user?.requiresContractAcceptance !== false) {
+      return res.status(403).json({
+        message: 'Debe aceptar los términos y condiciones antes de continuar.',
+        code: 'CONTRACT_ACCEPTANCE_REQUIRED',
+      });
+    }
   }
   return bindTenantRlsContext(req, res, next);
 }

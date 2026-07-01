@@ -1,3 +1,5 @@
+import { isTenantAdminUser, resolveAppRole } from '../utils/userRole.js';
+
 export const DASHBOARD_MENU_STORAGE_KEY = 'wardi.dashboard.menu';
 
 export const MENU_ITEMS = [
@@ -37,23 +39,21 @@ export const CONFIG_GROUPS = [
 ];
 
 export function isSuperadmin(user) {
-  return String(user?.role || '').trim().toLowerCase() === 'superadmin';
+  return resolveAppRole(user) === 'superadmin';
 }
 
 export function isTenantAdmin(user) {
-  const r = String(user?.role || '').trim().toLowerCase();
-  if (r === 'superadmin' && user?.actingClientId) return true;
-  return r === 'admin';
+  return isTenantAdminUser(user);
 }
 
 export function isOperario(user) {
   if (isSuperadmin(user)) return false;
-  return String(user?.role || '').trim().toLowerCase() === 'operario';
+  return resolveAppRole(user) === 'operario';
 }
 
 /** Módulo Gastos: admin y operario. */
 export function canManageExpenses(user) {
-  const r = String(user?.role || '').trim().toLowerCase();
+  const r = resolveAppRole(user);
   if (r === 'superadmin' && user?.actingClientId) return true;
   return r === 'admin' || r === 'operario';
 }
@@ -80,7 +80,7 @@ export function canManageOperationalCatalogs(user) {
 
 /** Crear, editar o activar/inactivar producción de café. */
 export function canWriteCoffeeProduction(user) {
-  const r = String(user?.role || '').trim().toLowerCase();
+  const r = resolveAppRole(user);
   if (r === 'superadmin' && user?.actingClientId) return true;
   return r === 'admin';
 }

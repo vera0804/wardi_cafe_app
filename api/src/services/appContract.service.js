@@ -12,7 +12,8 @@ function getContractVersion() {
 }
 
 function contractGateAppliesToRole(role) {
-  return roleNameNorm(role) === 'admin';
+  const r = roleNameNorm(role);
+  return r === 'admin' || r === 'administrador';
 }
 
 /**
@@ -78,8 +79,22 @@ async function getContractGateFields(clientId, role) {
     };
   }
   const cid = clientId != null ? String(clientId).trim() : '';
-  const acceptedVersion = cid ? await getActiveAcceptedVersion(cid) : null;
-  const requires = !(await hasActiveContract(cid));
+  let acceptedVersion = null;
+  if (cid) {
+    try {
+      acceptedVersion = await getActiveAcceptedVersion(cid);
+    } catch {
+      acceptedVersion = null;
+    }
+  }
+  let requires = true;
+  if (cid) {
+    try {
+      requires = !(await hasActiveContract(cid));
+    } catch {
+      requires = true;
+    }
+  }
   const previousContractVersion =
     requires && acceptedVersion && acceptedVersion !== contractVersion ? acceptedVersion : null;
   return {

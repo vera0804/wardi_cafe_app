@@ -19,6 +19,10 @@ export default function Login() {
       setError(LICENSE_MSG);
       navigate(location.pathname, { replace: true, state: {} });
     }
+    if (location.state?.sessionInvalid) {
+      setError('La sesión no es válida o está desactualizada. Inicie sesión de nuevo.');
+      navigate(location.pathname, { replace: true, state: {} });
+    }
   }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
